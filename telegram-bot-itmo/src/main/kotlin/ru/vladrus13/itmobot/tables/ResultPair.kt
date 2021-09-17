@@ -1,7 +1,7 @@
 package ru.vladrus13.itmobot.tables
 
 class ResultPair(
-    val tableName : String,
+    val tableName: String,
     val name: String,
     var result: String
 ) {

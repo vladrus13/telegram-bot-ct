@@ -11,8 +11,8 @@ class User(
     settings: Settings = Settings(3),
     var path: String = "main",
     var notification: Boolean = true,
-    var usersSubjects: UsersSubjects? = null,
-    var usersPlugins: UserPlugins? = null,
+    private var usersSubjects: UsersSubjects? = null,
+    private var usersPlugins: UserPlugins? = null,
     updateBotUser: UpdateBotUser? = null
 ) : Chatted(chatId, group, settings, updateBotUser) {
 

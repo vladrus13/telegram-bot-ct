@@ -13,7 +13,7 @@ open class Chatted(
     val chatId: Long,
     var group: String? = null,
     var settings: Settings = Settings(3),
-    var updateBotUser: UpdateBotUser? = null
+    private var updateBotUser: UpdateBotUser? = null
 ) {
 
     fun send(

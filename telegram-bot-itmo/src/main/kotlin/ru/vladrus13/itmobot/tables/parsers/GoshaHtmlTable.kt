@@ -14,7 +14,7 @@ class GoshaHtmlTable(list: ArrayList<String>, updateCoolDown: Long) : Table(upda
     override var nextUpdate: Date = Date(0)
     private val data: HashMap<String, ResultPair> = HashMap()
 
-    override fun reload(): java.util.ArrayList<ResultPair> {
+    override fun reload(): ArrayList<ResultPair> {
         val getting = Jsoup.connect(url).timeout(0).get().getElementsByTag("table")[0].getElementsByTag(
             "tbody"
         )[0]

@@ -25,7 +25,6 @@ class StartCommand(override val parent: Menu) : Command() {
     }
 
     private fun get(bot: TelegramLongPollingBot, user: User, chatted: Chatted, isKeyboard: Boolean) {
-        // TODO paths to normal
         chatted.send(
             bot = bot,
             text = """
@@ -67,7 +66,7 @@ class StartCommand(override val parent: Menu) : Command() {
                     НЕМНОГО О ФИЧАХ И ОШИБКАХ В БОТЕ
                     
                     1) Если вы заметили в боте некорректное поведение, которое показалось вам необычным или какие либо ошибки, то можете смело писать @vladrus13. Он постарается закрыть все баги очень оперативно.
-                    2) Вы можете писать @vladrus13 о предложениях по улучшению бота, добавлению возможностей и различных плагинов. <ТУТ ДОЛЖНА БЫТЬ ССЫЛКА НА ГИТХАБ С БОТОМ> - здесь вы можете посмотреть все, что вам может потребоваться для написания плагинов. Если вы хотите что то реализовать сами, то такое только приветствуется
+                    2) Вы можете писать @vladrus13 о предложениях по улучшению бота, добавлению возможностей и различных плагинов. https://github.com/vladrus13/telegram-bot-ct - здесь вы можете посмотреть все, что вам может потребоваться для написания плагинов. Если вы хотите что то реализовать сами, то такое только приветствуется
                     """.trimIndent(),
             replyKeyboard = if (isKeyboard) parent.getReplyKeyboard(user) else null,
             image = Path.of("../telegram-bot-itmo-data/images/memes/mem_open_source.jpg")

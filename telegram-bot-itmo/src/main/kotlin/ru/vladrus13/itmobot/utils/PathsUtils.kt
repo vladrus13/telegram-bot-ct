@@ -21,7 +21,7 @@ class PathsUtils {
 
     companion object {
 
-        const val FOLDER_USER_SPLITTER = '/'
+        private const val FOLDER_USER_SPLITTER = '/'
         const val COMMAND_PATH_SPLITTER = '_'
         const val COMMAND_PATH_SPLITTER_SPACE = ' '
         const val COMMAND_ARGUMENTS_SPLITTER = '1'

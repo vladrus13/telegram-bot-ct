@@ -15,7 +15,7 @@ class ScheduleTable {
     }
 
     class Table(
-        val time: Date
+        private val time: Date
     ) {
 
         private val groups: HashMap<String, TableGroup> = HashMap()

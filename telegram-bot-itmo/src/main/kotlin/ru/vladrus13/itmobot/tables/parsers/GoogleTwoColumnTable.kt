@@ -49,7 +49,7 @@ class GoogleTwoColumnTable(list: ArrayList<String>, updateCoolDown: Long) : Tabl
                     // answer.add(resultPair)
                 }
             }
-        } catch (e : Exception) {
+        } catch (e: Exception) {
             Writer.printStackTrace(logger = logger, e)
             return ArrayList()
         }

@@ -9,7 +9,7 @@ class TimeUtils {
 
         fun getCurrentTime(): GregorianCalendar = GregorianCalendar()
 
-        fun getSimpleDateFormat(): SimpleDateFormat = SimpleDateFormat("EEEE, dd MMMM, HH:mm:ss")
+        private fun getSimpleDateFormat(): SimpleDateFormat = SimpleDateFormat("EEEE, dd MMMM, HH:mm:ss")
 
         fun getCurrentTimeString(): String {
             val time = getCurrentTime()

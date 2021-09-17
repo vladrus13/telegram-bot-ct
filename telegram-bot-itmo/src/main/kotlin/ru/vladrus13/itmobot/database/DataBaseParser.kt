@@ -115,7 +115,7 @@ abstract class DataBaseEntity<T> {
     }
 
     fun getAllByFilter(filter: SqlExpressionBuilder.() -> Op<Boolean>): List<T> {
-        var list = mutableListOf<T>()
+        val list = mutableListOf<T>()
         transaction(DataBaseParser.connection) {
             val answer = table.select(filter)
             for (it in answer) {

@@ -12,7 +12,7 @@
     <datatable id="plugin_table"
                class="ru.vladrus13.itmobot.database.entities.PluginsParser"
                subclass="ru.vladrus13.itmobot.bean.UserPlugins"/>
-    <datatable id ="subjects_table"
+    <datatable id="subjects_table"
                class="ru.vladrus13.itmobot.database.entities.SubjectsParser"
                subclass="ru.vladrus13.itmobot.bean.UsersSubjects"/>
     <datatable id="chat_table"

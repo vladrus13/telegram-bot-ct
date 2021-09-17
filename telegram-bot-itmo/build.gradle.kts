@@ -36,7 +36,7 @@ tasks.withType<JavaExec> {
 }
 
 apply {
-        plugin("application")
+    plugin("application")
 }
 
 tasks.withType<JavaCompile>().configureEach {

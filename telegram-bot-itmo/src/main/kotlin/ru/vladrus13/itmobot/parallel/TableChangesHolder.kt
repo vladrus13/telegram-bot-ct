@@ -18,7 +18,7 @@ class TableChangesHolder {
                             val resultPair = it.value.pollFirst()!!
                             for (user in users) {
                                 if (user.group == null || user.name == null) continue
-                                if (TableGroupsHolder.get(it.key).isDepends(user.group!!)) {
+                                if (TableGroupsHolder[it.key].isDepends(user.group!!)) {
                                     if (resultPair.name.contains(user.name!!)) {
                                         user.send(
                                             bot = Launcher.bot,

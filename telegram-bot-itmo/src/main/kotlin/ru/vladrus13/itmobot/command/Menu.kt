@@ -94,8 +94,7 @@ abstract class Menu(
         }
         for (plugin in pluginChildes) {
             if (userPlugins.plugins.contains(plugin.first.systemName)) {
-                val fold = plugin.second
-                when (fold) {
+                when (val fold = plugin.second) {
                     is Menu -> {
                         sb.appendLine(fold.groupHelp(tab + 1, userPlugins))
                     }

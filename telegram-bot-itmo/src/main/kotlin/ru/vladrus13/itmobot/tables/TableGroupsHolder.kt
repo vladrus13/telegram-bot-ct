@@ -68,7 +68,7 @@ class TableGroupsHolder {
                         isReady = true
                         Thread.sleep(timeToChange)
                     }
-                } catch (e : Exception) {
+                } catch (e: Exception) {
                     Writer.printStackTrace(logger = logger, e)
                 }
             }

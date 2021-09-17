@@ -18,7 +18,7 @@ class GetCommand(override val parent: Menu) : Command() {
 
     override fun isAccept(update: Update): Boolean = update.message.text!! == name
 
-    fun getReal(): String {
+    private fun getReal(): String {
         val respond = ru.vladrus13.shikimori.Animes.get()
         val json = JSONArray(respond)
         return "<code>${json.toString(1)}</code>"
