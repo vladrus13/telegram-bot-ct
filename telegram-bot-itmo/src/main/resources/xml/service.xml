@@ -21,4 +21,7 @@
     <datatable id="updates_user_table"
                class="ru.vladrus13.itmobot.database.entities.UpdateUserParser"
                subclass="ru.vladrus13.itmobot.bean.UpdateBotUser"/>
+    <plugin id="schedule_timer" class="ru.vladrus13.itmobot.plugin.alarm.ScheduleTimerPlugin"/>
+    <plugin id="shipper_plugin" class="ru.vladrus13.itmobot.plugin.shipper.ShipperPlugin"/>
+    <plugin id="simple_plugin" class="ru.vladrus13.itmobot.plugin.simple.SimplePlugin"/>
 </root>

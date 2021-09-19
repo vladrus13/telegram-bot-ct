@@ -23,7 +23,6 @@ import java.util.logging.Logger
 class Launcher {
     companion object {
         val logger: Logger = Logger.getLogger(Launcher::class.java.simpleName)
-        const val timeToReloadTable: Long = 5 * 60 * 1000
         val bot = ItmoBot()
     }
 }
@@ -38,6 +37,8 @@ fun main() {
         println("Can't load logging properties. Stop bot")
         return
     }
+    InitialProperties.logger = Launcher.logger
+    InitialProperties.bot = bot
     Launcher.logger.info("= Launch bot")
     Launcher.logger.info("== Start timezone default")
     TimeZone.setDefault(TimeZone.getTimeZone("GMT+3"))
