@@ -22,7 +22,7 @@ class ResultPair(
         return if (oldResult == null) {
             "Новое значение: $result"
         } else {
-            "${oldResult.toString()} -> $result"
+            "${oldResult.toString()} → $result"
         }
     }
 

@@ -23,10 +23,22 @@ class User(
         return usersSubjects!!
     }
 
+    fun setSubjects() {
+        DataBase.put(chatId, usersSubjects)
+    }
+
     fun getPlugins(forced: Boolean = false): UserPlugins {
         if (forced || usersPlugins == null) {
             usersPlugins = DataBase.get(chatId)
         }
         return usersPlugins!!
+    }
+
+    fun setPlugins() {
+        DataBase.put(chatId, usersPlugins)
+    }
+
+    override fun save() {
+        DataBase.put(chatId, this)
     }
 }

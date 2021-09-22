@@ -9,7 +9,7 @@ import ru.vladrus13.itmobot.updates.Updates
 import ru.vladrus13.itmobot.utils.Messager
 import java.nio.file.Path
 
-open class Chatted(
+abstract class Chatted(
     val chatId: Long,
     var group: String? = null,
     var settings: Settings = Settings(3),
@@ -32,6 +32,7 @@ open class Chatted(
             )
         }
         updateBotUser = UpdateBotUser(chatId, Updates.getLast())
+        setUpdateBotUser()
     }
 
     fun send(
@@ -51,6 +52,7 @@ open class Chatted(
             )
         }
         updateBotUser = UpdateBotUser(chatId, Updates.getLast())
+        setUpdateBotUser()
     }
 
     fun getUpdateBotUser(forced: Boolean = false): UpdateBotUser {
@@ -60,8 +62,14 @@ open class Chatted(
         return updateBotUser!!
     }
 
+    fun setUpdateBotUser() {
+        DataBase.put(chatId, updateBotUser)
+    }
+
     fun getUpdateTexts(forced: Boolean = false): List<Pair<String, SendMessage.() -> Unit>> {
         val updateBotUser = getUpdateBotUser(forced)
         return Updates.getUpdates(updateBotUser.version)
     }
+
+    abstract fun save()
 }

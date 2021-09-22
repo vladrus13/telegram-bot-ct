@@ -28,61 +28,61 @@ fun main() {
         return
     }
     InitialProperties.logger = Logger.getLogger(Debug::class.java.simpleName)
-    Launcher.logger.info("= Launch bot")
-    Launcher.logger.info("== Start timezone default")
+    InitialProperties.logger.info("= Launch bot")
+    InitialProperties.logger.info("== Start timezone default")
     TimeZone.setDefault(TimeZone.getTimeZone("GMT+3"))
-    Launcher.logger.info("== Finish timezone default")
-    Launcher.logger.info("== Start loading properties")
+    InitialProperties.logger.info("== Finish timezone default")
+    InitialProperties.logger.info("== Start loading properties")
     try {
-        Launcher.logger.info("=== Load main properties file")
+        InitialProperties.logger.info("=== Load main properties file")
         InitialProperties.mainProperties
-        Launcher.logger.info("=== Load datatable properties file")
+        InitialProperties.logger.info("=== Load datatable properties file")
         InitialProperties.databaseProperties
     } catch (e: NoSuchFileException) {
-        Launcher.logger.severe("=== Failed at loading property file ${e.file.name}. File not found. Stop bot")
+        InitialProperties.logger.severe("=== Failed at loading property file ${e.file.name}. File not found. Stop bot")
         return
     }
-    Launcher.logger.info("== Finish loading properties")
+    InitialProperties.logger.info("== Finish loading properties")
 
-    Launcher.logger.info("== Start loading XML")
+    InitialProperties.logger.info("== Start loading XML")
     try {
         XMLParser.init()
     } catch (e: NoSuchFileException) {
-        Launcher.logger.severe("=== Failed at loading XML file ${e.file.name}. File not found. Stop bot")
+        InitialProperties.logger.severe("=== Failed at loading XML file ${e.file.name}. File not found. Stop bot")
         return
     } catch (e: SAXException) {
-        Launcher.logger.severe("=== Failed at parse XML file. Stop bot")
+        InitialProperties.logger.severe("=== Failed at parse XML file. Stop bot")
         return
     } catch (e: XMLClassCastException) {
-        Launcher.logger.severe("=== Failed at parse XML file. Can't cast class ${e.found.qualifiedName} to class ${e.field}")
+        InitialProperties.logger.severe("=== Failed at parse XML file. Can't cast class ${e.found.qualifiedName} to class ${e.field}")
         return
     } catch (e: ClassNotFoundException) {
-        Launcher.logger.severe("=== Failed at parse XML file. Can't find class")
+        InitialProperties.logger.severe("=== Failed at parse XML file. Can't find class")
         return
     } catch (e: NullPointerException) {
-        Launcher.logger.severe("=== Failed at parse XML file. ${e.message}")
+        InitialProperties.logger.severe("=== Failed at parse XML file. ${e.message}")
         return
     } catch (e: Exception) {
-        Writer.printStackTrace(Launcher.logger, e)
+        Writer.printStackTrace(InitialProperties.logger, e)
         return
     }
-    Launcher.logger.info("== Finish loading XML")
+    InitialProperties.logger.info("== Finish loading XML")
 
-    Launcher.logger.info("== Start loading database")
+    InitialProperties.logger.info("== Start loading database")
     try {
         DataBase.init()
     } catch (e: IllegalArgumentException) {
-        Writer.printStackTrace(Launcher.logger, e)
+        Writer.printStackTrace(InitialProperties.logger, e)
     }
-    Launcher.logger.info("== Finish loading database")
+    InitialProperties.logger.info("== Finish loading database")
 
-    Launcher.logger.info("== Start initial plugins")
+    InitialProperties.logger.info("== Start initial plugins")
     PluginsHolder.init()
-    Launcher.logger.info("== Finish initial plugins")
+    InitialProperties.logger.info("== Finish initial plugins")
 
-    Launcher.logger.info("== Start creating bot API")
+    InitialProperties.logger.info("== Start creating bot API")
     val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)
-    Launcher.logger.info("== Finish creating bot API")
+    InitialProperties.logger.info("== Finish creating bot API")
 
 
     TableGroupsHolder.run()
