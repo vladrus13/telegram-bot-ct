@@ -54,7 +54,7 @@ class ResultsGet(override val parent: Menu) : Command() {
         }
         val sb = StringBuilder("Ваши результаты: \n")
         for (result in realTables) {
-            sb.append("${result.tableName} -> ${result.result}\n")
+            sb.append("${result.tableName} → ${result.result}\n")
         }
         user.send(
             bot = bot,
