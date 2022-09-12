@@ -19,7 +19,7 @@ class TableChangesHolder {
                             val resultPair = it.value.pollFirst()!!
                             for (user in users) {
                                 if (user.group == null || user.name == null) continue
-                                if (TableGroupsHolder[it.key].isDepends(user.group!!)) {
+                                if (TableGroupsHolder[it.key]?.isDepends(user.group!!) ?: false) {
                                     if (resultPair.name.contains(user.name!!)) {
                                         // TODO null-safe
                                         user.send(

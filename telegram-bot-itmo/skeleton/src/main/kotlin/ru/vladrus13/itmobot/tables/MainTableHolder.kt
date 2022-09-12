@@ -40,12 +40,16 @@ class MainTableHolder {
                             TableGroupsHolder.set(TableFactory.getTable(row, timeToChange))
                         } else {
                             if (!Utils.equals(tables[row[0]]!!, row)) {
-                                val groupSet = TableGroupsHolder[row[0]].getGroups()
-                                logger.info("==== Changed table with name ${row[0]}")
-                                tables[row[0]] = row
-                                val table = TableFactory.getTable(row, timeToChange)
-                                table.addGroup(groupSet)
-                                TableGroupsHolder.set(table)
+                                val groupSet = TableGroupsHolder[row[0]]?.getGroups()
+                                if (groupSet == null) {
+                                    logger.info("==== Can't add to table with name: ${row[0]}")
+                                } else {
+                                    logger.info("==== Changed table with name ${row[0]}")
+                                    tables[row[0]] = row
+                                    val table = TableFactory.getTable(row, timeToChange)
+                                    table.addGroup(groupSet)
+                                    TableGroupsHolder.set(table)
+                                }
                             }
                         }
                     }
@@ -62,7 +66,7 @@ class MainTableHolder {
                     for (it in linksArray) {
                         if (it.size > 1) {
                             tableNames.add(it[0])
-                            TableGroupsHolder[it[0]].addGroup(name, it[1])
+                            TableGroupsHolder[it[0]]?.addGroup(name, it[1])
                         }
                     }
                     groupsTables[name] = tableNames

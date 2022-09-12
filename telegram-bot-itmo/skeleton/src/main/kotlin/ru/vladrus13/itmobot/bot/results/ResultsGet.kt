@@ -42,7 +42,7 @@ class ResultsGet(override val parent: Menu) : Command() {
             return
         }
         val realTables = tables
-            .map { TableGroupsHolder[it] }
+            .mapNotNull { TableGroupsHolder[it] }
             .mapNotNull { it[user.name!!] }
         if (realTables.isEmpty()) {
             user.send(

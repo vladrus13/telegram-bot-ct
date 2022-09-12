@@ -21,8 +21,8 @@ class TableGroupsHolder {
             map[table.name] = table
         }
 
-        operator fun get(name: String): Table {
-            return map[name]!!
+        operator fun get(name: String): Table? {
+            return map[name]
         }
 
         private fun merger(
