@@ -20,5 +20,7 @@ dependencies {
     implementation("com.google.apis:google-api-services-drive:v3-rev110-1.23.0")
     implementation("org.jsoup:jsoup:1.14.1")
 
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
+
     implementation("com.google.apis:google-api-services-sheets:v4-rev614-1.18.0-rc")
 }

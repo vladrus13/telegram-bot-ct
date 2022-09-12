@@ -1,19 +1,20 @@
 package ru.vladrus13.itmobot.utils
 
+import kotlin.streams.toList
+
 class PathsUtils {
 
     class MessageUno(val name: String, val arguments: List<String>) {
         constructor(s: String) : this(
             s.split(COMMAND_ARGUMENTS_SPLITTER, limit = 1)[0],
-            s.split(COMMAND_ARGUMENTS_SPLITTER).stream().skip(1).toList()
+            s.split(COMMAND_ARGUMENTS_SPLITTER).drop(1)
         )
     }
 
     class MessagePath(val list: List<MessageUno>, val arguments: List<String>) {
         constructor(s: String) : this(
-            s.split(COMMAND_PATH_SPLITTER_SPACE, limit = 1)[0].split(COMMAND_PATH_SPLITTER).map { MessageUno(it) }
-                .toList(),
-            s.split(COMMAND_PATH_SPLITTER_SPACE).stream().skip(1).toList()
+            s.split(COMMAND_PATH_SPLITTER_SPACE, limit = 1)[0].split(COMMAND_PATH_SPLITTER).map { MessageUno(it) },
+            s.split(COMMAND_PATH_SPLITTER_SPACE).drop(1)
         )
     }
 

@@ -19,14 +19,12 @@ class PluginFolder(override val parent: Menu) : Menu(parent) {
 
     override fun menuHelp(): String = "Меню плагинов"
 
-    override val name: String
-        get() = "Плагины"
-    override val systemName: String
-        get() = "plugins"
+    override val name: String = "Плагины"
+    override val systemName: String = "plugins"
 
     override fun getReplyKeyboard(user: User): ReplyKeyboard {
         val replyKeyboardMarkup = ReplyKeyboardMarkup()
-        val list = Utils.splitBy(Arrays.stream(PluginsHolder.plugins).map { it.name }.toList(), 1)
+        val list = Utils.splitBy(PluginsHolder.plugins.map { it.name }, 1)
         val backRow = KeyboardRow()
         backRow.add("<< Назад")
         list.add(backRow)

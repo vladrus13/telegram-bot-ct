@@ -13,7 +13,7 @@ import ru.vladrus13.itmobot.utils.Writer
 import java.util.*
 import java.util.logging.Logger
 
-class ItmoBot : TelegramLongPollingBot() {
+object ItmoBot : TelegramLongPollingBot() {
 
     private var token = ""
     private val logger: Logger = InitialProperties.logger
@@ -34,7 +34,7 @@ class ItmoBot : TelegramLongPollingBot() {
         if (update.message.chat.userName != null) {
             user.username = update.message.chat.userName
         }
-        if (InitialProperties.mainProperties.getProperty("DEBUG_MODE") == "true" && user.username == "@vladrus13") {
+        if (InitialProperties.mainProperties.getProperty("DEBUG_MODE") == "true" && user.username != "vladrus13") {
             logger.info("Receive ignored message from user: ${user.username}: ${update.message.text}")
             execute(
                 Messager.getMessage(
@@ -47,7 +47,7 @@ class ItmoBot : TelegramLongPollingBot() {
         if (update.message.chatId != null) {
             logger.info("Receive message from user: ${user.username}: ${update.message.text}")
         }
-        val current = mainFolder.folder(LinkedList(PathsUtils.foldersSplit(user.path)), user.getPlugins())
+        val current = mainFolder.folder(LinkedList(PathsUtils.foldersSplit(user.path.getPath())), user.getPlugins())
         current.get(update, this, user)
         DataBase.put(user.chatId, user)
     }
@@ -93,7 +93,7 @@ class ItmoBot : TelegramLongPollingBot() {
         }
         val chatId = update.message.chatId
         if (update.hasMessage()) {
-            if (update.message.text == null) return
+            if (update.message.text == null) update.message.text = ""
             try {
                 if (update.message.chat.isGroupChat || update.message.chat.isSuperGroupChat) {
                     onChat(update)

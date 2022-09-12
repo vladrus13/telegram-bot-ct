@@ -127,7 +127,7 @@ abstract class Menu(
                         text = "Возвращаемся...",
                         replyKeyboard = parent!!.getReplyKeyboard(user)
                     )
-                    user.path = parent!!.path
+                    user.path.setPath(parent!!.path)
                 } else {
                     user.send(
                         bot = bot,
@@ -162,7 +162,7 @@ abstract class Menu(
                             text = it.onEnter!!
                         )
                     }
-                    user.path = it.path
+                    user.path.setPath(it.path)
                 }
                 if (it is Command) {
                     it.get(update, bot, user)
@@ -179,7 +179,7 @@ abstract class Menu(
                         text = "Переходим в раздел...",
                         replyKeyboard = (it.second as Menu).getReplyKeyboard(user)
                     )
-                    user.path = it.second.path
+                    user.path.setPath(it.second.path)
                 }
                 if (it.second is Command) {
                     it.second.get(update, bot, user)
@@ -220,8 +220,7 @@ abstract class Menu(
         }
         val plugins = user.getPlugins()
         val pluginsNames =
-            pluginChildes.stream().filter { plugins.plugins.contains(it.first.systemName) }.map { it.second.name }
-                .toList()
+            pluginChildes.filter { plugins.plugins.contains(it.first.systemName) }.map { it.second.name }
         for (i in pluginsNames.indices step 2) {
             val row = KeyboardRow()
             row.add(pluginsNames[i])

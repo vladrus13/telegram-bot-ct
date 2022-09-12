@@ -37,7 +37,7 @@ class UserParser : DataBaseEntity<User>() {
         it[Users.name] = o.name
         it[Users.username] = o.username
         it[Users.settings] = o.settings.getByte()
-        it[Users.path] = o.path
+        it[Users.path] = o.path.toString()
         it[Users.notification] = o.notification
     }
 
@@ -48,9 +48,11 @@ class UserParser : DataBaseEntity<User>() {
         result[Users.name],
         result[Users.username],
         Settings(result[Users.settings]),
-        result[Users.path],
+        User.UserPath.fromString(result[Users.path]),
         result[Users.notification]
     )
+
+
 
     override val name: String = "Users"
 }

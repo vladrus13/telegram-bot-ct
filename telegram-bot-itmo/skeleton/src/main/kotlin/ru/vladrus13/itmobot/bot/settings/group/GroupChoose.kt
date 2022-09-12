@@ -51,7 +51,7 @@ class GroupChoose(override val parent: Menu) : Menu(parent) {
         if (ScheduleHolder.table.getGroups().contains(newGroup)) {
             sender.group = newGroup
             if (sender is User) {
-                sender.path = parent.path
+                sender.path.setPath(parent.path)
             }
             sender.send(
                 bot = bot,

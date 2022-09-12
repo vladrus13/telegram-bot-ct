@@ -44,6 +44,9 @@ class ScheduleTable {
                     lastNotBlank = i
                 }
             }
+            if (!lastGroup.isNullOrBlank() && !groups.containsKey(lastGroup)) {
+                groups[lastGroup] = TableGroup(table, lastPosition, lastNotBlank)
+            }
             for (group in groups.values) {
                 subjects.addAll(group.getSubjects())
             }
@@ -71,8 +74,7 @@ class ScheduleTable {
                 return sb
             } else {
                 val groups: Collection<TableGroup> =
-                    this.groups.entries.stream().sorted { o1, o2 -> o1.key.compareTo(o2.key) }.map { o1 -> o1.value }
-                        .toList()
+                    this.groups.entries.sortedBy { it.key }.map { o1 -> o1.value }
                 val time = "Последнее время обновления: ${TimeUtils.getTimeString(time)}\n"
                 val sb = StringBuilder(time)
                 for (it in groups) {
@@ -91,7 +93,7 @@ class ScheduleTable {
         }
 
         fun getSubjects(): List<String> {
-            return subjects.stream().sorted().toList()
+            return subjects.sorted()
         }
     }
 

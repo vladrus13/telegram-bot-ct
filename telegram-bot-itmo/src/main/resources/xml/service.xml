@@ -24,4 +24,5 @@
     <plugin id="schedule_timer" class="ru.vladrus13.itmobot.plugin.alarm.ScheduleTimerPlugin"/>
     <plugin id="shipper_plugin" class="ru.vladrus13.itmobot.plugin.shipper.ShipperPlugin"/>
     <plugin id="simple_plugin" class="ru.vladrus13.itmobot.plugin.simple.SimplePlugin"/>
+    <plugin id="homework" class="ru.vladrus13.itmobot.plugin.homework.HomeworkPlugin"/>
 </root>

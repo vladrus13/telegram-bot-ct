@@ -41,10 +41,9 @@ class ResultsGet(override val parent: Menu) : Command() {
             )
             return
         }
-        val realTables = tables.stream()
+        val realTables = tables
             .map { TableGroupsHolder[it] }
-            .map { it[user.name!!] }
-            .toList().filterNotNull()
+            .mapNotNull { it[user.name!!] }
         if (realTables.isEmpty()) {
             user.send(
                 bot = bot,

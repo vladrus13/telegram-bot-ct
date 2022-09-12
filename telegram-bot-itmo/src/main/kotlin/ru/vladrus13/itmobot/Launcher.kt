@@ -6,7 +6,6 @@ import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.xml.sax.SAXException
-import ru.vladrus13.itmobot.Launcher.Companion.bot
 import ru.vladrus13.itmobot.bot.ItmoBot
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.exceptions.XMLClassCastException
@@ -22,8 +21,9 @@ import java.util.logging.Logger
 
 class Launcher {
     companion object {
-        val logger: Logger = Logger.getLogger(Launcher::class.java.simpleName)
-        val bot = ItmoBot()
+        val logger: Logger = Logger.getLogger(Launcher::class.java.simpleName).apply {
+            InitialProperties.logger = this
+        }
     }
 }
 
@@ -38,7 +38,6 @@ fun main() {
         return
     }
     InitialProperties.logger = Launcher.logger
-    InitialProperties.bot = bot
     Launcher.logger.info("= Launch bot")
     Launcher.logger.info("== Start timezone default")
     TimeZone.setDefault(TimeZone.getTimeZone("GMT+3"))
@@ -95,11 +94,11 @@ fun main() {
     val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)
     Launcher.logger.info("== Finish creating bot API")
 
-
     TableGroupsHolder.run()
     TableChangesHolder.run()
+    InitialProperties.bot = ItmoBot
     try {
-        telegramBotsApi.registerBot(bot)
+        telegramBotsApi.registerBot(InitialProperties.bot)
     } catch (e: TelegramApiRequestException) {
         Writer.printStackTrace(Launcher.logger, e)
     }
