@@ -1,0 +1,19 @@
+# standard
+.idea
+build
+
+# auth to google
+tokens
+
+# secret data
+.env
+src/main/resources/datatable.properties
+src/main/resources/main.properties
+src/main/resources/credentials.json
+
+# hide files of logger
+logger/application_log.txt.0
+logger/application_log.txt.0.lck
+
+# postgres database
+postgres-data
