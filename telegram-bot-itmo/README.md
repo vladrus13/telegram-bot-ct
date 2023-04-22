@@ -25,3 +25,7 @@ docker-compose up --build
 * password=${PASSWORD}
 5) Also you need to get correct credentials.json. You may get it from [link](https://developers.google.com/sheets/api/quickstart/java)
 6) Then launch it with run.sh 
+
+### What you may fix?
+
+* if person writes `плагины`, then bot can't get state, now you need write `Плагины`. You may fix it
