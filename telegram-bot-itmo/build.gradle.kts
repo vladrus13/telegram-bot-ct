@@ -17,6 +17,7 @@ dependencies {
     implementation(project("plugins:shipper"))
     implementation(project("plugins:simple"))
     implementation(project("plugins:homework"))
+    implementation(project("plugins:tempplugin"))
     implementation(project("skeleton"))
 
 }
