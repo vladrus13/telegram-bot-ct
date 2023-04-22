@@ -11,8 +11,6 @@ import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.utils.Utils
-import java.util.*
-import javax.xml.crypto.Data
 
 class RemoveHWTeam(override val parent: Menu) : Menu(parent) {
     override val childes: Array<Foldable> = arrayOf()
