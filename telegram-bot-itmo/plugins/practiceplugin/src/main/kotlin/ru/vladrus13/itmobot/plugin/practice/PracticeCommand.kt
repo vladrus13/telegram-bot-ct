@@ -15,7 +15,7 @@ class PracticeCommand(override val parent: Menu) : Command() {
     override val systemName: String
         get() = "practice"
 
-    override fun isAccept(update: Update): Boolean = true
+    override fun isAccept(update: Update): Boolean = update.message.text!! == name
 
     override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
         user.send(
