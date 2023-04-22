@@ -1,4 +1,4 @@
-package ru.vladrus13.itmobot.plugin.temp
+package ru.vladrus13.itmobot.plugin.practice
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -7,13 +7,13 @@ import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
 import ru.vladrus13.itmobot.command.Menu
 
-class TempCommand(override val parent: Menu) : Command() {
-    override fun help(): String = "Докажи, иначе гей"
+class PracticeCommand(override val parent: Menu) : Command() {
+    override fun help(): String = "Этот плагин позволяет создать таблицу для отметки задач на практиках"
 
     override val name: String
-        get() = "Не пидор, а гей"
+        get() = "Создать таблицу"
     override val systemName: String
-        get() = "gay"
+        get() = "practice"
 
     override fun isAccept(update: Update): Boolean = true
 

@@ -1,4 +1,4 @@
-package ru.vladrus13.itmobot.plugin.temp
+package ru.vladrus13.itmobot.plugin.practice
 
 import ru.vladrus13.itmobot.bot.MainFolder
 import ru.vladrus13.itmobot.command.Foldable
@@ -6,11 +6,11 @@ import ru.vladrus13.itmobot.database.DataBaseEntity
 import ru.vladrus13.itmobot.plugins.Plugin
 import kotlin.reflect.KClass
 
-class TempPlugin : Plugin() {
+class PracticePlugin : Plugin() {
     override val name: String
-        get() = "Alexey - gay"
+        get() = "Таблица для практик"
     override val systemName: String
-        get() = "tempPlugin"
+        get() = "practicePlugin"
     override val password: String?
         get() = null
     override val isAvailableUser: Boolean
@@ -25,7 +25,7 @@ class TempPlugin : Plugin() {
     override fun addFoldable(current: Foldable): List<Pair<Plugin, Foldable>> {
         return when (current) {
             is MainFolder -> {
-                arrayListOf(Pair(this, TempCommand(current)))
+                arrayListOf(Pair(this, PracticeCommand(current)))
             }
             else -> arrayListOf()
         }
