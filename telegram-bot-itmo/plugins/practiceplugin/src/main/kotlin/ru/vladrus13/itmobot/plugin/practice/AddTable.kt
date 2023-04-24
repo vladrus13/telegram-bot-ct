@@ -1,17 +1,16 @@
 package ru.vladrus13.itmobot.plugin.practice
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential
-import com.google.api.client.http.HttpRequestInitializer
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.sheets.v4.Sheets
-import com.google.api.services.sheets.v4.SheetsScopes
+import com.google.api.services.sheets.v4.model.Spreadsheet
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
-import java.util.*
+import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getCredentials
 
 class AddTable(override val parent: Menu) : Menu(parent) {
     override val childes: Array<Foldable> = arrayOf()
@@ -68,11 +67,30 @@ class AddTable(override val parent: Menu) : Menu(parent) {
 //        val service: Sheets = Sheets.Builder(NetHttpTransport(
 //            GsonFactory.getDefaultInstance(),
 //        ))
+        val requestBody = Spreadsheet()
+        val sheetsService = createSheetsService(text)
+
+        val request = sheetsService.spreadsheets().create(requestBody)
+
+        val response = request.execute()
 
         user.send(
             bot = bot,
-            text = text,
+            text = response.toString(),
             replyKeyboard = getReplyKeyboard(user)
         )
+    }
+
+    companion object {
+        private fun createSheetsService(text: String): Sheets {
+            val httpTransport: NetHttpTransport = GoogleNetHttpTransport.newTrustedTransport()
+            return Sheets.Builder(
+                httpTransport,
+                GsonFactory.getDefaultInstance(),
+                getCredentials(httpTransport)
+            )
+                .setApplicationName(text)
+                .build()
+        }
     }
 }
