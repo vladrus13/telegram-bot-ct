@@ -29,7 +29,6 @@ class MainTableHolder {
                         continue
                     }
                     for (row in array) {
-                        continue
                         if (row.isEmpty()) continue
                         if (row.size < 3) {
                             logger.warning("Table with name ${row[0]} contain too low columns")
