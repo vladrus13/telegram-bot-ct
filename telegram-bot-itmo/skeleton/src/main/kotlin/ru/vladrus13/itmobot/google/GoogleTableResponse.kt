@@ -23,7 +23,7 @@ class GoogleTableResponse {
         private val JSON_FACTORY: GsonFactory = GsonFactory.getDefaultInstance()
         private const val TOKENS_DIRECTORY_PATH = "tokens"
 
-        private val SCOPES = listOf(SheetsScopes.SPREADSHEETS_READONLY)
+        private val SCOPES = listOf(SheetsScopes.SPREADSHEETS)
         private const val CREDENTIALS_FILE_PATH = "/credentials.json"
 
         @Throws(IOException::class)
