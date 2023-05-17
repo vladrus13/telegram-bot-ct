@@ -11,6 +11,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0")
     implementation("org.telegram:telegrambots:5.2.0")
     implementation("org.jetbrains.exposed:exposed:0.17.13")
     implementation("org.postgresql:postgresql:42.5.4")

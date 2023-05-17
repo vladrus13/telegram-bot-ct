@@ -2,8 +2,10 @@ package ru.vladrus13.itmobot.plugin.practice
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.Permission
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.Spreadsheet
@@ -16,6 +18,7 @@ import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getCredentials
+import ru.vladrus13.itmobot.parallel.ThreadHolder
 
 class AddTable(override val parent: Menu) : Menu(parent) {
     override val childes: Array<Foldable> = arrayOf()
@@ -28,36 +31,6 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         get() = "makeTable"
 
     override fun isAccept(update: Update): Boolean = update.message.text == name
-
-    /**
-     * ublic static String createSpreadsheet(String title) throws IOException {
-     *         /* Load pre-authorized user credentials from the environment.
-     *            TODO(developer) - See https://developers.google.com/identity for
-     *             guides on implementing OAuth2 for your application. */
-     *     GoogleCredentials credentials = GoogleCredentials.getApplicationDefault()
-     *         .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
-     *     HttpRequestInitializer requstInitializer = new HttpCredentialsAdapter(
-     *         credentials);
-     *
-     *     // Create the sheets API client
-     *     Sheets service = new Sheets.Builder(new NetHttpTransport(),
-     *         GsonFactory.getDefaultInstance(),
-     *         requestInitializer)
-     *         .setApplicationName("Sheets samples")
-     *         .build();
-     *
-     *     // Create new spreadsheet with a title
-     *     Spreadsheet spreadsheet = new Spreadsheet()
-     *         .setProperties(new SpreadsheetProperties()
-     *             .setTitle(title));
-     *     spreadsheet = service.spreadsheets().create(spreadsheet)
-     *         .setFields("spreadsheetId")
-     *         .execute();
-     *     // Prints the new spreadsheet id
-     *     System.out.println("Spreadsheet ID: " + spreadsheet.getSpreadsheetId());
-     *     return spreadsheet.getSpreadsheetId();
-     *   }
-     */
 
     override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
         if (standardCommand(update, bot, user)) return
@@ -79,7 +52,7 @@ class AddTable(override val parent: Menu) : Menu(parent) {
                 SpreadsheetProperties()
                     .setTitle(name)
             )
-        val sheetsService = createSheetsService(name)
+        val sheetsService = createSheetsService()
 
         val request = sheetsService.spreadsheets().create(spreadsheet)
 
@@ -88,19 +61,36 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val mapper = ObjectMapper()
 
         val node = mapper.readTree(response)
-        val id = node.get("spreadsheetId").toString().substring(1, node.get("spreadsheetId").toString().length - 1)
-        val url = node.get("spreadsheetUrl").toString()
+        val id = deleteBrackets(node.get("spreadsheetId").toString())
+        val url = deleteBrackets(node.get("spreadsheetUrl").toString())
 
         // I need it for writing cells
 
         val body = ValueRange()
             .setValues(peopleList)
         val range = "Sheet1!A1:A" + peopleList.size
+        val secondRange = "Sheet1!A" + (peopleList.size) + ":A" + (peopleList.size * 2 - 1)
 
         val result: UpdateValuesResponse =
             sheetsService.spreadsheets().values().update(id, range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute()
+        val result2 = sheetsService.spreadsheets().values().update(id, secondRange, body)
+            .setValueInputOption("USER_ENTERED")
+            .execute()
+
+        val service = createDriveService()
+
+        insertPermission(service, id)
+
+
+
+        ThreadHolder.executorService.submit {
+            while (true) {
+
+                Thread.sleep(timeToReloadJobs)
+            }
+        }
 
         user.send(
             bot = bot,
@@ -110,15 +100,43 @@ class AddTable(override val parent: Menu) : Menu(parent) {
     }
 
     companion object {
-        private fun createSheetsService(text: String): Sheets {
-            val httpTransport: NetHttpTransport = GoogleNetHttpTransport.newTrustedTransport()
-            return Sheets.Builder(
-                httpTransport,
+        private const val APPLICATION_NAME = "ScoresBot"
+        private val JSON_FACTORY: GsonFactory = GsonFactory.getDefaultInstance()
+        private val HTTP_TRANSPORT: NetHttpTransport = GoogleNetHttpTransport.newTrustedTransport()
+        private fun createSheetsService() = Sheets.Builder(
+            HTTP_TRANSPORT,
+            JSON_FACTORY,
+            getCredentials(HTTP_TRANSPORT)
+        )
+            .setApplicationName(APPLICATION_NAME)
+            .build()
+
+        private fun createDriveService(): Drive =
+
+            Drive.Builder(
+                HTTP_TRANSPORT,
                 GsonFactory.getDefaultInstance(),
-                getCredentials(httpTransport)
+                getCredentials(HTTP_TRANSPORT)
             )
-                .setApplicationName(text)
-                .build()
-        }
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+
+        private fun deleteBrackets(str: String) =
+            if (str.length >= 2 && str.first() == '"' && str.last() == '"')
+                str.substring(1, str.length - 1)
+            else str
+
+        private fun insertPermission(service: Drive, fileId: String) =
+            service
+                .Permissions()
+                .create(
+                    fileId,
+                    // I don't understand why i can't create permission, maybe can update?
+                    Permission()
+                        .setType("user")
+                        .setEmailAddress("ct.36.y2021@gmail.com")
+                        .setRole("writer")
+                )
+                .execute()
     }
 }

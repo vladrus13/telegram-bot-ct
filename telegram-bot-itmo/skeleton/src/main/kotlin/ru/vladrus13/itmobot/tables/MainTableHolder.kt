@@ -3,7 +3,7 @@ package ru.vladrus13.itmobot.tables
 import ru.vladrus13.itmobot.google.GoogleTableResponse
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.logger
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadTable
+import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
 import ru.vladrus13.itmobot.utils.Utils
 import ru.vladrus13.itmobot.utils.Writer
 import java.util.concurrent.ConcurrentHashMap
@@ -12,7 +12,7 @@ class MainTableHolder {
     companion object {
         private val link: String = InitialProperties.mainProperties.getProperty("MAIN_TABLE")
 
-        private const val timeToChange: Long = timeToReloadTable
+        private const val timeToChange: Long = timeToReloadJobs
         val links: ConcurrentHashMap<String, String> = ConcurrentHashMap()
         val groupsTables: ConcurrentHashMap<String, ArrayList<String>> = ConcurrentHashMap()
         private val tables: HashMap<String, ArrayList<String>> = HashMap()
