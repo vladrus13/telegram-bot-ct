@@ -2,13 +2,13 @@ package ru.vladrus13.itmobot.parallel
 
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.bot
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadTable
+import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
 import ru.vladrus13.itmobot.tables.TableGroupsHolder
 
 class TableChangesHolder {
     companion object {
 
-        private const val timeToChange: Long = timeToReloadTable
+        private const val timeToChange: Long = timeToReloadJobs
 
         fun run() {
             ThreadHolder.executorService.submit {

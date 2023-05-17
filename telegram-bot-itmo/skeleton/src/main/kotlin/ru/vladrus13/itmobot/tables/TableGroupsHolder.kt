@@ -2,7 +2,7 @@ package ru.vladrus13.itmobot.tables
 
 import ru.vladrus13.itmobot.parallel.ThreadHolder
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.logger
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadTable
+import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
 import ru.vladrus13.itmobot.tables.schedule.ScheduleHolder
 import ru.vladrus13.itmobot.utils.Writer
 import java.util.*
@@ -13,7 +13,7 @@ class TableGroupsHolder {
     companion object {
         private val map: ConcurrentHashMap<String, Table> = ConcurrentHashMap()
         val changes: ConcurrentHashMap<String, ConcurrentLinkedDeque<ResultPair>> = ConcurrentHashMap()
-        private const val timeToChange: Long = timeToReloadTable
+        private const val timeToChange: Long = timeToReloadJobs
 
         var isReady = false
 
