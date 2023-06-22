@@ -1,26 +1,30 @@
 package ru.vladrus13.itmobot.plugin.practice
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
-import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.drive.Drive
-import com.google.api.services.drive.model.Permission
-import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse
 import com.google.api.services.sheets.v4.model.ValueRange
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getCredentials
-import ru.vladrus13.itmobot.parallel.ThreadHolder
+import ru.vladrus13.itmobot.parallel.CoroutineThreadOverseer
+import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.createDriveService
+import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.createSheetsService
+import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.getTableInfo
+import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.insertPermission
+import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
+import java.util.logging.Logger
 
 class AddTable(override val parent: Menu) : Menu(parent) {
+    override val logger: Logger
+        get() = super.logger
     override val childes: Array<Foldable> = arrayOf()
 
     override fun menuHelp() = "Пункт создания таблицы"
@@ -38,14 +42,14 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val listTexts = text
             .split("\n")
             .filter(String::isNotBlank)
-            .map { item -> listOf(item) };
         if (text.isBlank()) {
             unknownCommand(bot, user)
         }
 
         // All what I need for creating table
-        val name: String = listTexts[0][0]
-        val peopleList = listTexts.subList(1, listTexts.size)
+        val name: String = listTexts[0]
+        val link: String = listTexts[1]
+        val peopleList = listTexts.subList(2, listTexts.size)
 
         val spreadsheet = Spreadsheet()
             .setProperties(
@@ -54,89 +58,34 @@ class AddTable(override val parent: Menu) : Menu(parent) {
             )
         val sheetsService = createSheetsService()
 
-        val request = sheetsService.spreadsheets().create(spreadsheet)
-
-        val response: String = request.execute().toString()
-
-        val mapper = ObjectMapper()
-
-        val node = mapper.readTree(response)
-        val id = deleteBrackets(node.get("spreadsheetId").toString())
-        val url = deleteBrackets(node.get("spreadsheetUrl").toString())
+        val dictData = getTableInfo(sheetsService, spreadsheet)
+        val id: String = dictData["spreadsheetId"] ?: ""
+        val url: String = dictData["spreadsheetUrl"] ?: ""
 
         // I need it for writing cells
-
         val body = ValueRange()
-            .setValues(peopleList)
+            .setValues(peopleList.map { item -> listOf(item) })
         val range = "Sheet1!A1:A" + peopleList.size
-        val secondRange = "Sheet1!A" + (peopleList.size) + ":A" + (peopleList.size * 2 - 1)
 
         val result: UpdateValuesResponse =
             sheetsService.spreadsheets().values().update(id, range, body)
                 .setValueInputOption("USER_ENTERED")
                 .execute()
-        val result2 = sheetsService.spreadsheets().values().update(id, secondRange, body)
-            .setValueInputOption("USER_ENTERED")
-            .execute()
 
         val service = createDriveService()
-
         insertPermission(service, id)
 
-
-
-        ThreadHolder.executorService.submit {
-            while (true) {
-
-                Thread.sleep(timeToReloadJobs)
-            }
-        }
+//        runBlocking {
+//            val job = launch {
+//                NeercParserInfo(id, url).
+//            }
+//            CoroutineThreadOverseer.addTask(job)
+//        }
 
         user.send(
             bot = bot,
             text = url,
             replyKeyboard = getReplyKeyboard(user)
         )
-    }
-
-    companion object {
-        private const val APPLICATION_NAME = "ScoresBot"
-        private val JSON_FACTORY: GsonFactory = GsonFactory.getDefaultInstance()
-        private val HTTP_TRANSPORT: NetHttpTransport = GoogleNetHttpTransport.newTrustedTransport()
-        private fun createSheetsService() = Sheets.Builder(
-            HTTP_TRANSPORT,
-            JSON_FACTORY,
-            getCredentials(HTTP_TRANSPORT)
-        )
-            .setApplicationName(APPLICATION_NAME)
-            .build()
-
-        private fun createDriveService(): Drive =
-
-            Drive.Builder(
-                HTTP_TRANSPORT,
-                GsonFactory.getDefaultInstance(),
-                getCredentials(HTTP_TRANSPORT)
-            )
-                .setApplicationName(APPLICATION_NAME)
-                .build();
-
-        private fun deleteBrackets(str: String) =
-            if (str.length >= 2 && str.first() == '"' && str.last() == '"')
-                str.substring(1, str.length - 1)
-            else str
-
-        private fun insertPermission(service: Drive, fileId: String) =
-            service
-                .Permissions()
-                .create(
-                    fileId,
-                    // I don't understand why i can't create permission, maybe can update?
-                    Permission()
-                        .setType("user")
-                        .setEmailAddress("ct.36.y2021@gmail.com")
-                        .setRole("writer")
-                )
-                .execute()
     }
 }
