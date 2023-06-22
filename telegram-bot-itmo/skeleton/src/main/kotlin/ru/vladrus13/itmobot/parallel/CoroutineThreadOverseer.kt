@@ -6,7 +6,7 @@ class CoroutineThreadOverseer {
     companion object {
         private val jobs: MutableList<Job> = mutableListOf()
 
-        suspend fun addTask(job: Job) {
+        fun addTask(job: Job) {
             jobs.add(job)
         }
 
