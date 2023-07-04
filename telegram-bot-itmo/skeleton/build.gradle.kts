@@ -13,6 +13,7 @@ repositories {
 dependencies {
     implementation("org.telegram:telegrambots:5.2.0")
     implementation("org.jetbrains.exposed:exposed:0.17.13")
+    implementation("org.postgresql:postgresql:42.5.4")
     implementation("mysql:mysql-connector-java:8.0.25")
     implementation("com.google.api-client:google-api-client:1.31.5")
     implementation("com.google.oauth-client:google-oauth-client:1.31.5")
