@@ -30,7 +30,7 @@ class AddTable(override val parent: Menu) : Menu(parent) {
     override fun menuHelp() = "Пункт создания таблицы"
 
     override val name: String
-        get() = "Создать новую таблицу (введите название)"
+        get() = "Создать новую таблицу (введите название таблицы, а в следующих строка ФИО студентов)"
     override val systemName: String
         get() = "makeTable"
 
@@ -48,8 +48,8 @@ class AddTable(override val parent: Menu) : Menu(parent) {
 
         // All what I need for creating table
         val name: String = listTexts[0]
-        val link: String = listTexts[1]
-        val peopleList = listTexts.subList(2, listTexts.size)
+//        val link: String = listTexts[1]
+        val peopleList = listTexts.subList(1, listTexts.size)
 
         val spreadsheet = Spreadsheet()
             .setProperties(
@@ -62,18 +62,21 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val id: String = dictData["spreadsheetId"] ?: ""
         val url: String = dictData["spreadsheetUrl"] ?: ""
 
-        // I need it for writing cells
-        val body = ValueRange()
-            .setValues(peopleList.map { item -> listOf(item) })
-        val range = "Sheet1!A1:A" + peopleList.size
-
-        val result: UpdateValuesResponse =
-            sheetsService.spreadsheets().values().update(id, range, body)
-                .setValueInputOption("USER_ENTERED")
-                .execute()
+        Utils.generateMainList(sheetsService, id, peopleList)
+//        // I need it for writing cells
+//        val body = ValueRange()
+//            .setValues(peopleList.map { item -> listOf(item) })
+//        val range = "Sheet1!A1:A" + peopleList.size
+//
+//        val result: UpdateValuesResponse =
+//            sheetsService.spreadsheets().values().update(id, range, body)
+//                .setValueInputOption("USER_ENTERED")
+//                .execute()
 
         val service = createDriveService()
         insertPermission(service, id)
+
+
 
 //        runBlocking {
 //            val job = launch {
