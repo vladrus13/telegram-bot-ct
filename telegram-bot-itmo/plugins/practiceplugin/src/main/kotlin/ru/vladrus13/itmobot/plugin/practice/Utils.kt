@@ -3,9 +3,8 @@ package ru.vladrus13.itmobot.plugin.practice
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest
 import com.google.api.services.sheets.v4.model.Request
-import com.google.api.services.sheets.v4.model.UpdateValuesResponse
 import com.google.api.services.sheets.v4.model.ValueRange
-import java.util.Arrays.asList
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 
 class Utils {
     companion object {
@@ -38,11 +37,13 @@ class Utils {
                 .setValueInputOption("USER_ENTERED")
                 .execute()
 
-            // requests
             val requests = mutableListOf<Request>()
-            requests.add(RequestMaker.updateBorders(0, 0, body.getValues().size, 0, 1))
-            requests.add(RequestMaker.updateBorders(0, 0, body.getValues().size, 1, 2))
-            requests.add(RequestMaker.updateBorders(0, 0, 1, 0, body.getValues().first().size))
+            // Border
+            requests.add(GridRequestMaker(0, 0, body.getValues().size, 0, 1).updateBorders())
+            requests.add(GridRequestMaker(0, 0, body.getValues().size, 1, 2).updateBorders())
+            requests.add(GridRequestMaker(0, 0, 1, 0, body.getValues().first().size).updateBorders())
+            // Align
+            requests.add(GridRequestMaker(0, 0, body.getValues().size, 0, 2).updateCells())
 
             val req = BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
 
