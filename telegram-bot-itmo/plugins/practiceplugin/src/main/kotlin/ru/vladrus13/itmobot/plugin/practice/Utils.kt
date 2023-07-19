@@ -1,10 +1,10 @@
 package ru.vladrus13.itmobot.plugin.practice
 
+import com.google.api.client.json.GenericJson
 import com.google.api.services.sheets.v4.Sheets
-import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest
-import com.google.api.services.sheets.v4.model.Request
-import com.google.api.services.sheets.v4.model.ValueRange
+import com.google.api.services.sheets.v4.model.*
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
+import java.util.function.Function
 
 class Utils {
     companion object {
@@ -16,7 +16,24 @@ class Utils {
             else str
 
         fun generateList(sheetsService: Sheets, id: String, students: List<String>) {
+            val homeworkCount = sheetsService.spreadsheets().get(id).size
+            val name = "Д$homeworkCount"
 
+            val properties = SheetProperties().setTitle(name)
+
+            val requests = listOf(
+                Request().setAddSheet(AddSheetRequest().setProperties(properties))
+            )
+
+            val req = BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
+
+            sheetsService.spreadsheets().batchUpdate(
+                id,
+                req
+            ).execute()
+
+
+            fillInStudents(sheetsService, id, students, name) { ind -> "=Results!B$ind" }
         }
 
 //        fun getCurrentBody(sheetsService: Sheets, id: String): MutableList<MutableList<String>> {
@@ -24,12 +41,32 @@ class Utils {
 //        }
 
         fun generateMainList(sheetsService: Sheets, id: String, students: List<String>) {
+            val properties = SheetProperties().setIndex(0).setTitle("Results")
+
+            val update = UpdateSheetPropertiesRequest()
+                .setProperties(properties)
+                .setFields("title")
+
+            val requests = listOf(Request().setUpdateSheetProperties(update))
+
+            val req = BatchUpdateSpreadsheetRequest()
+                .setRequests(requests)
+
+            sheetsService.spreadsheets().batchUpdate(
+                id,
+                req
+            ).execute()
+
+            fillInStudents(sheetsService, id, students, "Results") { ind -> "=SUM(C$ind:$ind)*$const" }
+        }
+
+        private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, sheet: String, getTotalCount: Function<Int, String>) {
             val listBody = mutableListOf(listOf("ФИО", "Total"))
-            listBody.addAll(students.mapIndexed { index, name -> listOf(name, "=SUM(C${index + 2}:${index + 2})*$const") })
+            listBody.addAll(students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
 
             val body = ValueRange().setValues(listBody.toList())
 
-            val range = "Sheet1!A1:B" + body.getValues().size
+            val range = "$sheet!A1:B" + body.getValues().size
 
             // Enter input
             sheetsService.spreadsheets().values()

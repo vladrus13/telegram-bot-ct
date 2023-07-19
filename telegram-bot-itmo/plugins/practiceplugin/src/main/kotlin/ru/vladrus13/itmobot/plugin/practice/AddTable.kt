@@ -63,6 +63,8 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val url: String = dictData["spreadsheetUrl"] ?: ""
 
         Utils.generateMainList(sheetsService, id, peopleList)
+
+        Utils.generateList(sheetsService, id, peopleList)
 //        // I need it for writing cells
 //        val body = ValueRange()
 //            .setValues(peopleList.map { item -> listOf(item) })
