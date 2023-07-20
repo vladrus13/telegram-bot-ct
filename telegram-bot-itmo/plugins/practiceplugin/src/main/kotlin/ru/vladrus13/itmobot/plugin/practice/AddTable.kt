@@ -64,7 +64,8 @@ class AddTable(override val parent: Menu) : Menu(parent) {
 
         Utils.generateMainList(sheetsService, id, peopleList)
 
-        Utils.generateList(sheetsService, id, peopleList)
+        Utils.generateList(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
+        Utils.generateList(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
 //        // I need it for writing cells
 //        val body = ValueRange()
 //            .setValues(peopleList.map { item -> listOf(item) })

@@ -1,9 +1,9 @@
 package ru.vladrus13.itmobot.plugin.practice
 
-import com.google.api.client.json.GenericJson
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
+import java.lang.IllegalArgumentException
 import java.util.function.Function
 
 class Utils {
@@ -15,8 +15,8 @@ class Utils {
                 str.substring(1, str.length - 1)
             else str
 
-        fun generateList(sheetsService: Sheets, id: String, students: List<String>) {
-            val homeworkCount = sheetsService.spreadsheets().get(id).size
+        fun generateList(sheetsService: Sheets, id: String, students: List<String>, tasks: List<String>) {
+            val homeworkCount = sheetsService.spreadsheets().get(id).execute().sheets.size
             val name = "Д$homeworkCount"
 
             val properties = SheetProperties().setTitle(name)
@@ -31,7 +31,6 @@ class Utils {
                 id,
                 req
             ).execute()
-
 
             fillInStudents(sheetsService, id, students, name) { ind -> "=Results!B$ind" }
         }
@@ -60,13 +59,24 @@ class Utils {
             fillInStudents(sheetsService, id, students, "Results") { ind -> "=SUM(C$ind:$ind)*$const" }
         }
 
-        private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, sheet: String, getTotalCount: Function<Int, String>) {
+        private fun getSheetIdFromTitle(sheetsService: Sheets, id: String, title: String): Int {
+            for (sheet in sheetsService.spreadsheets().get(id).execute().sheets) {
+                if (sheet.properties.title == title)
+                    return sheet.properties.sheetId
+            }
+            throw IllegalArgumentException("No sheet with current title")
+        }
+
+        /**
+         * sheet is "[0-9]+Д" or "Results"
+         */
+        private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, title: String, getTotalCount: Function<Int, String>) {
             val listBody = mutableListOf(listOf("ФИО", "Total"))
             listBody.addAll(students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
 
             val body = ValueRange().setValues(listBody.toList())
 
-            val range = "$sheet!A1:B" + body.getValues().size
+            val range = "$title!A1:B" + body.getValues().size
 
             // Enter input
             sheetsService.spreadsheets().values()
@@ -75,12 +85,14 @@ class Utils {
                 .execute()
 
             val requests = mutableListOf<Request>()
+
+            val sheetIndex = getSheetIdFromTitle(sheetsService, id, title)
             // Border
-            requests.add(GridRequestMaker(0, 0, body.getValues().size, 0, 1).updateBorders())
-            requests.add(GridRequestMaker(0, 0, body.getValues().size, 1, 2).updateBorders())
-            requests.add(GridRequestMaker(0, 0, 1, 0, body.getValues().first().size).updateBorders())
+            requests.add(GridRequestMaker(sheetIndex, 0, body.getValues().size, 0, 1).updateBorders())
+            requests.add(GridRequestMaker(sheetIndex, 0, body.getValues().size, 1, 2).updateBorders())
+            requests.add(GridRequestMaker(sheetIndex, 0, 1, 0, body.getValues().first().size).updateBorders())
             // Align
-            requests.add(GridRequestMaker(0, 0, body.getValues().size, 0, 2).updateCells())
+            requests.add(GridRequestMaker(sheetIndex, 0, body.getValues().size, 0, 2).updateCells())
 
             val req = BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
 
