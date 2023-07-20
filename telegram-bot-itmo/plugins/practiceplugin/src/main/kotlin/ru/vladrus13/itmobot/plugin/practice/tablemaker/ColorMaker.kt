@@ -4,7 +4,7 @@ import com.google.api.services.sheets.v4.model.Color
 
 class ColorMaker {
     companion object {
-        fun getColor(blue: Float, green: Float, red: Float): Color = Color()
+        private fun getColor(blue: Float, green: Float, red: Float): Color = Color()
             .setBlue(blue)
             .setGreen(green)
             .setRed(red)

@@ -47,8 +47,14 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         }
 
         // All what I need for creating table
+        // Example input:
+        // """
+        // TestNameTable
+        // Grunskii Alexey
+        // Vladimir Kuznetsov
+        // """
+
         val name: String = listTexts[0]
-//        val link: String = listTexts[1]
         val peopleList = listTexts.subList(1, listTexts.size)
 
         val spreadsheet = Spreadsheet()
@@ -66,27 +72,9 @@ class AddTable(override val parent: Menu) : Menu(parent) {
 
         Utils.generateList(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
         Utils.generateList(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
-//        // I need it for writing cells
-//        val body = ValueRange()
-//            .setValues(peopleList.map { item -> listOf(item) })
-//        val range = "Sheet1!A1:A" + peopleList.size
-//
-//        val result: UpdateValuesResponse =
-//            sheetsService.spreadsheets().values().update(id, range, body)
-//                .setValueInputOption("USER_ENTERED")
-//                .execute()
 
         val service = createDriveService()
         insertPermission(service, id)
-
-
-
-//        runBlocking {
-//            val job = launch {
-//                NeercParserInfo(id, url).
-//            }
-//            CoroutineThreadOverseer.addTask(job)
-//        }
 
         user.send(
             bot = bot,

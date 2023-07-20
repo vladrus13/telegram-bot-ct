@@ -2,7 +2,6 @@ package ru.vladrus13.itmobot.plugin.practice.tablemaker
 
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getBlackColor
 
 /**
@@ -13,16 +12,14 @@ class GridRequestMaker(
     firstRow: Int, lastRow: Int,
     firstColumn: Int, lastColumn: Int
 ) {
-    val range: GridRange = GridRange()
+    private val range: GridRange = GridRange()
         .setSheetId(sheetId)
         .setStartRowIndex(firstRow)
         .setEndRowIndex(lastRow)
         .setStartColumnIndex(firstColumn)
         .setEndColumnIndex(lastColumn)
 
-    override fun toString() = range.toString()
-
-    fun updateBorders(): Request {
+    fun colorizeBorders(): Request {
         val border = Border()
             .setColor(getBlackColor())
             .setWidth(1)
@@ -38,7 +35,7 @@ class GridRequestMaker(
         return Request().setUpdateBorders(updateBorders)
     }
 
-    fun updateCells(): Request {
+    fun formatCells(): Request {
         val padding = Padding()
             .setBottom(1)
             .setTop(1)
@@ -84,8 +81,14 @@ class GridRequestMaker(
         )
 
         /**
-         * Getting values like [0, t)
-         * Return values like [1, t-1]
+         * This function return correct range string
+         *
+         * @param sheetTitle is $title
+         * @param firstRow in [0, t)
+         * @param lastRow in [0, t)
+         * @param firstColumn in [0, t)
+         * @param lastColumn in [0, t)
+         * @return "$title![A-Z]+NUM:[A-Z]+NUM", where NUM is natural number in [1, +inf)
          */
         fun getPrettyRange(
             sheetTitle: String,
