@@ -2,7 +2,6 @@ package ru.vladrus13.itmobot.bot
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.Chatted
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
@@ -77,7 +76,4 @@ class StartCommand(override val parent: Menu) : Command() {
         get(bot, user, user, true)
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat) {
-        get(bot, user, chat, false)
-    }
 }

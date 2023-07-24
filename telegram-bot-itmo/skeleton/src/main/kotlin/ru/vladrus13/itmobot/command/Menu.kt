@@ -5,7 +5,6 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.Chatted
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.bean.UserPlugins
@@ -237,11 +236,4 @@ abstract class Menu(
         return replyKeyboardMarkup
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat) {
-        if (standardChatHelp(update, bot, chat, user)) return
-        chat.send(
-            bot = bot,
-            text = "Вы пытаетесь выполнить папку("
-        )
-    }
 }

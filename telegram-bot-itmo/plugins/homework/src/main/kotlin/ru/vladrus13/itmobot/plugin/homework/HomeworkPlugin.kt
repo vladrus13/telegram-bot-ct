@@ -1,7 +1,6 @@
 package ru.vladrus13.itmobot.plugin.homework
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
@@ -17,8 +16,6 @@ class HomeworkPlugin : Plugin() {
     override val name: String = "HW плагин"
     override val systemName: String = "homework"
     override val password: String? = null
-    override val isAvailableUser: Boolean = true
-    override val isAvailableChat: Boolean = false
 
     class Team(
         val id: Long,

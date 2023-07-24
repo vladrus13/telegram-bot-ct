@@ -2,7 +2,6 @@ package ru.vladrus13.itmobot.bot.results
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
 import ru.vladrus13.itmobot.command.Menu
@@ -61,10 +60,4 @@ class ResultsGet(override val parent: Menu) : Command() {
         )
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat) {
-        chat.send(
-            bot = bot,
-            text = "Получение результатов доступно только в личных сообщениях!"
-        )
-    }
 }

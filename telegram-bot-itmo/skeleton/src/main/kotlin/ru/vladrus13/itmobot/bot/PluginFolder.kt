@@ -11,7 +11,6 @@ import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.plugins.PluginsHolder
 import ru.vladrus13.itmobot.utils.Utils
-import java.util.*
 
 class PluginFolder(override val parent: Menu) : Menu(parent) {
     override val childes: Array<Foldable>
@@ -38,17 +37,9 @@ class PluginFolder(override val parent: Menu) : Menu(parent) {
         bot: TelegramLongPollingBot,
         chatted: Chatted,
         userPlugins: UserPlugins,
-        namePlugin: String,
-        type: ChattedType
+        namePlugin: String
     ) {
-        val plugin = when (type) {
-            ChattedType.USER -> {
-                PluginsHolder.getPluginByName(namePlugin)
-            }
-            ChattedType.CHAT -> {
-                PluginsHolder.getPluginBySystemName(namePlugin)
-            }
-        }
+        val plugin = PluginsHolder.getPluginByName(namePlugin)
         if (plugin != null) {
             if (userPlugins.plugins.contains(plugin.systemName)) {
                 userPlugins.plugins.remove(plugin.systemName)
@@ -58,20 +49,6 @@ class PluginFolder(override val parent: Menu) : Menu(parent) {
                 )
                 plugin.onDisable(chatted)
             } else {
-                if (type == ChattedType.CHAT && !plugin.isAvailableChat) {
-                    chatted.send(
-                        bot = bot,
-                        text = "Плагин \"${plugin.name}\" не поддерживает группы"
-                    )
-                    return
-                }
-                if (type == ChattedType.USER && !plugin.isAvailableUser) {
-                    chatted.send(
-                        bot = bot,
-                        text = "Плагин \"${plugin.name}\" не поддерживает личные чаты"
-                    )
-                    return
-                }
                 userPlugins.plugins.add(plugin.systemName)
                 chatted.send(
                     bot = bot,
@@ -95,21 +72,7 @@ class PluginFolder(override val parent: Menu) : Menu(parent) {
         val text = update.message.text!!
         val userPlugins = user.getPlugins()
 
-        save(bot, user, userPlugins, text, ChattedType.USER)
+        save(bot, user, userPlugins, text)
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat) {
-        if (standardChatHelp(update, bot, chat, user)) return
-        val text = update.message.text!!
-        val splitted = text.split(' ')
-        if (splitted.size == 1) {
-            chat.send(
-                bot = bot,
-                text = "Не введено имя плагина"
-            )
-        } else {
-            val pluginName = splitted[1]
-            save(bot, chat, DataBase.get(chat.chatId), pluginName, ChattedType.CHAT)
-        }
-    }
 }

@@ -2,7 +2,6 @@ package ru.vladrus13.itmobot.bot
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.properties.InitialProperties
@@ -52,41 +51,6 @@ object ItmoBot : TelegramLongPollingBot() {
         DataBase.put(user.chatId, user)
     }
 
-    private fun onChat(update: Update) {
-        if (!TableGroupsHolder.isReady) {
-            return
-        }
-        if (!update.message.text.startsWith("/")) {
-            return
-        }
-        val user = DataBase.get<User>(update.message.from.id)
-        user.username = update.message.from.userName
-        val chat = DataBase.get<Chat>(update.message.chatId)
-        if (update.message.chat.title != null) {
-            logger.info("Receive message from chat ${update.message.chat.title}: ${update.message.text}")
-            chat.name = update.message.chat.title
-        } else {
-            logger.info("Receive message from chat with chatId: ${update.message.chatId}: ${update.message.text}")
-        }
-        try {
-            val current = mainFolder.folder(
-                LinkedList(PathsUtils.foldersChatSplit(update.message.text!!)),
-                user.getPlugins()
-            )
-            current.get(update, this, user, chat)
-            DataBase.put(user.chatId, user)
-            DataBase.put(chat.chatId, chat)
-        } catch (e: Exception) {
-            Writer.printStackTrace(logger, e)
-            execute(
-                Messager.getMessage(
-                    chatId = chat.chatId,
-                    text = "Произошла ошибка во время исполнения команды!"
-                )
-            )
-        }
-    }
-
     override fun onUpdateReceived(update: Update?) {
         if (update == null || update.message == null || update.message.chatId == null) {
             return
@@ -96,7 +60,8 @@ object ItmoBot : TelegramLongPollingBot() {
             if (update.message.text == null) update.message.text = ""
             try {
                 if (update.message.chat.isGroupChat || update.message.chat.isSuperGroupChat) {
-                    onChat(update)
+                    logger.warning("Chats are not supported: received update from chat with id [${update.message.chatId}]," +
+                            " update [${update.message}]")
                 } else {
                     if (update.message.isUserMessage) {
                         onUser(update)

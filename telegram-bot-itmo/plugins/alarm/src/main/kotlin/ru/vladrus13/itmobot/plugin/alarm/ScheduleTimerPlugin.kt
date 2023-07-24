@@ -5,7 +5,6 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.Chatted
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
@@ -25,22 +24,15 @@ class ScheduleTimerPlugin : Plugin() {
     override val name: String = "Поставщик расписания"
     override val systemName: String = "scheduleTimer"
     override val password: String? = null
-    override val isAvailableUser: Boolean
-        get() = true
-    override val isAvailableChat: Boolean
-        get() = true
 
     object ScheduleTimePluginTable : Table() {
         val id = long("chat_id").uniqueIndex()
-        val type = varchar("type", 25)
     }
 
     class ScheduleTimerRow(
-        val chatId: Long,
-        val type: String = "user"
+        val chatId: Long
     ) {
-        constructor(chat: Chat) : this(chat.chatId, "chat")
-        constructor(user: User) : this(user.chatId, "user")
+        constructor(user: User) : this(user.chatId)
     }
 
     class OnPluginChatId : DataBaseEntity<ScheduleTimerRow>() {
@@ -51,13 +43,10 @@ class ScheduleTimerPlugin : Plugin() {
 
         override fun getNew(chatId: Long): ScheduleTimerRow = ScheduleTimerRow(chatId)
 
-        override fun set(o: ScheduleTimerRow, it: UpdateBuilder<Number>) {
-            it[ScheduleTimePluginTable.type] = o.type
-        }
+        override fun set(o: ScheduleTimerRow, it: UpdateBuilder<Number>) = Unit
 
         override fun get(result: ResultRow): ScheduleTimerRow = ScheduleTimerRow(
             result[ScheduleTimePluginTable.id],
-            result[ScheduleTimePluginTable.type]
         )
 
         override val name: String = "ScheduleTimerPluginChatId"
@@ -100,28 +89,9 @@ class ScheduleTimerPlugin : Plugin() {
                 }
             }
 
-            fun onChat(it: ScheduleTimerRow) {
-                val chat = DataBase.get<Chat>(it.chatId)
-                if (chat.group != null) {
-                    val temp = ScheduleHolder.table.toStringBuilder(chat, null, TimeUtils.getDay())
-                    chat.send(
-                        bot = bot,
-                        text = "${getText()}\n<code>${temp}</code>",
-                        other = {
-                            it.enableHtml(true)
-                        }
-                    )
-                }
-            }
-
             override fun run() {
                 DataBaseParser.get<ScheduleTimerRow> { Op.TRUE }.stream()
-                    .forEach {
-                        when (it.type) {
-                            "user" -> onUser(it)
-                            "chat" -> onChat(it)
-                        }
-                    }
+                    .forEach(::onUser)
             }
         }, nextDay.time, 86400000)
     }
@@ -131,7 +101,6 @@ class ScheduleTimerPlugin : Plugin() {
     override fun onEnable(chatted: Chatted) {
         val row = when (chatted) {
             is User -> ScheduleTimerRow(chatted)
-            is Chat -> ScheduleTimerRow(chatted)
             else -> null
         }
         if (row != null) {
@@ -142,7 +111,6 @@ class ScheduleTimerPlugin : Plugin() {
     override fun onDisable(chatted: Chatted) {
         val row = when (chatted) {
             is User -> ScheduleTimerRow(chatted)
-            is Chat -> ScheduleTimerRow(chatted)
             else -> null
         }
         if (row != null) {

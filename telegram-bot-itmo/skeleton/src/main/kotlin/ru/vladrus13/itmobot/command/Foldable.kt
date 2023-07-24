@@ -2,7 +2,6 @@ package ru.vladrus13.itmobot.command
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.User
 import java.util.logging.Logger
 
@@ -19,5 +18,4 @@ interface Foldable {
 
     fun isAccept(update: Update): Boolean
     fun get(update: Update, bot: TelegramLongPollingBot, user: User)
-    fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat)
 }

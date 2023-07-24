@@ -75,7 +75,6 @@ class DataBaseParser {
     }
 }
 
-@Suppress("UNCHECKED_CAST")
 abstract class DataBaseEntity<T> {
 
     abstract val name: String

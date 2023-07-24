@@ -10,8 +10,6 @@ class ShipperPlugin : Plugin() {
     override val name: String = "Шиппер"
     override val systemName: String = "shipperPlugin"
     override val password: String? = null
-    override val isAvailableUser: Boolean = true
-    override val isAvailableChat: Boolean = true
 
     override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> {
         return listOf(

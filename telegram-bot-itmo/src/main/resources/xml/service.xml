@@ -15,9 +15,6 @@
     <datatable id="subjects_table"
                class="ru.vladrus13.itmobot.database.entities.SubjectsParser"
                subclass="ru.vladrus13.itmobot.bean.UsersSubjects"/>
-    <datatable id="chat_table"
-               class="ru.vladrus13.itmobot.database.entities.ChatParser"
-               subclass="ru.vladrus13.itmobot.bean.Chat"/>
     <datatable id="updates_user_table"
                class="ru.vladrus13.itmobot.database.entities.UpdateUserParser"
                subclass="ru.vladrus13.itmobot.bean.UpdateBotUser"/>

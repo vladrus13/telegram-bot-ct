@@ -10,9 +10,6 @@ abstract class Plugin {
     abstract val systemName: String
     abstract val password: String?
 
-    abstract val isAvailableUser: Boolean
-    abstract val isAvailableChat: Boolean
-
     abstract fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>>
 
     abstract fun init()

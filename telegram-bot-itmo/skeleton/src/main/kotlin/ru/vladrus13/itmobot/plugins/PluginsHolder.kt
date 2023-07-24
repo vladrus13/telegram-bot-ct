@@ -26,15 +26,6 @@ class PluginsHolder {
             }
         }
 
-        fun getPluginBySystemName(name: String): Plugin? {
-            for (plugin in plugins) {
-                if (plugin.systemName == name) {
-                    return plugin
-                }
-            }
-            return null
-        }
-
         fun getFoldable(o: Foldable): ArrayList<Pair<Plugin, Foldable>> {
             val list = ArrayList<Pair<Plugin, Foldable>>()
             for (plugin in plugins) {

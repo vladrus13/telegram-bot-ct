@@ -5,7 +5,6 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.Chatted
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
@@ -66,16 +65,4 @@ class GroupChoose(override val parent: Menu) : Menu(parent) {
         }
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat) {
-        if (standardChatHelp(update, bot, chat, user)) return
-        val splitted = update.message.text.split(' ')
-        if (splitted.size == 1) {
-            chat.send(
-                bot = bot,
-                text = "Нужно написать группу"
-            )
-            return
-        }
-        get(PathsUtils.MessagePath(update.message.text), bot, chat)
-    }
 }

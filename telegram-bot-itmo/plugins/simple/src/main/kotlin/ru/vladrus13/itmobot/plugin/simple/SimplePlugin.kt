@@ -13,10 +13,6 @@ class SimplePlugin : Plugin() {
         get() = "simplePlugin"
     override val password: String?
         get() = null
-    override val isAvailableUser: Boolean
-        get() = true
-    override val isAvailableChat: Boolean
-        get() = true
 
     override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> = emptyList()
 
