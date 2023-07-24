@@ -1,15 +1,14 @@
 package ru.vladrus13.itmobot.tables
 
+import org.apache.logging.log4j.kotlin.Logging
 import ru.vladrus13.itmobot.google.GoogleTableResponse
 import ru.vladrus13.itmobot.properties.InitialProperties
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.logger
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadTable
 import ru.vladrus13.itmobot.utils.Utils
-import ru.vladrus13.itmobot.utils.Writer
 import java.util.concurrent.ConcurrentHashMap
 
 class MainTableHolder {
-    companion object {
+    companion object : Logging {
         private val link: String = InitialProperties.mainProperties.getProperty("MAIN_TABLE")
 
         private const val timeToChange: Long = timeToReloadTable
@@ -25,13 +24,13 @@ class MainTableHolder {
                     try {
                         array = GoogleTableResponse.reload(link, name, "A2:Z")
                     } catch (e: Exception) {
-                        Writer.printStackTrace(logger, e)
+                        logger.error("Something went wrong", e)
                         continue
                     }
                     for (row in array) {
                         if (row.isEmpty()) continue
                         if (row.size < 3) {
-                            logger.warning("Table with name ${row[0]} contain too low columns")
+                            logger.warn("Table with name ${row[0]} contain too low columns")
                             continue
                         }
                         if (!tables.containsKey(row[0])) {
@@ -59,7 +58,7 @@ class MainTableHolder {
                     try {
                         linksArray = GoogleTableResponse.reload(link, name, "D:E")
                     } catch (e: Exception) {
-                        Writer.printStackTrace(logger, e)
+                        logger.error("Something went wrong", e)
                         continue
                     }
                     val tableNames = ArrayList<String>()
@@ -73,7 +72,7 @@ class MainTableHolder {
                     try {
                         linksArray = GoogleTableResponse.reload(link, name, "A:B")
                     } catch (e: Exception) {
-                        Writer.printStackTrace(logger, e)
+                        logger.error("Something went wrong", e)
                         continue
                     }
                     val parts: ArrayList<String> = ArrayList()

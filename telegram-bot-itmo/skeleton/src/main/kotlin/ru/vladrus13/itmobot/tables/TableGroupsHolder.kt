@@ -1,16 +1,15 @@
 package ru.vladrus13.itmobot.tables
 
+import org.apache.logging.log4j.kotlin.Logging
 import ru.vladrus13.itmobot.parallel.ThreadHolder
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.logger
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadTable
 import ru.vladrus13.itmobot.tables.schedule.ScheduleHolder
-import ru.vladrus13.itmobot.utils.Writer
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 
 class TableGroupsHolder {
-    companion object {
+    companion object : Logging {
         private val map: ConcurrentHashMap<String, Table> = ConcurrentHashMap()
         val changes: ConcurrentHashMap<String, ConcurrentLinkedDeque<ResultPair>> = ConcurrentHashMap()
         private const val timeToChange: Long = timeToReloadTable
@@ -42,7 +41,7 @@ class TableGroupsHolder {
                         try {
                             MainTableHolder.reload()
                         } catch (e: Exception) {
-                            Writer.printStackTrace(logger, e)
+                            logger.error("Something went wrong", e)
                         }
                         logger.info("=== Main table reload finished. Time = ${Date().time - current.time} ms")
                         current = Date()
@@ -50,7 +49,7 @@ class TableGroupsHolder {
                         try {
                             ScheduleHolder.reload()
                         } catch (e: Exception) {
-                            Writer.printStackTrace(logger, e)
+                            logger.error("Something went wrong", e)
                         }
                         logger.info("=== Schedule reload finished. Time = ${Date().time - current.time} ms")
                         for (table in map.elements()) {
@@ -69,7 +68,7 @@ class TableGroupsHolder {
                         Thread.sleep(timeToChange)
                     }
                 } catch (e: Exception) {
-                    Writer.printStackTrace(logger = logger, e)
+                    logger.error("Something went wrong", e)
                 }
             }
         }

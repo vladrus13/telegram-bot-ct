@@ -1,12 +1,12 @@
 package ru.vladrus13.itmobot.plugins
 
+import org.apache.logging.log4j.kotlin.Logging
 import ru.vladrus13.itmobot.command.Foldable
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.logger
 import ru.vladrus13.itmobot.xml.XMLParser
 import kotlin.reflect.full.primaryConstructor
 
 class PluginsHolder {
-    companion object {
+    companion object : Logging {
         val plugins
             get() = XMLParser.pluginList.map { it.clazz.primaryConstructor!!.call() }.toTypedArray()
 

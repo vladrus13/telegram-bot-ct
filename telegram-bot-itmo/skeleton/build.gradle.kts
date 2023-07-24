@@ -6,10 +6,6 @@ plugins {
 group = "ru.vladrus13.itmobot"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation("org.telegram:telegrambots:5.2.0")
     implementation("org.jetbrains.exposed:exposed:0.17.13")
@@ -24,4 +20,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
 
     implementation("com.google.apis:google-api-services-sheets:v4-rev614-1.18.0-rc")
+
+    implementation(libs.bundles.logging)
 }

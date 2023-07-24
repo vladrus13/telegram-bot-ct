@@ -1,12 +1,12 @@
 package ru.vladrus13.itmobot.properties
 
+import org.apache.logging.log4j.kotlin.Logging
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import java.io.IOException
 import java.nio.file.Path
 import java.util.*
-import java.util.logging.Logger
 
-class InitialProperties {
+class InitialProperties : Logging {
     companion object {
         val mainProperties: Properties
             get() {
@@ -46,16 +46,5 @@ class InitialProperties {
             }
 
         const val timeToReloadTable = 5 * 60 * 1000L
-
-        private var nullableLogger: Logger? = null
-
-        var logger: Logger
-            get() {
-                check(nullableLogger != null) { "Logger must be initialize" }
-                return nullableLogger!!
-            }
-            set(value) {
-                nullableLogger = value
-            }
     }
 }

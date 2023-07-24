@@ -2,6 +2,7 @@
 
 package ru.vladrus13.itmobot
 
+import org.apache.logging.log4j.kotlin.logger
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
@@ -13,86 +14,68 @@ import ru.vladrus13.itmobot.parallel.TableChangesHolder
 import ru.vladrus13.itmobot.plugins.PluginsHolder
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.tables.TableGroupsHolder
-import ru.vladrus13.itmobot.utils.Writer
 import ru.vladrus13.itmobot.xml.XMLParser
 import java.util.*
 import java.util.logging.LogManager
-import java.util.logging.Logger
-
-class Launcher {
-    companion object {
-        val logger: Logger = Logger.getLogger(Launcher::class.java.simpleName).apply {
-            InitialProperties.logger = this
-        }
-    }
-}
+import kotlin.math.log
 
 fun main() {
-    try {
-        LogManager.getLogManager()
-            .readConfiguration(Launcher::class.java.getResourceAsStream("/logging_main.properties"))
-        LogManager.getLogManager()
-            .readConfiguration(DataBase::class.java.getResourceAsStream("/logging_datatable.properties"))
-    } catch (e: NullPointerException) {
-        println("Can't load logging properties. Stop bot")
-        return
-    }
-    InitialProperties.logger = Launcher.logger
-    Launcher.logger.info("= Launch bot")
-    Launcher.logger.info("== Start timezone default")
+    val logger = logger("main")
+    logger.info("= Launch bot")
+    logger.info("== Start timezone default")
     TimeZone.setDefault(TimeZone.getTimeZone("GMT+3"))
-    Launcher.logger.info("== Finish timezone default")
-    Launcher.logger.info("== Start loading properties")
+    logger.info("== Finish timezone default")
+    logger.info("== Start loading properties")
     try {
-        Launcher.logger.info("=== Load main properties file")
+        logger.info("=== Load main properties file")
         InitialProperties.mainProperties
-        Launcher.logger.info("=== Load datatable properties file")
+        logger.info("=== Load datatable properties file")
         InitialProperties.databaseProperties
     } catch (e: NoSuchFileException) {
-        Launcher.logger.severe("=== Failed at loading property file ${e.file.name}. File not found. Stop bot")
+        logger.error("=== Failed at loading property file ${e.file.name}. File not found. Stop bot", e)
         return
     }
-    Launcher.logger.info("== Finish loading properties")
+    logger.info("== Finish loading properties")
 
-    Launcher.logger.info("== Start loading XML")
+    logger.info("== Start loading XML")
     try {
         XMLParser.init()
     } catch (e: NoSuchFileException) {
-        Launcher.logger.severe("=== Failed at loading XML file ${e.file.name}. File not found. Stop bot")
+        logger.error("=== Failed at loading XML file ${e.file.name}. File not found. Stop bot", e)
         return
     } catch (e: SAXException) {
-        Launcher.logger.severe("=== Failed at parse XML file. Stop bot")
+        logger.error("=== Failed at parse XML file. Stop bot", e)
         return
     } catch (e: XMLClassCastException) {
-        Launcher.logger.severe("=== Failed at parse XML file. Can't cast class ${e.found.qualifiedName} to class ${e.field}")
+        logger.error("=== Failed at parse XML file. Can't cast class ${e.found.qualifiedName} to class ${e.field}", e)
         return
     } catch (e: ClassNotFoundException) {
-        Launcher.logger.severe("=== Failed at parse XML file. Can't find class")
+        logger.error("=== Failed at parse XML file. Can't find class", e)
         return
     } catch (e: NullPointerException) {
-        Launcher.logger.severe("=== Failed at parse XML file. ${e.message}")
+        logger.error("=== Failed at parse XML file. ${e.message}", e)
         return
     } catch (e: Exception) {
-        Writer.printStackTrace(Launcher.logger, e)
+        logger.error("=== Something went wrong loading XML", e)
         return
     }
-    Launcher.logger.info("== Finish loading XML")
+    logger.info("== Finish loading XML")
 
-    Launcher.logger.info("== Start loading database")
+    logger.info("== Start loading database")
     try {
         DataBase.init()
     } catch (e: IllegalArgumentException) {
-        Writer.printStackTrace(Launcher.logger, e)
+        logger.error("Something went wrong loading database", e)
     }
-    Launcher.logger.info("== Finish loading database")
+    logger.info("== Finish loading database")
 
-    Launcher.logger.info("== Start initial plugins")
+    logger.info("== Start initial plugins")
     PluginsHolder.init()
-    Launcher.logger.info("== Finish initial plugins")
+    logger.info("== Finish initial plugins")
 
-    Launcher.logger.info("== Start creating bot API")
+    logger.info("== Start creating bot API")
     val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)
-    Launcher.logger.info("== Finish creating bot API")
+    logger.info("== Finish creating bot API")
 
     TableGroupsHolder.run()
     TableChangesHolder.run()
@@ -100,6 +83,6 @@ fun main() {
     try {
         telegramBotsApi.registerBot(InitialProperties.bot)
     } catch (e: TelegramApiRequestException) {
-        Writer.printStackTrace(Launcher.logger, e)
+        logger.error("Somethign went wrong initalizing bot", e)
     }
 }

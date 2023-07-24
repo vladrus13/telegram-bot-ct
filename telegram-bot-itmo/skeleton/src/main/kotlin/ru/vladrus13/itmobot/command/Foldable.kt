@@ -1,14 +1,11 @@
 package ru.vladrus13.itmobot.command
 
+import org.apache.logging.log4j.kotlin.Logging
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
-import java.util.logging.Logger
 
-interface Foldable {
-    val logger: Logger
-        get() = Logger.getLogger(Foldable::name.toString())
-
+interface Foldable : Logging {
     fun help(): String
     val name: String
     val systemName: String

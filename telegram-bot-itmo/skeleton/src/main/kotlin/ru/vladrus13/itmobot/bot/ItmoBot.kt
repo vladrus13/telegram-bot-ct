@@ -1,5 +1,6 @@
 package ru.vladrus13.itmobot.bot
 
+import org.apache.logging.log4j.kotlin.Logging
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
@@ -8,14 +9,11 @@ import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.tables.TableGroupsHolder
 import ru.vladrus13.itmobot.utils.Messager
 import ru.vladrus13.itmobot.utils.PathsUtils
-import ru.vladrus13.itmobot.utils.Writer
 import java.util.*
-import java.util.logging.Logger
 
-object ItmoBot : TelegramLongPollingBot() {
+object ItmoBot : TelegramLongPollingBot(), Logging {
 
     private var token = ""
-    private val logger: Logger = InitialProperties.logger
     private val mainFolder = MainFolder()
 
     private fun onUser(update: Update) {
@@ -60,7 +58,7 @@ object ItmoBot : TelegramLongPollingBot() {
             if (update.message.text == null) update.message.text = ""
             try {
                 if (update.message.chat.isGroupChat || update.message.chat.isSuperGroupChat) {
-                    logger.warning("Chats are not supported: received update from chat with id [${update.message.chatId}]," +
+                    logger.warn("Chats are not supported: received update from chat with id [${update.message.chatId}]," +
                             " update [${update.message}]")
                 } else {
                     if (update.message.isUserMessage) {
@@ -68,7 +66,7 @@ object ItmoBot : TelegramLongPollingBot() {
                     }
                 }
             } catch (e: Exception) {
-                Writer.printStackTrace(logger, e)
+                logger.error("Something went wrong executing command", e)
                 execute(
                     Messager.getMessage(
                         chatId = chatId,
@@ -90,7 +88,7 @@ object ItmoBot : TelegramLongPollingBot() {
         if (token.isEmpty()) {
             token = InitialProperties.mainProperties.getProperty("BOT_TOKEN")
             if (token.isEmpty()) {
-                logger.severe("Bot token not found. Please, check \"BOT_TOKEN\" on main.properties")
+                logger.error("Bot token not found. Please, check \"BOT_TOKEN\" on main.properties")
             }
         }
         return token

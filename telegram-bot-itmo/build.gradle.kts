@@ -1,13 +1,10 @@
 plugins {
     kotlin("jvm") version "1.7.20"
+    id("io.freefair.lombok") version "8.1.0"
 }
 
 group = "ru.vladrus13.itmobot"
 version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation("org.telegram:telegrambots:5.2.0")
@@ -18,6 +15,7 @@ dependencies {
     implementation(project("plugins:homework"))
     implementation(project("skeleton"))
 
+    implementation(libs.bundles.logging)
 }
 
 tasks.withType<JavaExec> {

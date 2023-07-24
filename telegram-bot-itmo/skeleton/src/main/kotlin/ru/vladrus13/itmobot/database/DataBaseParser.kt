@@ -1,5 +1,6 @@
 package ru.vladrus13.itmobot.database
 
+import org.apache.logging.log4j.kotlin.Logging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -10,7 +11,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 class DataBaseParser {
-    companion object {
+    companion object : Logging {
 
         val connection = Database.connect(
             url = InitialProperties.databaseProperties.getProperty("url"),
@@ -52,12 +53,12 @@ class DataBaseParser {
 
         @Throws(IllegalArgumentException::class)
         fun init() {
-            DataBase.logger.info("=== Start load databases from XML")
+            logger.info("=== Start load databases from XML")
             for (it in XMLParser.datatableList) {
                 parsers[it.subclass] = it.clazz.createInstance()
             }
-            DataBase.logger.info("=== Finish load databases from XML")
-            DataBase.logger.info("=== Start initialize databases")
+            logger.info("=== Finish load databases from XML")
+            logger.info("=== Start initialize databases")
             transaction(connection) {
                 addLogger(StdOutSqlLogger)
                 for (plugin in PluginsHolder.plugins) {
@@ -66,11 +67,11 @@ class DataBaseParser {
                     }
                 }
                 for (parser in parsers.values) {
-                    DataBase.logger.info("==== Initialize database ${parser::class.simpleName}")
+                    logger.info("==== Initialize database ${parser::class.simpleName}")
                     parser.init()
                 }
             }
-            DataBase.logger.info("=== Finish initialize databases")
+            logger.info("=== Finish initialize databases")
         }
     }
 }
