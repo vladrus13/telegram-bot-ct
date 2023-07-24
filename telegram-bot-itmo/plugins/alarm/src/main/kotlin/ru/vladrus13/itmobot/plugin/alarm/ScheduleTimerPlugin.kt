@@ -36,10 +36,8 @@ class ScheduleTimerPlugin : Plugin() {
     }
 
     class OnPluginChatId : DataBaseEntity<ScheduleTimerRow>() {
-        override val table: Table
-            get() = ScheduleTimePluginTable
-        override val columnId: Column<Long>
-            get() = ScheduleTimePluginTable.id
+        override val table: Table = ScheduleTimePluginTable
+        override val columnId: Column<Long> = ScheduleTimePluginTable.id
 
         override fun getNew(chatId: Long): ScheduleTimerRow = ScheduleTimerRow(chatId)
 
