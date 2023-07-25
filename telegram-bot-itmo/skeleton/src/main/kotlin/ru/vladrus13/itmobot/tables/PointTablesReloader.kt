@@ -5,19 +5,14 @@ import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.parallel.ThreadHolder
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadPointsTable
+import ru.vladrus13.itmobot.utils.SafeRunnable
 import java.util.concurrent.TimeUnit
 
 class PointTablesReloader(private val pointTablesRegistry: PointTablesRegistry) : Logging {
-
     init {
         doRun()
-        ThreadHolder.scheduledExecutorService.scheduleAtFixedRate({
-            try {
-                doRun()
-            } catch (e: Exception) {
-                logger.error("Something went wrong", e)
-            }
-        }, timeToReloadPointsTable, timeToReloadPointsTable, TimeUnit.MILLISECONDS)
+        ThreadHolder.scheduledExecutorService.scheduleAtFixedRate(SafeRunnable(::doRun),
+            timeToReloadPointsTable, timeToReloadPointsTable, TimeUnit.MILLISECONDS)
     }
 
     private fun doRun() {
