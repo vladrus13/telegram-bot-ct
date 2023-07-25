@@ -10,7 +10,6 @@ dependencies {
     implementation("org.telegram:telegrambots:5.2.0")
 
     implementation(project("plugins:alarm"))
-    implementation(project("plugins:shipper"))
     implementation(project("plugins:simple"))
     implementation(project("plugins:homework"))
     implementation(project("skeleton"))
