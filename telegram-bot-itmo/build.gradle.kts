@@ -16,6 +16,7 @@ dependencies {
     implementation(project("skeleton"))
 
     implementation(libs.bundles.logging)
+    implementation(libs.bundles.di)
 }
 
 tasks.withType<JavaExec> {

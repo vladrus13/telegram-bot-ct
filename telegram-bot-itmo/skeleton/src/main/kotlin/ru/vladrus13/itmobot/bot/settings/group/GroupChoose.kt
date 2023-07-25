@@ -9,7 +9,7 @@ import ru.vladrus13.itmobot.bean.Chatted
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.tables.schedule.ScheduleHolder
+import ru.vladrus13.itmobot.tables.schedule.ScheduleRegistry
 import ru.vladrus13.itmobot.utils.PathsUtils
 import ru.vladrus13.itmobot.utils.Utils
 
@@ -23,7 +23,8 @@ class GroupChoose(override val parent: Menu) : Menu(parent) {
 
     override fun getReplyKeyboard(user: User): ReplyKeyboard {
         val replyKeyboardMarkup = ReplyKeyboardMarkup()
-        val list = Utils.splitBy(ScheduleHolder.table.getGroups().sorted())
+        // TODO прикрутить DI
+        val list = Utils.splitBy(ScheduleRegistry().table.getGroups().sorted())
         val backRow = KeyboardRow()
         backRow.add("<< Назад")
         list.add(backRow)
@@ -47,7 +48,8 @@ class GroupChoose(override val parent: Menu) : Menu(parent) {
 
     private fun get(message: PathsUtils.MessagePath, bot: TelegramLongPollingBot, sender: Chatted) {
         val newGroup = message.arguments[0]
-        if (ScheduleHolder.table.getGroups().contains(newGroup)) {
+        // TODO прикрутить DI
+        if (ScheduleRegistry().table.getGroups().contains(newGroup)) {
             sender.group = newGroup
             if (sender is User) {
                 sender.path.setPath(parent.path)

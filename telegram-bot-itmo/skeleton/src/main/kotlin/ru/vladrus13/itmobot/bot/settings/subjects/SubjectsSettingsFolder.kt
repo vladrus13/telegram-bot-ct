@@ -10,7 +10,7 @@ import ru.vladrus13.itmobot.bean.UsersSubjects
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.database.DataBase
-import ru.vladrus13.itmobot.tables.schedule.ScheduleHolder
+import ru.vladrus13.itmobot.tables.schedule.ScheduleRegistry
 import ru.vladrus13.itmobot.utils.Utils
 
 class SubjectsSettingsFolder(override val parent: Menu) : Menu(parent) {
@@ -47,7 +47,8 @@ class SubjectsSettingsFolder(override val parent: Menu) : Menu(parent) {
 
     override fun getReplyKeyboard(user: User): ReplyKeyboard {
         val replyKeyboardMarkup = ReplyKeyboardMarkup()
-        val list = Utils.splitBy(recollect(user.getSubjects(), ScheduleHolder.table.getSubjects()))
+        // TODO прикрутить DI
+        val list = Utils.splitBy(recollect(user.getSubjects(), ScheduleRegistry().table.getSubjects()))
         val backRow = KeyboardRow()
         backRow.add("<< Назад")
         list.add(backRow)

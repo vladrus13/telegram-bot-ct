@@ -6,18 +6,19 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.properties.InitialProperties
-import ru.vladrus13.itmobot.tables.TableGroupsHolder
+import ru.vladrus13.itmobot.tables.PointTablesRegistry
 import ru.vladrus13.itmobot.utils.Messager
 import ru.vladrus13.itmobot.utils.PathsUtils
 import java.util.*
 
-object ItmoBot : TelegramLongPollingBot(), Logging {
+class ItmoBot(private val pointTablesRegistry: PointTablesRegistry) : TelegramLongPollingBot(), Logging {
 
     private var token = ""
     private val mainFolder = MainFolder()
 
     private fun onUser(update: Update) {
-        if (!TableGroupsHolder.isReady) {
+        // TODO сделать нормальный жизненный цикл
+        if (!pointTablesRegistry.pointsTablesByName.isEmpty()) {
             logger.info("Receive ignored message from user with chatId: ${update.message.chatId}: ${update.message.text}")
             execute(
                 Messager.getMessage(

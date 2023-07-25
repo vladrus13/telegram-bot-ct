@@ -5,7 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.tables.schedule.ScheduleHolder
+import ru.vladrus13.itmobot.tables.schedule.ScheduleRegistry
 import ru.vladrus13.itmobot.utils.TimeUtils
 
 class GetScheduleCommand(override val parent: Menu) : Command() {
@@ -35,20 +35,24 @@ class GetScheduleCommand(override val parent: Menu) : Command() {
         val text = update.message.text!!
         val answer = if (TimeUtils.days.contains(text)) {
             val day = TimeUtils.getDayByName(text)
-            ScheduleHolder.table.toStringBuilder(user, user.getSubjects(), day).toString()
+            // TODO прикрутить DI
+            ScheduleRegistry().table.toStringBuilder(user, user.getSubjects(), day).toString()
         } else {
             when (text) {
-                "Сегодня" -> ScheduleHolder.table.toStringBuilder(
+                // TODO прикрутить DI
+                "Сегодня" -> ScheduleRegistry().table.toStringBuilder(
                     user,
                     user.getSubjects(),
                     TimeUtils.getDay()
                 ).toString()
-                "Завтра" -> ScheduleHolder.table.toStringBuilder(
+                // TODO прикрутить DI
+                "Завтра" -> ScheduleRegistry().table.toStringBuilder(
                     user,
                     user.getSubjects(),
                     TimeUtils.getDay(1)
                 ).toString()
-                "Все" -> ScheduleHolder.table.toStringBuilder(user, user.getSubjects()).toString()
+                // TODO прикрутить DI
+                "Все" -> ScheduleRegistry().table.toStringBuilder(user, user.getSubjects()).toString()
                 else -> "Неизвестный день("
             }
         }

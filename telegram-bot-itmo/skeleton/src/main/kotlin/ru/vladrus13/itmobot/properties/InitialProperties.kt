@@ -45,6 +45,8 @@ class InitialProperties : Logging {
                 nullableBot = value
             }
 
-        const val timeToReloadTable = 5 * 60 * 1000L
+        const val timeToReloadMainTable = 5 * 60 * 1000L
+        const val timeToReloadPointsTable = 5 * 60 * 1000L
+        const val timeToReloadScheduleTable = 20 * 1000L
     }
 }

@@ -1,20 +1,23 @@
 package ru.vladrus13.itmobot.tables.parsers
 
+import lombok.EqualsAndHashCode
 import org.apache.logging.log4j.kotlin.Logging
+import ru.vladrus13.itmobot.tables.TableModule
 import ru.vladrus13.itmobot.google.GoogleTableResponse
 import ru.vladrus13.itmobot.tables.ResultPair
 import ru.vladrus13.itmobot.tables.Table
 import java.lang.Integer.min
 import java.util.*
 
-class GoogleTwoColumnTable(list: ArrayList<String>, updateCoolDown: Long) : Table(updateCoolDown), Logging {
-
-    override val name: String = list[0]
-    private val url: String = list[2]
-    private val sheetName: String = list[3]
-    private val names: String = list[4]
-    private val results: String = list[5]
-
+@EqualsAndHashCode(of = arrayOf("name"))
+class GoogleTwoColumnTable(
+        override val name: String,
+        val url: String,
+        val sheetName: String,
+        val names: String,
+        val results: String,
+        updateCoolDown: Long
+) : Table(updateCoolDown), Logging {
     override var nextUpdate = Date(0)
     private var data: HashMap<String, ResultPair> = HashMap()
 
@@ -65,20 +68,16 @@ class GoogleTwoColumnTable(list: ArrayList<String>, updateCoolDown: Long) : Tabl
         return null
     }
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as GoogleTwoColumnTable
-
-        if (name != other.name) return false
-
-        return true
+    class GoogleTwoColumnTableFactory : TableModule.TableConstructor {
+        override fun construct(list: ArrayList<String>, coolDown: Long): GoogleTwoColumnTable {
+            return GoogleTwoColumnTable(
+                    name = list[0],
+                    url = list[2],
+                    sheetName = list[3],
+                    names = list[4],
+                    results = list[5],
+                    updateCoolDown = coolDown)
+        }
     }
-
-    override fun hashCode(): Int {
-        return name.hashCode()
-    }
-
 
 }

@@ -1,18 +1,18 @@
 package ru.vladrus13.itmobot
 
+import com.google.inject.Guice
 import org.apache.logging.log4j.kotlin.logger
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.xml.sax.SAXException
+import ru.vladrus13.itmobot.bot.BotModule
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.exceptions.XMLClassCastException
-import ru.vladrus13.itmobot.parallel.TableChangesHolder
 import ru.vladrus13.itmobot.plugins.PluginsHolder
 import ru.vladrus13.itmobot.properties.InitialProperties
-import ru.vladrus13.itmobot.tables.TableGroupsHolder
+import ru.vladrus13.itmobot.tables.TableModule
 import ru.vladrus13.itmobot.xml.XMLParser
 import java.util.*
-import java.util.logging.LogManager
 
 fun main() {
     val logger = logger("debug")
@@ -27,7 +27,10 @@ fun main() {
         logger.info("=== Load datatable properties file")
         InitialProperties.databaseProperties
     } catch (e: NoSuchFileException) {
-        logger.error("=== Failed at loading property file ${e.file.name}. File not found. Stop bot", e)
+        logger.error(
+            "=== Failed at loading property file ${e.file.name}. File not found. Stop bot",
+            e
+        )
         return
     }
     logger.info("== Finish loading properties")
@@ -42,7 +45,10 @@ fun main() {
         logger.error("=== Failed at parse XML file. Stop bot", e)
         return
     } catch (e: XMLClassCastException) {
-        logger.error("=== Failed at parse XML file. Can't cast class ${e.found.qualifiedName} to class ${e.field}", e)
+        logger.error(
+            "=== Failed at parse XML file. Can't cast class ${e.found.qualifiedName} to class ${e.field}",
+            e
+        )
         return
     } catch (e: ClassNotFoundException) {
         logger.error("=== Failed at parse XML file. Can't find class", e)
@@ -68,10 +74,12 @@ fun main() {
     PluginsHolder.init()
     logger.info("== Finish initial plugins")
 
+    val injector = Guice.createInjector(
+        TableModule(),
+        BotModule()
+    )
+
     logger.info("== Start creating bot API")
     val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)
     logger.info("== Finish creating bot API")
-
-    TableGroupsHolder.run()
-    TableChangesHolder.run()
 }

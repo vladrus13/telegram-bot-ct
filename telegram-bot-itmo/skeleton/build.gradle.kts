@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     idea
+    id("io.freefair.lombok") version "8.1.0"
 }
 
 group = "ru.vladrus13.itmobot"
@@ -22,4 +23,5 @@ dependencies {
     implementation("com.google.apis:google-api-services-sheets:v4-rev614-1.18.0-rc")
 
     implementation(libs.bundles.logging)
+    implementation(libs.bundles.di)
 }

@@ -2,22 +2,21 @@
 
 package ru.vladrus13.itmobot
 
+import com.google.inject.Guice
 import org.apache.logging.log4j.kotlin.logger
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.xml.sax.SAXException
+import ru.vladrus13.itmobot.bot.BotModule
 import ru.vladrus13.itmobot.bot.ItmoBot
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.exceptions.XMLClassCastException
-import ru.vladrus13.itmobot.parallel.TableChangesHolder
 import ru.vladrus13.itmobot.plugins.PluginsHolder
 import ru.vladrus13.itmobot.properties.InitialProperties
-import ru.vladrus13.itmobot.tables.TableGroupsHolder
+import ru.vladrus13.itmobot.tables.TableModule
 import ru.vladrus13.itmobot.xml.XMLParser
 import java.util.*
-import java.util.logging.LogManager
-import kotlin.math.log
 
 fun main() {
     val logger = logger("main")
@@ -77,9 +76,11 @@ fun main() {
     val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)
     logger.info("== Finish creating bot API")
 
-    TableGroupsHolder.run()
-    TableChangesHolder.run()
-    InitialProperties.bot = ItmoBot
+    val injector = Guice.createInjector(
+        TableModule(),
+        BotModule()
+    )
+    InitialProperties.bot = injector.getInstance(ItmoBot::class.java)
     try {
         telegramBotsApi.registerBot(InitialProperties.bot)
     } catch (e: TelegramApiRequestException) {

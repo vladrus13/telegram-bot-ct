@@ -5,8 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.tables.MainTableHolder
-import ru.vladrus13.itmobot.tables.TableGroupsHolder
+import ru.vladrus13.itmobot.tables.PointTablesRegistry
 
 class ResultsGet(override val parent: Menu) : Command() {
     override fun help(): String = "Получение результатов"
@@ -41,7 +40,7 @@ class ResultsGet(override val parent: Menu) : Command() {
             return
         }
         val realTables = tables
-            .mapNotNull { TableGroupsHolder[it] }
+            .mapNotNull { PointTablesRegistry()[it] }
             .mapNotNull { it[user.name!!] }
         if (realTables.isEmpty()) {
             user.send(

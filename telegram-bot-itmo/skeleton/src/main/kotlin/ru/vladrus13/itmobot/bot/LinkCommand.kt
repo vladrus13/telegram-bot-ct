@@ -5,7 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.tables.MainTableHolder
+import ru.vladrus13.itmobot.tables.PointTablesRegistry
 
 class LinkCommand(override val parent: Menu) : Command() {
 
@@ -30,7 +30,8 @@ class LinkCommand(override val parent: Menu) : Command() {
             )
         } else {
             val group = user.group!!
-            var message = MainTableHolder.links[group]
+            // TODO прикрутить DI
+            var message = PointTablesRegistry().linksByGroup[group]
                 ?: "Ошибка при поиске вашей таблички. Возможные проблемы: у бота проблемы с табличками, у вашей группы нет таблички"
             if (message.isEmpty()) {
                 message = "Табличка для вашей группы была создана, но, к сожалению, не содержит ссылок"

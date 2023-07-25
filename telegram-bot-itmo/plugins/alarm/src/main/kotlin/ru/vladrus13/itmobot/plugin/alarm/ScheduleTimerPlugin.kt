@@ -13,7 +13,7 @@ import ru.vladrus13.itmobot.database.DataBaseEntity
 import ru.vladrus13.itmobot.database.DataBaseParser
 import ru.vladrus13.itmobot.plugins.Plugin
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.bot
-import ru.vladrus13.itmobot.tables.schedule.ScheduleHolder
+import ru.vladrus13.itmobot.tables.schedule.ScheduleRegistry
 import ru.vladrus13.itmobot.utils.TimeUtils
 import ru.vladrus13.itmobot.utils.TimeUtils.Companion.getCurrentTime
 import ru.vladrus13.itmobot.utils.TimeUtils.Companion.getCurrentTimeString
@@ -76,7 +76,8 @@ class ScheduleTimerPlugin : Plugin() {
                         text = "${getText()}\nУ вас не выбрана группа!"
                     )
                 } else {
-                    val temp = ScheduleHolder.table.toStringBuilder(user, user.getSubjects(), TimeUtils.getDay())
+                    // TODO прикрутить DI
+                    val temp = ScheduleRegistry().table.toStringBuilder(user, user.getSubjects(), TimeUtils.getDay())
                     user.send(
                         bot = bot,
                         text = "${getText()}\n<code>${temp}</code>",
