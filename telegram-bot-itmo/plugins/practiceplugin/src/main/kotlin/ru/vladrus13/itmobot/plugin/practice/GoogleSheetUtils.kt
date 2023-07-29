@@ -35,8 +35,7 @@ class GoogleSheetUtils {
             fillInStudents(sheetsService, id, students, title) { ind -> "=$MAIN_LIST_NAME!B$ind" }
 
 
-            val listBody = mutableListOf(mutableListOf(COUNT_ONE_PRACTICE_TASKS_COLUMN))
-            listBody[0].addAll(tasks)
+            val listBody = mutableListOf(mutableListOf(COUNT_ONE_PRACTICE_TASKS_COLUMN) + tasks)
             val body = ValueRange().setValues(listBody.toList())
             sheetsService.spreadsheets().values()
                 .update(id, getPrettyRange(title, 0, 1, 2, 2 + listBody[0].size), body)
