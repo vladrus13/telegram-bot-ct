@@ -1,25 +1,16 @@
 package ru.vladrus13.itmobot.plugin.practice
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties
-import com.google.api.services.sheets.v4.model.UpdateValuesResponse
-import com.google.api.services.sheets.v4.model.ValueRange
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.parallel.CoroutineThreadOverseer
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.createDriveService
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.createSheetsService
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.getTableInfo
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleApi.Companion.insertPermission
-import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import java.util.logging.Logger
 
 class AddTable(override val parent: Menu) : Menu(parent) {
@@ -68,10 +59,10 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val id: String = dictData["spreadsheetId"] ?: ""
         val url: String = dictData["spreadsheetUrl"] ?: ""
 
-        Utils.generateMainList(sheetsService, id, peopleList)
+        GoogleSheetUtils.generateMainList(sheetsService, id, peopleList)
 
-        Utils.generateList(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
-        Utils.generateList(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
+        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
+        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
 
         val service = createDriveService()
         insertPermission(service, id)

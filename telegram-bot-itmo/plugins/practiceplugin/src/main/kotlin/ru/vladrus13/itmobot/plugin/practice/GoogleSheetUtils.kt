@@ -6,11 +6,13 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
 import java.util.function.Function
 
-class Utils {
+class GoogleSheetUtils {
     companion object {
+        private const val MAIN_LIST_NAME = "Results"
+
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
-        fun deleteBrackets(str: String) =
+        fun deleteQuotationMarks(str: String) =
             if (str.length >= 2 && str.first() == '"' && str.last() == '"')
                 str.substring(1, str.length - 1)
             else str
@@ -30,7 +32,7 @@ class Utils {
             ).execute()
 
 
-            fillInStudents(sheetsService, id, students, title) { ind -> "=Results!B$ind" }
+            fillInStudents(sheetsService, id, students, title) { ind -> "=$MAIN_LIST_NAME!B$ind" }
 
 
             val listBody = mutableListOf(mutableListOf("S"))
@@ -43,8 +45,8 @@ class Utils {
         }
 
         fun generateMainList(sheetsService: Sheets, id: String, students: List<String>) {
-            // rename list to "Results"
-            val properties = SheetProperties().setIndex(0).setTitle("Results")
+            // rename list to $MAIN_LIST_NAME
+            val properties = SheetProperties().setIndex(0).setTitle(MAIN_LIST_NAME)
             val update = UpdateSheetPropertiesRequest()
                 .setProperties(properties)
                 .setFields("title")
@@ -56,11 +58,11 @@ class Utils {
                 req
             ).execute()
 
-            fillInStudents(sheetsService, id, students, "Results") { ind -> "=SUM(C$ind:$ind)*$SCORES_FOR_DISCRETE_MATH_TASK" }
+            fillInStudents(sheetsService, id, students, MAIN_LIST_NAME) { ind -> "=SUM(C$ind:$ind)*$SCORES_FOR_DISCRETE_MATH_TASK" }
         }
 
         /**
-         * @param title is "Д[0-9]+" or "Results"
+         * @param title is "Д[0-9]+" or MAIN_LIST_NAME
          */
         private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, title: String, getTotalCount: Function<Int, String>) {
             val listBody = mutableListOf(listOf("ФИО", "Total"))

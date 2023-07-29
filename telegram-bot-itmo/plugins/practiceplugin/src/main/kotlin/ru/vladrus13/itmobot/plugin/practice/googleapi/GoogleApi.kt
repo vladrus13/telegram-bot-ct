@@ -9,7 +9,7 @@ import com.google.api.services.drive.model.Permission
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getCredentials
-import ru.vladrus13.itmobot.plugin.practice.Utils.Companion.deleteBrackets
+import ru.vladrus13.itmobot.plugin.practice.GoogleSheetUtils.Companion.deleteQuotationMarks
 
 class GoogleApi {
     companion object {
@@ -68,8 +68,8 @@ class GoogleApi {
             val id = "spreadsheetId"
             val url = "spreadsheetUrl"
             return mapOf(
-                Pair(id, deleteBrackets(node.get(id).toString())),
-                Pair(url, deleteBrackets(node.get(url).toString()))
+                Pair(id, deleteQuotationMarks(node.get(id).toString())),
+                Pair(url, deleteQuotationMarks(node.get(url).toString()))
             )
         }
     }
