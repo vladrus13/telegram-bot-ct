@@ -79,6 +79,7 @@ class GoogleTableResponse {
             return answer
         }
 
+        @Throws(IOException::class)
         fun getNames(address: String): ArrayList<String> {
             val list: ArrayList<String> = ArrayList()
             val service: Sheets = Sheets.Builder(
@@ -95,6 +96,7 @@ class GoogleTableResponse {
             return list
         }
 
+        @Throws(IOException::class)
         fun createSheetsService(): Sheets = Sheets.Builder(
             HTTP_TRANSPORT,
             JSON_FACTORY,
@@ -103,6 +105,7 @@ class GoogleTableResponse {
             .setApplicationName(APPLICATION_NAME)
             .build()
 
+        @Throws(IOException::class)
         fun createDriveService(): Drive =
             Drive.Builder(
                 HTTP_TRANSPORT,
@@ -112,6 +115,7 @@ class GoogleTableResponse {
                 .setApplicationName(APPLICATION_NAME)
                 .build()
 
+        @Throws(IOException::class)
         fun insertPermission(
             service: Drive,
             fileId: String,
@@ -124,6 +128,7 @@ class GoogleTableResponse {
                     list.fold(Permission()) { permission, f -> f.invoke(permission) })
                 .execute()
 
+        @Throws(IOException::class)
         fun insertPermission(service: Drive, fileId: String): Permission =
             insertPermission(
                 service,
@@ -133,6 +138,7 @@ class GoogleTableResponse {
                     { permission: Permission -> permission.setRole("writer") })
             )
 
+        @Throws(IOException::class)
         fun getTableInfo(sheetService: Sheets, spreadsheet: Spreadsheet): Map<String, String> {
             val node = mapper.readTree(
                 sheetService
@@ -150,7 +156,7 @@ class GoogleTableResponse {
             )
         }
 
-        fun deleteQuotationMarks(str: String) =
+        private fun deleteQuotationMarks(str: String) =
             if (str.length >= 2 && str.first() == '"' && str.last() == '"')
                 str.substring(1, str.length - 1)
             else str
