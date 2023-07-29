@@ -7,16 +7,11 @@ import ru.vladrus13.itmobot.plugins.Plugin
 import kotlin.reflect.KClass
 
 class PracticePlugin : Plugin() {
-    override val name: String
-        get() = "Таблица для практик"
-    override val systemName: String
-        get() = "practicePlugin"
-    override val password: String?
-        get() = null
-    override val isAvailableUser: Boolean
-        get() = true
-    override val isAvailableChat: Boolean
-        get() = false
+    override val name = "Таблица для практик"
+    override val systemName = "practicePlugin"
+    override val password: String? = null
+    override val isAvailableUser = true
+    override val isAvailableChat = false
 
     override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> = listOf()
 
