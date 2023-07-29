@@ -8,6 +8,10 @@ import java.util.function.Function
 
 class GoogleSheetUtils {
     companion object {
+        enum class WHO_ENTERED {
+            USER_ENTERED,
+        }
+
         private const val MAIN_LIST_NAME = "Results"
         private const val FCS_COLUMN = "ФИО"
         private const val TOTAL_SCORES_COLUMN = "Total"
@@ -41,7 +45,7 @@ class GoogleSheetUtils {
             val body = ValueRange().setValues(listBody.toList())
             sheetsService.spreadsheets().values()
                 .update(id, getPrettyRange(title, 0, 1, 2, 2 + listBody[0].size), body)
-                .setValueInputOption("USER_ENTERED")
+                .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
                 .execute()
         }
 
@@ -66,12 +70,13 @@ class GoogleSheetUtils {
          * @param title is "Д[0-9]+" or MAIN_LIST_NAME
          */
         private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, title: String, getTotalCount: Function<Int, String>) {
-            val listBody = mutableListOf(listOf(FCS_COLUMN, TOTAL_SCORES_COLUMN) + students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
+            val listBody = mutableListOf(listOf(FCS_COLUMN, TOTAL_SCORES_COLUMN))
+            listBody.addAll(students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
             val body = ValueRange().setValues(listBody.toList())
             val range = getPrettyRange(title, 0, body.getValues().size, 0, 2)
             sheetsService.spreadsheets().values()
                 .update(id, range, body)
-                .setValueInputOption("USER_ENTERED")
+                .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
                 .execute()
 
 
