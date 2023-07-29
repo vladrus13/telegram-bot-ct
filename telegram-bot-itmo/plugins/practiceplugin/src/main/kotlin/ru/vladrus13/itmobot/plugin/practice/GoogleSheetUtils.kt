@@ -64,8 +64,7 @@ class GoogleSheetUtils {
          * @param title is "Д[0-9]+" or MAIN_LIST_NAME
          */
         private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, title: String, getTotalCount: Function<Int, String>) {
-            val listBody = mutableListOf(listOf("ФИО", "Total"))
-            listBody.addAll(students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
+            val listBody = mutableListOf(listOf("ФИО", "Total") + students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
             val body = ValueRange().setValues(listBody.toList())
             val range = getPrettyRange(title, 0, body.getValues().size, 0, 2)
             sheetsService.spreadsheets().values()
