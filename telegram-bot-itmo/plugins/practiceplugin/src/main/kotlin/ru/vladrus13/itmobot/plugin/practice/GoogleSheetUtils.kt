@@ -9,7 +9,7 @@ import java.util.function.Function
 class GoogleSheetUtils {
     companion object {
         private const val MAIN_LIST_NAME = "Results"
-
+        private const val COUNT_ONE_PRACTICE_TASKS_COLUMN = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
         fun deleteQuotationMarks(str: String) =
@@ -35,7 +35,7 @@ class GoogleSheetUtils {
             fillInStudents(sheetsService, id, students, title) { ind -> "=$MAIN_LIST_NAME!B$ind" }
 
 
-            val listBody = mutableListOf(mutableListOf("S"))
+            val listBody = mutableListOf(mutableListOf(COUNT_ONE_PRACTICE_TASKS_COLUMN))
             listBody[0].addAll(tasks)
             val body = ValueRange().setValues(listBody.toList())
             sheetsService.spreadsheets().values()
