@@ -9,7 +9,9 @@ import java.util.function.Function
 class GoogleSheetUtils {
     companion object {
         private const val MAIN_LIST_NAME = "Results"
-        private const val COUNT_ONE_PRACTICE_TASKS_COLUMN = "S"
+        private const val FCS_COLUMN = "ФИО"
+        private const val TOTAL_SCORES_COLUMN = "Total"
+        private const val ONE_PRACTICE_TASKS_COLUMN = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
         fun deleteQuotationMarks(str: String) =
@@ -35,7 +37,7 @@ class GoogleSheetUtils {
             fillInStudents(sheetsService, id, students, title) { ind -> "=$MAIN_LIST_NAME!B$ind" }
 
 
-            val listBody = mutableListOf(mutableListOf(COUNT_ONE_PRACTICE_TASKS_COLUMN) + tasks)
+            val listBody = mutableListOf(mutableListOf(ONE_PRACTICE_TASKS_COLUMN) + tasks)
             val body = ValueRange().setValues(listBody.toList())
             sheetsService.spreadsheets().values()
                 .update(id, getPrettyRange(title, 0, 1, 2, 2 + listBody[0].size), body)
@@ -64,7 +66,7 @@ class GoogleSheetUtils {
          * @param title is "Д[0-9]+" or MAIN_LIST_NAME
          */
         private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, title: String, getTotalCount: Function<Int, String>) {
-            val listBody = mutableListOf(listOf("ФИО", "Total") + students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
+            val listBody = mutableListOf(listOf(FCS_COLUMN, TOTAL_SCORES_COLUMN) + students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
             val body = ValueRange().setValues(listBody.toList())
             val range = getPrettyRange(title, 0, body.getValues().size, 0, 2)
             sheetsService.spreadsheets().values()
