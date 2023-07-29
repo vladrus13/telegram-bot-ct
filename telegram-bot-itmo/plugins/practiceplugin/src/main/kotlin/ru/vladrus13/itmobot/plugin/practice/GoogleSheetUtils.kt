@@ -18,11 +18,6 @@ class GoogleSheetUtils {
         private const val ONE_PRACTICE_TASKS_COLUMN = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
-        fun deleteQuotationMarks(str: String) =
-            if (str.length >= 2 && str.first() == '"' && str.last() == '"')
-                str.substring(1, str.length - 1)
-            else str
-
         fun generateList(sheetsService: Sheets, id: String, students: List<String>, tasks: List<String>) {
             // make new list
             val homeworkCount = sheetsService.spreadsheets().get(id).execute().sheets.size
