@@ -5,8 +5,11 @@ import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenAcceptedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenCountTasksColor
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenScores
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getRedScores
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getWhiteColor
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getYellowDeclinedTask
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getYellowScores
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.nToAZ
@@ -24,6 +27,7 @@ class GoogleSheetUtils {
 
         private const val INTERPOLATION_POINT_TYPE_MIN = "MIN"
         private const val INTERPOLATION_POINT_TYPE_MAX = "MAX"
+        private const val INTERPOLATION_POINT_TYPE_PERCENTILE = "PERCENTILE"
 
         private const val COUNT_A_FORMULA = "COUNTA"
         private const val COUNT_IF_FORMULA = "COUNTIF"
@@ -351,6 +355,40 @@ class GoogleSheetUtils {
                 students,
                 MAIN_LIST_NAME
             ) { ind -> "=$SUM_FORMULA($FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_CHAR$ind:$ind)*$SCORES_FOR_DISCRETE_MATH_TASK" }
+
+            // Conditional Format
+            executeRequestsSequence(
+                sheetsService, id, listOf(
+                    getConditionalFormatRequest(
+                        sheetsService,
+                        id,
+                        MAIN_LIST_NAME,
+                        MIN_STUDENT_ROW_INDEX, MIN_STUDENT_ROW_INDEX + students.size,
+                        TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER,
+                        {
+                            it.setGradientRule(
+                                GradientRule()
+                                    .setMinpoint(
+                                        InterpolationPoint()
+                                            .setType(INTERPOLATION_POINT_TYPE_MIN)
+                                            .setColor(getRedScores())
+                                    )
+                                    .setMidpoint(
+                                        InterpolationPoint()
+                                            .setType(INTERPOLATION_POINT_TYPE_PERCENTILE)
+                                            .setColor(getYellowScores())
+                                            .setValue("50")
+                                    )
+                                    .setMaxpoint(
+                                        InterpolationPoint()
+                                            .setType(INTERPOLATION_POINT_TYPE_MAX)
+                                            .setColor(getGreenScores())
+                                    )
+                            )
+                        }
+                    )
+                )
+            )
         }
 
         /**
