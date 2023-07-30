@@ -2,6 +2,7 @@ package ru.vladrus13.itmobot.plugin.practice
 
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties
+import kotlinx.coroutines.runBlocking
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
@@ -11,6 +12,7 @@ import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createDriveServ
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getTableInfo
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.insertPermission
+import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import java.util.logging.Logger
 
 class AddTable(override val parent: Menu) : Menu(parent) {
@@ -63,14 +65,33 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
 
-        val list = GoogleSheetUtils.getTasksList(sheetsService, id);
-        for (i in list.indices) {
-            print("$i: ")
-            for (task in list[i]) {
-                print("$task, ")
+        val parser = NeercParserInfo(id, "http://neerc.ifmo.ru/wiki/index.php?title=Список_заданий_по_ДМ_2к_2023_весна")
+        runBlocking {
+            val actualTasks: List<String> = parser.getTasks()
+            val currentTasks = GoogleSheetUtils.getTasksList(sheetsService, id).flatten()
+
+            if (currentTasks.size < actualTasks.size) {
+                GoogleSheetUtils.generateSheet(
+                    sheetsService,
+                    id,
+                    peopleList,
+                    actualTasks.subList(currentTasks.size, actualTasks.size)
+                )
             }
-            println()
         }
+
+
+//        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
+//        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
+//
+//        val list = GoogleSheetUtils.getTasksList(sheetsService, id);
+//        for (i in list.indices) {
+//            print("$i: ")
+//            for (task in list[i]) {
+//                print("$task, ")
+//            }
+//            println()
+//        }
 
         val service = createDriveService()
         insertPermission(service, id)
