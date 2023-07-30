@@ -3,8 +3,10 @@ package ru.vladrus13.itmobot.plugin.practice
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenAcceptedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenCountTasksColor
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getWhiteColor
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getYellowDeclinedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.nToAZ
@@ -16,7 +18,8 @@ class GoogleSheetUtils {
         }
 
         enum class CONDITION_TYPE {
-            NUMBER_EQ
+            NUMBER_EQ,
+            CUSTOM_FORMULA,
         }
 
         private const val INTERPOLATION_POINT_TYPE_MIN = "MIN"
@@ -92,48 +95,6 @@ class GoogleSheetUtils {
             executeRequestsSequence(
                 sheetsService, id, listOf(
                     Request().setAddSheet(AddSheetRequest().setProperties(properties)),
-
-                    )
-            )
-            executeRequestsSequence(
-                sheetsService, id, listOf(
-                    getConditionalFormatRequest(
-                        sheetsService, id, title, MIN_STUDENT_ROW_INDEX,
-                        maxStudentRowNumber,
-                        TASK_COUNTER_COLUMN_INDEX,
-                        TASK_COUNTER_COLUMN_NUMBER,
-                    ) { rule ->
-                        rule.setGradientRule(
-                            GradientRule()
-                                .setMinpoint(
-                                    InterpolationPoint()
-                                        .setType(INTERPOLATION_POINT_TYPE_MIN)
-                                        .setColor(getWhiteColor())
-                                )
-                                .setMaxpoint(
-                                    InterpolationPoint()
-                                        .setType(INTERPOLATION_POINT_TYPE_MAX)
-                                        .setColor(getGreenCountTasksColor())
-                                )
-                        )
-                    },
-                    getConditionalFormatRequest(
-                        sheetsService, id, title, MIN_STUDENT_ROW_INDEX,
-                        maxStudentRowNumber,
-                        TASK_COUNTER_COLUMN_INDEX,
-                        TASK_COUNTER_COLUMN_NUMBER,
-                    ) { rule ->
-                        rule.setBooleanRule(
-                            BooleanRule()
-                                .setCondition(
-                                    BooleanCondition()
-                                        .setType(CONDITION_TYPE.NUMBER_EQ.toString())
-                                        .setValues(listOf(ConditionValue().setUserEnteredValue("0")))
-                                )
-                                .setFormat(CellFormat().setBackgroundColor(getWhiteColor()))
-                        )
-                    }
-
                 )
             )
 
@@ -174,7 +135,103 @@ class GoogleSheetUtils {
                 .execute()
 
             addNewMainListColumn(sheetsService, id, students, title)
+
+            // Conditional Format
+            executeRequestsSequence(
+                sheetsService, id, listOf(
+                    getListRules(
+                        sheetsService, id, title, MIN_STUDENT_ROW_INDEX,
+                        maxStudentRowNumber,
+                        TASK_COUNTER_COLUMN_INDEX,
+                        TASK_COUNTER_COLUMN_NUMBER,
+                        {
+                            it.setGradientRule(
+                                GradientRule()
+                                    .setMinpoint(
+                                        InterpolationPoint()
+                                            .setType(INTERPOLATION_POINT_TYPE_MIN)
+                                            .setColor(getWhiteColor())
+                                    )
+                                    .setMaxpoint(
+                                        InterpolationPoint()
+                                            .setType(INTERPOLATION_POINT_TYPE_MAX)
+                                            .setColor(getGreenCountTasksColor())
+                                    )
+                            )
+                        },
+                        {
+                            it.setBooleanRule(
+                                BooleanRule()
+                                    .setCondition(
+                                        BooleanCondition()
+                                            .setType(CONDITION_TYPE.NUMBER_EQ.toString())
+                                            .setValues(listOf(ConditionValue().setUserEnteredValue("0")))
+                                    )
+                                    .setFormat(CellFormat().setBackgroundColor(getWhiteColor()))
+                            )
+                        }
+                    ),
+                    getListRules(
+                        sheetsService, id, title, lastRowIndex, lastRowNumber,
+                        TASK_FIRST_COLUMN_INDEX, listBody.size,
+                        *getListBooleanConditionsOfAcceptedOrNotTask(
+                            "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$TASK_FIRST_COLUMN_CHAR$maxStudentRowNumber"
+                        ).map { it }.toTypedArray()
+                    ),
+                    getListRules(
+                        sheetsService, id, title, MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
+                        FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER,
+                        *getListBooleanConditionsOfAcceptedOrNotTask(
+                            "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$MIN_STUDENT_ROW_NUMBER"
+                        ).map { it }.toTypedArray()
+                    )
+                ).flatten()
+            )
         }
+
+        private fun getListRules(
+            service: Sheets,
+            id: String,
+            sheetTitle: String,
+            firstRow: Int,
+            lastRow: Int,
+            firstColumn: Int,
+            lastColumn: Int,
+            vararg addRule: (ConditionalFormatRule) -> ConditionalFormatRule
+        ): List<Request> = addRule.map {
+            getConditionalFormatRequest(
+                service,
+                id,
+                sheetTitle,
+                firstRow,
+                lastRow,
+                firstColumn,
+                lastColumn,
+                it
+            )
+        }
+
+        private fun getListBooleanConditionsOfAcceptedOrNotTask(range: String): List<(ConditionalFormatRule) -> ConditionalFormatRule> =
+            listOf(
+                {
+                    it.setBooleanRule(
+                        BooleanRule()
+                            .setCondition(
+                                getCustomFormulaBooleanCondition("=${getCountIfRussianEnglishIsT(range)}")
+                            )
+                            .setFormat(CellFormat().setBackgroundColor(getGreenAcceptedTask()))
+                    )
+                },
+                {
+                    it.setBooleanRule(
+                        BooleanRule()
+                            .setCondition(
+                                getCustomFormulaBooleanCondition("=${getCountIfRussianEnglishIsP(range)}")
+                            )
+                            .setFormat(CellFormat().setBackgroundColor(getYellowDeclinedTask()))
+                    )
+                }
+            )
 
         private fun getConditionalFormatRequest(
             service: Sheets,
@@ -203,6 +260,9 @@ class GoogleSheetUtils {
             )
         )
 
+        private fun getCustomFormulaBooleanCondition(userEnteredValue: String) = BooleanCondition()
+            .setType(CONDITION_TYPE.CUSTOM_FORMULA.toString())
+            .setValues(listOf(ConditionValue().setUserEnteredValue(userEnteredValue)))
 
         private fun executeRequestsSequence(service: Sheets, id: String, listRequests: List<Request>) {
             listRequests.forEach { request: Request ->
@@ -236,10 +296,9 @@ class GoogleSheetUtils {
 
             val listBody = mutableListOf(mutableListOf(titleSheet))
             for (studentRowNumber in students.indices.map { index -> MIN_STUDENT_ROW_NUMBER + index }) {
-                val range =
-                    "$titleSheet!$TASK_FIRST_COLUMN_CHAR$studentRowNumber:$studentRowNumber"
+                val range = "$titleSheet!$TASK_FIRST_COLUMN_CHAR$studentRowNumber:$studentRowNumber"
                 // There are russian 'Т' and English 'T'.
-                listBody.add(mutableListOf("=${getCountIf(range, 'T')} + ${getCountIf(range, 'Т')}"))
+                listBody.add(mutableListOf("=${getCountIfRussianEnglishIsT(range)}"))
             }
 
             val body = ValueRange().setValues(listBody.toList())
@@ -259,7 +318,18 @@ class GoogleSheetUtils {
                 .execute()
         }
 
+        private fun getCountIfRussianEnglishIsT(range: String) =
+            "${getCountIf(range, getRussianT())} + ${getCountIf(range, getEnglishT())}"
+
+        private fun getCountIfRussianEnglishIsP(range: String) =
+            "${getCountIf(range, getRussianP())} + ${getCountIf(range, getEnglishP())}"
+
         private fun getCountIf(range: String, char: Char) = "$COUNT_IF_FORMULA($range;\"$char\")"
+
+        private fun getRussianT() = 'Т'
+        private fun getEnglishT() = 'T'
+        private fun getRussianP() = 'Р'
+        private fun getEnglishP() = 'P'
 
         fun generateMainSheet(sheetsService: Sheets, id: String, students: List<String>) {
             // rename list to $MAIN_LIST_NAME
