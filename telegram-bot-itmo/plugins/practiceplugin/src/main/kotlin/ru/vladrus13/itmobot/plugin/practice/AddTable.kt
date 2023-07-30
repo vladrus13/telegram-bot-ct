@@ -14,8 +14,7 @@ import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.insertPermissio
 import java.util.logging.Logger
 
 class AddTable(override val parent: Menu) : Menu(parent) {
-    override val logger: Logger
-        get() = super.logger
+    override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf()
 
     override fun menuHelp() = "Пункт создания таблицы"
