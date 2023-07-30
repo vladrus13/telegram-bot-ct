@@ -23,6 +23,7 @@ class GoogleSheetUtils {
         enum class CONDITION_TYPE {
             NUMBER_EQ,
             CUSTOM_FORMULA,
+            TEXT_EQ
         }
 
         private const val INTERPOLATION_POINT_TYPE_MIN = "MIN"
@@ -113,6 +114,7 @@ class GoogleSheetUtils {
             for (rowNumber in MIN_STUDENT_ROW_NUMBER..maxStudentRowNumber) {
                 listBody.add(mutableListOf("=$COUNT_A_FORMULA($TASK_FIRST_COLUMN_CHAR$rowNumber:$rowNumber)"))
             }
+            val width = listBody[0].size
 
             val lastRow =
                 mutableListOf("=$COUNT_IF_FORMULA($TASK_FIRST_COLUMN_CHAR$lastRowNumber:$lastRowNumber; \">0\")")
@@ -131,7 +133,7 @@ class GoogleSheetUtils {
                         TASKS_NAMES_ROW_INDEX,
                         lastRowNumber,
                         TASK_COUNTER_COLUMN_INDEX,
-                        TASK_COUNTER_COLUMN_INDEX + listBody[0].size
+                        TASK_COUNTER_COLUMN_INDEX + width
                     ),
                     body
                 )
@@ -142,7 +144,8 @@ class GoogleSheetUtils {
 
             // Conditional Format
             executeRequestsSequence(
-                sheetsService, id, listOf(
+                sheetsService, id,
+                listOf(
                     getListRules(
                         sheetsService, id, title, MIN_STUDENT_ROW_INDEX,
                         maxStudentRowNumber,
@@ -188,8 +191,38 @@ class GoogleSheetUtils {
                         *getListBooleanConditionsOfAcceptedOrNotTask(
                             "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$MIN_STUDENT_ROW_NUMBER"
                         ).map { it }.toTypedArray()
-                    )
-                ).flatten()
+                    ),
+                    getListRules(
+                        sheetsService, id, title, MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
+                        TASK_FIRST_COLUMN_INDEX, listBody.size,
+                        *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
+                    ),
+                    // all table
+                    createGridRequestMaker(
+                        sheetsService, id, title,
+                        TASKS_NAMES_ROW_INDEX, lastRowNumber,
+                        FCS_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                    ).colorizeBordersAndFormatCells(),
+                    // S
+                    createGridRequestMaker(
+                        sheetsService, id, title,
+                        MIN_STUDENT_ROW_INDEX, lastRowNumber,
+                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_NUMBER
+                    ).colorizeBordersAndFormatCells(),
+                    // up
+                    createGridRequestMaker(
+                        sheetsService, id, title,
+                        TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER,
+                        TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                    ).colorizeBordersAndFormatCells(),
+                    //down
+                    createGridRequestMaker(
+                        sheetsService, id, title,
+                        lastRowIndex, lastRowNumber,
+                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                    ).colorizeBordersAndFormatCells(),
+
+                    ).flatten()
             )
         }
 
@@ -237,6 +270,34 @@ class GoogleSheetUtils {
                 }
             )
 
+        private fun getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP(): List<(ConditionalFormatRule) -> ConditionalFormatRule> =
+            listOf(
+                {
+                    it.setBooleanRule(
+                        BooleanRule()
+                            .setCondition(
+                                BooleanCondition()
+                                    .setType(CONDITION_TYPE.TEXT_EQ.toString())
+                                    .setValues(listOf(ConditionValue().setUserEnteredValue("T")))
+                            )
+                            .setFormat(CellFormat().setBackgroundColor(getGreenAcceptedTask()))
+                    )
+
+                },
+                {
+                    it.setBooleanRule(
+                        BooleanRule()
+                            .setCondition(
+                                BooleanCondition()
+                                    .setType(CONDITION_TYPE.TEXT_EQ.toString())
+                                    .setValues(listOf(ConditionValue().setUserEnteredValue("P")))
+                            )
+                            .setFormat(CellFormat().setBackgroundColor(getYellowDeclinedTask()))
+                    )
+                }
+            )
+
+
         private fun getConditionalFormatRequest(
             service: Sheets,
             id: String,
@@ -269,10 +330,8 @@ class GoogleSheetUtils {
             .setValues(listOf(ConditionValue().setUserEnteredValue(userEnteredValue)))
 
         private fun executeRequestsSequence(service: Sheets, id: String, listRequests: List<Request>) {
-            listRequests.forEach { request: Request ->
-                val req = BatchUpdateSpreadsheetRequest().setRequests(listOf(request))
-                service.spreadsheets().batchUpdate(id, req).execute()
-            }
+            val req = BatchUpdateSpreadsheetRequest().setRequests(listRequests)
+            service.spreadsheets().batchUpdate(id, req).execute()
         }
 
         private fun addNewMainListColumn(
@@ -320,6 +379,31 @@ class GoogleSheetUtils {
                 )
                 .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
                 .execute()
+
+            // format new column
+            executeRequestsSequence(
+                sheetsService, id,
+                listOf(
+                    createGridRequestMaker(
+                        sheetsService,
+                        id,
+                        MAIN_LIST_NAME,
+                        TASKS_NAMES_MAIN_LIST_ROW_INDEX,
+                        maxStudentRowNumber,
+                        width,
+                        width + 1
+                    ).colorizeBordersAndFormatCells(),
+                    createGridRequestMaker(
+                        sheetsService,
+                        id,
+                        MAIN_LIST_NAME,
+                        TASKS_NAMES_MAIN_LIST_ROW_INDEX,
+                        TASKS_NAMES_MAIN_LIST_ROW_NUMBER,
+                        width,
+                        width + 1
+                    ).colorizeBordersAndFormatCells()
+                ).flatten()
+            )
         }
 
         private fun getCountIfRussianEnglishIsT(range: String) =

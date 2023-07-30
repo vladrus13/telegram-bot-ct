@@ -19,6 +19,8 @@ class GridRequestMaker(
         .setStartColumnIndex(firstColumn)
         .setEndColumnIndex(lastColumn)
 
+    fun colorizeBordersAndFormatCells(): List<Request> = listOf(colorizeBorders(), formatCells())
+
     fun colorizeBorders(): Request {
         val border = Border()
             .setColor(getBlackColor())
