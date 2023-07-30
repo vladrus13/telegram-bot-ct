@@ -65,9 +65,6 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
 
-        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
-        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
-
         val parser = NeercParserInfo(id, "http://neerc.ifmo.ru/wiki/index.php?title=Список_заданий_по_ДМ_2к_2023_весна")
         runBlocking {
             val actualTasks: List<String> = parser.getTasks()
