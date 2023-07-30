@@ -8,12 +8,15 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getW
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.nToAZ
-import java.util.function.Function
 
 class GoogleSheetUtils {
     companion object {
         enum class WHO_ENTERED {
             USER_ENTERED,
+        }
+
+        enum class CONDITION_TYPE {
+            NUMBER_EQ
         }
 
         private const val INTERPOLATION_POINT_TYPE_MIN = "MIN"
@@ -94,37 +97,43 @@ class GoogleSheetUtils {
             )
             executeRequestsSequence(
                 sheetsService, id, listOf(
-                    Request().setAddConditionalFormatRule(
-                        AddConditionalFormatRuleRequest().setRule(
-                            ConditionalFormatRule()
-                                .setRanges(
-                                    listOf(
-                                        createGridRequestMaker(
-                                            sheetsService,
-                                            id,
-                                            title,
-                                            MIN_STUDENT_ROW_INDEX,
-                                            maxStudentRowNumber,
-                                            TASK_COUNTER_COLUMN_INDEX,
-                                            TASK_COUNTER_COLUMN_NUMBER
-                                        ).range
-                                    )
+                    getConditionalFormatRequest(
+                        sheetsService, id, title, MIN_STUDENT_ROW_INDEX,
+                        maxStudentRowNumber,
+                        TASK_COUNTER_COLUMN_INDEX,
+                        TASK_COUNTER_COLUMN_NUMBER,
+                    ) { rule ->
+                        rule.setGradientRule(
+                            GradientRule()
+                                .setMinpoint(
+                                    InterpolationPoint()
+                                        .setType(INTERPOLATION_POINT_TYPE_MIN)
+                                        .setColor(getWhiteColor())
                                 )
-                                .setGradientRule(
-                                    GradientRule()
-                                        .setMinpoint(
-                                            InterpolationPoint()
-                                                .setType(INTERPOLATION_POINT_TYPE_MIN)
-                                                .setColor(getWhiteColor())
-                                        )
-                                        .setMaxpoint(
-                                            InterpolationPoint()
-                                                .setType(INTERPOLATION_POINT_TYPE_MAX)
-                                                .setColor(getGreenCountTasksColor())
-                                        )
+                                .setMaxpoint(
+                                    InterpolationPoint()
+                                        .setType(INTERPOLATION_POINT_TYPE_MAX)
+                                        .setColor(getGreenCountTasksColor())
                                 )
                         )
-                    ),
+                    },
+                    getConditionalFormatRequest(
+                        sheetsService, id, title, MIN_STUDENT_ROW_INDEX,
+                        maxStudentRowNumber,
+                        TASK_COUNTER_COLUMN_INDEX,
+                        TASK_COUNTER_COLUMN_NUMBER,
+                    ) { rule ->
+                        rule.setBooleanRule(
+                            BooleanRule()
+                                .setCondition(
+                                    BooleanCondition()
+                                        .setType(CONDITION_TYPE.NUMBER_EQ.toString())
+                                        .setValues(listOf(ConditionValue().setUserEnteredValue("0")))
+                                )
+                                .setFormat(CellFormat().setBackgroundColor(getWhiteColor()))
+                        )
+                    }
+
                 )
             )
 
@@ -166,6 +175,34 @@ class GoogleSheetUtils {
 
             addNewMainListColumn(sheetsService, id, students, title)
         }
+
+        private fun getConditionalFormatRequest(
+            service: Sheets,
+            id: String,
+            sheetTitle: String,
+            firstRow: Int,
+            lastRow: Int,
+            firstColumn: Int,
+            lastColumn: Int,
+            addRule: (ConditionalFormatRule) -> ConditionalFormatRule
+        ): Request = Request().setAddConditionalFormatRule(
+            AddConditionalFormatRuleRequest().setRule(
+                addRule(
+                    ConditionalFormatRule()
+                        .setRanges(
+                            listOf(
+                                createGridRequestMaker(
+                                    service,
+                                    id, sheetTitle,
+                                    firstRow, lastRow,
+                                    firstColumn, lastColumn
+                                ).range
+                            )
+                        )
+                )
+            )
+        )
+
 
         private fun executeRequestsSequence(service: Sheets, id: String, listRequests: List<Request>) {
             listRequests.forEach { request: Request ->
@@ -254,13 +291,13 @@ class GoogleSheetUtils {
             id: String,
             students: List<String>,
             title: String,
-            getTotalCount: Function<Int, String>
+            getTotalCount: (Int) -> String
         ) {
             val listBody = mutableListOf(listOf(FCS_COLUMN_NAME, TOTAL_SCORES_COLUMN_NAME))
             listBody.addAll(students.mapIndexed { studentIndex, name ->
                 listOf(
                     name,
-                    getTotalCount.apply(MIN_STUDENT_ROW_NUMBER + studentIndex)
+                    getTotalCount(MIN_STUDENT_ROW_NUMBER + studentIndex)
                 )
             })
             val body = ValueRange().setValues(listBody.toList())
