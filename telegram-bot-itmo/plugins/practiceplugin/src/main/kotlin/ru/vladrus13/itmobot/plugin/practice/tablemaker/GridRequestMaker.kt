@@ -12,7 +12,7 @@ class GridRequestMaker(
     firstRow: Int, lastRow: Int,
     firstColumn: Int, lastColumn: Int
 ) {
-    private val range: GridRange = GridRange()
+    val range: GridRange = GridRange()
         .setSheetId(sheetId)
         .setStartRowIndex(firstRow)
         .setEndRowIndex(lastRow)
