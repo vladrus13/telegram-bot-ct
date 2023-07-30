@@ -58,9 +58,12 @@ class GoogleSheetUtils {
 
 
             val listBody = mutableListOf(mutableListOf(ONE_PRACTICE_TASKS_COLUMN) + tasks)
+            for (i in 2 .. students.size + 1) {
+                listBody.add(mutableListOf("=COUNTA(D$i:$i)"))
+            }
             val body = ValueRange().setValues(listBody.toList())
             sheetsService.spreadsheets().values()
-                .update(id, getPrettyRange(title, 0, 1, 2, 2 + listBody[0].size), body)
+                .update(id, getPrettyRange(title, 0, students.size + 1, 2, 2 + listBody[0].size), body)
                 .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
                 .execute()
         }
