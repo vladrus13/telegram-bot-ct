@@ -63,6 +63,15 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
 
+        val list = GoogleSheetUtils.getTasksList(sheetsService, id);
+        for (i in list.indices) {
+            print("$i: ")
+            for (task in list[i]) {
+                print("$task, ")
+            }
+            println()
+        }
+
         val service = createDriveService()
         insertPermission(service, id)
 

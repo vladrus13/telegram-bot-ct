@@ -1,5 +1,6 @@
 package ru.vladrus13.itmobot.plugin.practice
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
@@ -17,6 +18,26 @@ class GoogleSheetUtils {
         private const val TOTAL_SCORES_COLUMN = "Total"
         private const val ONE_PRACTICE_TASKS_COLUMN = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
+
+        fun getTasksList(sheetsService: Sheets, id: String): List<List<String>> {
+            val tasksList = mutableListOf<List<String>>()
+            for (i in 1..30) {
+                val result: ValueRange
+                try {
+                    result = sheetsService
+                        .spreadsheets()
+                        .values()
+                        .get(id, "Д$i!1:1")
+                        .execute()
+                } catch (e: GoogleJsonResponseException) {
+                    break
+                }
+
+                val firstRow = result.getValues().first().map(Any::toString)
+                tasksList.add(firstRow.subList(3, firstRow.size))
+            }
+            return tasksList
+        }
 
         fun generateSheet(sheetsService: Sheets, id: String, students: List<String>, tasks: List<String>) {
             // make new list
@@ -58,13 +79,24 @@ class GoogleSheetUtils {
                 req
             ).execute()
 
-            fillInStudents(sheetsService, id, students, MAIN_LIST_NAME) { ind -> "=SUM(C$ind:$ind)*$SCORES_FOR_DISCRETE_MATH_TASK" }
+            fillInStudents(
+                sheetsService,
+                id,
+                students,
+                MAIN_LIST_NAME
+            ) { ind -> "=SUM(C$ind:$ind)*$SCORES_FOR_DISCRETE_MATH_TASK" }
         }
 
         /**
          * @param title is "Д[0-9]+" or <code>MAIN_LIST_NAME</code>
          */
-        private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, title: String, getTotalCount: Function<Int, String>) {
+        private fun fillInStudents(
+            sheetsService: Sheets,
+            id: String,
+            students: List<String>,
+            title: String,
+            getTotalCount: Function<Int, String>
+        ) {
             val listBody = mutableListOf(listOf(FCS_COLUMN, TOTAL_SCORES_COLUMN))
             listBody.addAll(students.mapIndexed { index, name -> listOf(name, getTotalCount.apply(index + 2)) })
             val body = ValueRange().setValues(listBody.toList())
@@ -77,9 +109,39 @@ class GoogleSheetUtils {
 
             val requests = mutableListOf<Request>()
             // Border
-            requests.add(createGridRequestMaker(sheetsService, id, title, 0, body.getValues().size, 0, 1).colorizeBorders())
-            requests.add(createGridRequestMaker(sheetsService, id, title, 0, body.getValues().size, 1, 2).colorizeBorders())
-            requests.add(createGridRequestMaker(sheetsService, id, title, 0, 1, 0, body.getValues().first().size).colorizeBorders())
+            requests.add(
+                createGridRequestMaker(
+                    sheetsService,
+                    id,
+                    title,
+                    0,
+                    body.getValues().size,
+                    0,
+                    1
+                ).colorizeBorders()
+            )
+            requests.add(
+                createGridRequestMaker(
+                    sheetsService,
+                    id,
+                    title,
+                    0,
+                    body.getValues().size,
+                    1,
+                    2
+                ).colorizeBorders()
+            )
+            requests.add(
+                createGridRequestMaker(
+                    sheetsService,
+                    id,
+                    title,
+                    0,
+                    1,
+                    0,
+                    body.getValues().first().size
+                ).colorizeBorders()
+            )
             // Align
             requests.add(createGridRequestMaker(sheetsService, id, title, 0, body.getValues().size, 0, 2).formatCells())
             val req = BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
