@@ -5,10 +5,8 @@ import org.apache.logging.log4j.kotlin.logger
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.xml.sax.SAXException
-import ru.vladrus13.itmobot.bot.BotModule
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.exceptions.XMLClassCastException
-import ru.vladrus13.itmobot.plugins.PluginsHolder
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.tables.TableModule
 import ru.vladrus13.itmobot.xml.XMLParser
@@ -69,10 +67,6 @@ fun main() {
         logger.error("Something went wrong initializing database", e)
     }
     logger.info("== Finish loading database")
-
-    logger.info("== Start initial plugins")
-    PluginsHolder.init()
-    logger.info("== Finish initial plugins")
 
     val injector = Guice.createInjector(
         TableModule(),

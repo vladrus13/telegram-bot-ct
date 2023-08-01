@@ -10,7 +10,7 @@ import java.lang.Boolean.TRUE
 class DataBase {
     companion object : Logging {
         fun getUsersWithNotification(): List<User> =
-                DataBaseParser.get { UserParser.Companion.Users.notification eq TRUE }
+                DataBaseParser.get { UserParser.Users.notification eq TRUE }
 
         inline fun <reified T> put(chatId: Long, o: T) = DataBaseParser.set(chatId, o)
 

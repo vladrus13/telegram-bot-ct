@@ -4,7 +4,7 @@ import org.apache.logging.log4j.kotlin.Logging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
-import ru.vladrus13.itmobot.plugins.PluginsHolder
+import ru.vladrus13.itmobot.plugins.Plugin
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.xml.XMLParser
 import kotlin.reflect.KClass
@@ -59,9 +59,11 @@ class DataBaseParser {
             }
             logger.info("=== Finish load databases from XML")
             logger.info("=== Start initialize databases")
+            // TODO добавить DI
+            val plugins = HashMap<String, Plugin>()
             transaction(connection) {
                 addLogger(StdOutSqlLogger)
-                for (plugin in PluginsHolder.plugins) {
+                for (plugin in plugins.values) {
                     for (table in plugin.getDataBases()) {
                         parsers[table.first] = table.second
                     }
@@ -108,6 +110,7 @@ abstract class DataBaseEntity<T> {
                 1 -> {
                     get(entities.single())
                 }
+
                 else -> throw IllegalStateException("More than 1 entities with id: $chatId")
             }
         }
@@ -124,6 +127,7 @@ abstract class DataBaseEntity<T> {
         }
         return list
     }
+
 
     fun put(o: T, chatId: Long) {
         transaction(DataBaseParser.connection) {

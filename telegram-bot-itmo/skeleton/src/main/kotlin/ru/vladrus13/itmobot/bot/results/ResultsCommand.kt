@@ -1,21 +1,20 @@
 package ru.vladrus13.itmobot.bot.results
 
+import com.google.inject.Inject
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
-import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.tables.PointTablesRegistry
 
-class ResultsGet(override val parent: Menu) : Command() {
-    override fun help(): String = "Получение результатов"
+class ResultsCommand @Inject constructor(private val pointTablesRegistry: PointTablesRegistry) :
+    Command() {
+    override val name: String
+        get() = "Результаты"
+    override val help: String
+        get() = "Получение результатов"
 
-    override val name: String = "Результаты"
-    override val systemName: String = "results"
-
-    override fun isAccept(update: Update): Boolean = update.message.text == name
-
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
+    override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {
         if (user.group == null) {
             user.send(
                 bot = bot,
@@ -31,8 +30,8 @@ class ResultsGet(override val parent: Menu) : Command() {
             return
         }
         val group = user.group!!
-        val tables = MainTableHolder.groupsTables[group]
-        if (tables == null || tables.isEmpty()) {
+        val tables = pointTablesRegistry.pointsTableNamesByGroup[group]
+        if (tables.isNullOrEmpty()) {
             user.send(
                 bot = bot,
                 text = "У вас нет таблиц для контроля!"
@@ -40,7 +39,7 @@ class ResultsGet(override val parent: Menu) : Command() {
             return
         }
         val realTables = tables
-            .mapNotNull { PointTablesRegistry()[it] }
+            .mapNotNull { pointTablesRegistry[it] }
             .mapNotNull { it[user.name!!] }
         if (realTables.isEmpty()) {
             user.send(
@@ -58,5 +57,4 @@ class ResultsGet(override val parent: Menu) : Command() {
             text = sb.toString()
         )
     }
-
 }

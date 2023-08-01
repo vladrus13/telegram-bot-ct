@@ -8,11 +8,9 @@ import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
 import org.xml.sax.SAXException
-import ru.vladrus13.itmobot.bot.BotModule
 import ru.vladrus13.itmobot.bot.ItmoBot
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.exceptions.XMLClassCastException
-import ru.vladrus13.itmobot.plugins.PluginsHolder
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.tables.TableModule
 import ru.vladrus13.itmobot.xml.XMLParser
@@ -67,10 +65,6 @@ fun main() {
         logger.error("Something went wrong loading database", e)
     }
     logger.info("== Finish loading database")
-
-    logger.info("== Start initial plugins")
-    PluginsHolder.init()
-    logger.info("== Finish initial plugins")
 
     logger.info("== Start creating bot API")
     val telegramBotsApi = TelegramBotsApi(DefaultBotSession::class.java)

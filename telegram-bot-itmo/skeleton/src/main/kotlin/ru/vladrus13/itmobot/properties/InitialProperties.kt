@@ -1,7 +1,7 @@
 package ru.vladrus13.itmobot.properties
 
 import org.apache.logging.log4j.kotlin.Logging
-import org.telegram.telegrambots.bots.TelegramLongPollingBot
+import ru.vladrus13.itmobot.bot.ItmoBot
 import java.io.IOException
 import java.nio.file.Path
 import java.util.*
@@ -14,9 +14,13 @@ class InitialProperties : Logging {
                 try {
                     properties.load(InitialProperties::class.java.getResourceAsStream("/main.properties"))
                 } catch (e: IOException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/main.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/main.properties").toFile()
+                    )
                 } catch (e: NullPointerException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/main.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/main.properties").toFile()
+                    )
                 }
                 return properties
             }
@@ -27,16 +31,20 @@ class InitialProperties : Logging {
                 try {
                     properties.load(InitialProperties::class.java.getResourceAsStream("/datatable.properties"))
                 } catch (e: IOException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/datatable.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/datatable.properties").toFile()
+                    )
                 } catch (e: NullPointerException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/datatable.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/datatable.properties").toFile()
+                    )
                 }
                 return properties
             }
 
-        private var nullableBot: TelegramLongPollingBot? = null
+        private var nullableBot: ItmoBot? = null
 
-        var bot: TelegramLongPollingBot
+        var bot: ItmoBot
             get() {
                 check(nullableBot != null) { "Bot must be initialize" }
                 return nullableBot!!

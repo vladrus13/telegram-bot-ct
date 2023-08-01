@@ -1,4 +1,4 @@
-package ru.vladrus13.itmobot.bot.settings.schedule
+package ru.vladrus13.itmobot.bot.settings
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -6,35 +6,26 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
-import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.utils.Utils
 
-class ScheduleSettings(override val parent: Menu) : Menu(parent) {
-    override val childes: Array<Foldable>
-        get() = arrayOf()
-
-    override fun menuHelp(): String = "Настройки формата расписания"
-
-    override val name: String
-        get() = "Настройки расписания"
-    override val systemName: String
-        get() = "scheduleSettings"
-
-    override fun isAccept(update: Update): Boolean = update.message.text == name
+class ScheduleSettingsMenu : Menu(arrayOf()) {
+    override val menuHelp: String = "Настройки формата расписания"
+    override val name: String = "Настройки расписания"
 
     override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val replyKeyboardMarkup = ReplyKeyboardMarkup()
-        val list = Utils.splitBy(user.settings.getStatus())
+        val rows = ArrayList<KeyboardRow>()
+        for (part in user.settings.getStatus().chunked(2)) {
+            val row = KeyboardRow()
+            row.addAll(part.map { name })
+            rows.add(row)
+        }
         val backRow = KeyboardRow()
         backRow.add("<< Назад")
-        list.add(backRow)
-        replyKeyboardMarkup.keyboard = list
-        return replyKeyboardMarkup
+        rows.add(backRow)
+        return ReplyKeyboardMarkup(rows)
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
-        if (standardCommand(update, bot, user)) return
+    override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
         val text = update.message.text!!
         val isOn = text.endsWith("(включено)")
         val isOff = text.endsWith("(выключено)")
@@ -58,10 +49,9 @@ class ScheduleSettings(override val parent: Menu) : Menu(parent) {
                     text = "Успешно изменено!",
                     replyKeyboard = getReplyKeyboard(user)
                 )
-                return
+                return true
             }
         }
-        unknownCommand(bot, user)
+        return false
     }
-
 }

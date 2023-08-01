@@ -1,67 +1,49 @@
 package ru.vladrus13.itmobot.plugin.homework
 
-import org.jetbrains.exposed.sql.and
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
-import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.utils.Utils
-import java.util.*
-import javax.xml.crypto.Data
 
-class RemoveHWTeam(override val parent: Menu) : Menu(parent) {
-    override val childes: Array<Foldable> = arrayOf()
-
-    override fun menuHelp(): String = "Удаление команд"
+class RemoveTeamCommand : Menu(arrayOf()) {
+    override val menuHelp: String
+        get() = "Удаление команд"
+    override val name: String
+        get() = "Роспуск команды"
 
     override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val replyKeyboardMarkup = ReplyKeyboardMarkup()
-        val list = if (user.path.getData("selectedTeam") == null) {
+        val rows = if (user.path.getData("selectedTeam") == null) {
             Utils.splitBy(
-                HomeworkPlugin.TeamRoleDatabase.getAllByFilter {
-                    (HomeworkPlugin.TeamRoleTable.userId eq user.chatId) and
-                            (HomeworkPlugin.TeamRoleTable.role eq 3)
-                }
-                    .mapNotNull { HomeworkPlugin.TeamDatabase.getById(it.teamId)?.name }
+                TeamRoleDatabase.getAllTeamsWhereUserIsAdmin(user.chatId)
             )
         } else {
-            val team = HomeworkPlugin.TeamDatabase.getById(user.path.getData("selectedTeam")!!.toLong())!!
-            val teamName = team.name
-            val letters = teamName.split("").toMutableList()
-            letters.shuffle()
-            val newName = letters.joinToString(separator = "")
-            if (newName == teamName) {
-                arrayListOf()
-            } else {
-                arrayListOf(KeyboardRow().apply { add(newName) })
-            }
+            val team = TeamDatabase.getById(user.path.getData("selectedTeam")!!.toLong())!!
+            arrayListOf(KeyboardRow().apply { add(team.name) })
         }
         val backRow = KeyboardRow()
         backRow.add("<< Назад")
-        list.add(backRow)
-        replyKeyboardMarkup.keyboard = list
-        return replyKeyboardMarkup
+        rows.add(backRow)
+        return ReplyKeyboardMarkup(rows)
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
-        if (standardCommand(update, bot, user)) return
+    override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
         if (user.path.getData("selectedTeam") != null) {
-            val team = HomeworkPlugin.TeamDatabase.getById(user.path.getData("selectedTeam")!!.toLong())!!
+            val team = TeamDatabase.getById(user.path.getData("selectedTeam")!!.toLong())!!
             if (update.message.text == team.name) {
-                val users = HomeworkPlugin.TeamRoleDatabase.getByTeamId(team.id)
-                HomeworkPlugin.TeamRoleDatabase.deleteByTeamId(team.id)
-                HomeworkPlugin.TeamDatabase.deleteByTeamId(team.id)
-                HomeworkPlugin.TeamTaskDatabase.deleteByTeamId(team.id)
-                user.path.setPath(parent.path)
+                val users = TeamRoleDatabase.getByTeamId(team.id)
+                TeamRoleDatabase.deleteByTeamId(team.id)
+                TeamDatabase.deleteByTeamId(team.id)
+                TeamTaskDatabase.deleteByTeamId(team.id)
+                user.path.myRemoveFromPath()
                 user.send(
                     bot = bot,
                     text = "Успешно! Происходит отправка о роспуске всем участникам...",
-                    replyKeyboard = parent.getReplyKeyboard(user)
+                    replyKeyboard = user.path.myLast().getReplyKeyboard(user)
                 )
                 users.forEach { role ->
                     DataBase.get<User>(role.userId).send(
@@ -70,16 +52,16 @@ class RemoveHWTeam(override val parent: Menu) : Menu(parent) {
                     )
                 }
             } else {
-                user.path.setPath(parent.path)
+                user.path.myRemoveFromPath()
                 user.send(
                     bot = bot,
                     text = "Неверно!",
-                    replyKeyboard = parent.getReplyKeyboard(user)
+                    replyKeyboard = user.path.myLast().getReplyKeyboard(user)
                 )
             }
         } else {
             val teamName = update.message.text
-            val team = HomeworkPlugin.TeamDatabase.getByName(teamName)
+            val team = TeamDatabase.getByName(teamName)
             if (team == null) {
                 user.send(
                     bot = bot,
@@ -98,11 +80,6 @@ class RemoveHWTeam(override val parent: Menu) : Menu(parent) {
                 )
             }
         }
+        return true
     }
-
-    override val name: String = "Роспуск команды"
-    override val systemName: String = "removeHW"
-
-    override fun isAccept(update: Update): Boolean =
-        update.message.text == name
 }

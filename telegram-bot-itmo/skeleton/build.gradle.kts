@@ -24,4 +24,7 @@ dependencies {
 
     implementation(libs.bundles.logging)
     implementation(libs.bundles.di)
+//    implementation(project(mapOf("path" to ":plugins:alarm")))
+//    implementation(project(mapOf("path" to ":plugins:simple")))
+//    implementation(project(mapOf("path" to ":plugins:homework")))
 }

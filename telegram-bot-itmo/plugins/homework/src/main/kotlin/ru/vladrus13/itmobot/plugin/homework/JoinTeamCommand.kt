@@ -6,38 +6,36 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
-import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
+import ru.vladrus13.itmobot.plugin.homework.TeamRoleDatabase.*
 import ru.vladrus13.itmobot.utils.Utils
 
-class JoinTeamHWCommand(override val parent: Menu) : Menu(parent) {
-    override val childes: Array<Foldable> = arrayOf()
-
-    override fun menuHelp(): String = "Позволяет вам зайти в команду"
+class JoinTeamCommand : Menu(arrayOf()) {
+    override val menuHelp: String
+        get() = "Позволяет вам зайти в команду"
+    override val name: String
+        get() = "Присоединиться к команде"
 
     override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val replyKeyboardMarkup = ReplyKeyboardMarkup()
-        val list : MutableList<KeyboardRow> = if (user.path.getData("teamId") == null) {
-            val rolesOfUser = HomeworkPlugin.TeamRoleDatabase.getAllByFilter { HomeworkPlugin.TeamRoleTable.userId eq user.chatId }.map { it.teamId }
+        val rows: MutableList<KeyboardRow> = if (user.path.getData("teamId") == null) {
+            val teamsOfUser = TeamRoleDatabase.getAllTeamsForUser(user.chatId)
             Utils.splitBy(
-                HomeworkPlugin.TeamDatabase.getAll().filter { !rolesOfUser.contains(it.id) }.map { it.name }
+                TeamDatabase.getAllTeamsExcept(teamsOfUser)
             )
         } else {
             mutableListOf()
         }
         val backRow = KeyboardRow()
         backRow.add("<< Назад")
-        list.add(backRow)
-        replyKeyboardMarkup.keyboard = list
-        return replyKeyboardMarkup
+        rows.add(backRow)
+        return ReplyKeyboardMarkup(rows)
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
-        if (standardCommand(update, bot, user)) return
+    override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
         if (user.path.getData("teamId") != null) {
             val teamId = user.path.getData("teamId")!!.toLong()
             val password = update.message.text
-            val team = HomeworkPlugin.TeamDatabase.getById(teamId)
+            val team = TeamDatabase.getById(teamId)
             if (team == null) {
                 user.send(
                     bot = bot,
@@ -45,32 +43,32 @@ class JoinTeamHWCommand(override val parent: Menu) : Menu(parent) {
                 )
             } else {
                 if (team.password == password) {
-                    HomeworkPlugin.TeamRoleDatabase.put(HomeworkPlugin.TeamRole(user.chatId, teamId, 1))
-                    user.path.setPath(parent.path)
+                    TeamRoleDatabase.put(TeamRole(user.chatId, teamId, 1))
+                    user.path.myRemoveFromPath()
                     user.send(
                         bot = bot,
                         text = "Вы успешно вошли",
-                        replyKeyboard = parent.getReplyKeyboard(user)
+                        replyKeyboard = user.path.myLast().getReplyKeyboard(user)
                     )
                 } else {
-                    user.path.setPath(parent.path)
+                    user.path.myRemoveFromPath()
                     user.send(
                         bot = bot,
                         text = "НЕКОрректный пароль!",
-                        replyKeyboard = parent.getReplyKeyboard(user)
+                        replyKeyboard = user.path.myLast().getReplyKeyboard(user)
                     )
                 }
             }
         } else {
             val teamName = update.message.text
-            val team = HomeworkPlugin.TeamDatabase.getByName(teamName)
+            val team = TeamDatabase.getByName(teamName)
             if (team == null) {
                 user.send(
                     bot = bot,
                     text = "НЕКОрректное имя группы"
                 )
             } else {
-                val role = HomeworkPlugin.TeamRoleDatabase.get(user.chatId, team.id)
+                val role = TeamRoleDatabase.get(user.chatId, team.id)
                 if (role != null) {
                     user.send(
                         bot = bot,
@@ -85,11 +83,6 @@ class JoinTeamHWCommand(override val parent: Menu) : Menu(parent) {
                 }
             }
         }
+        return true
     }
-
-    override val name: String = "Присоединиться к команде"
-    override val systemName: String = "joinHWTeam"
-
-    override fun isAccept(update: Update): Boolean =
-        update.message.text == name
 }
