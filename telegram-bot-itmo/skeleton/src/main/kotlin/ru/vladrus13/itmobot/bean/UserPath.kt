@@ -4,21 +4,21 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import ru.vladrus13.itmobot.command.Menu
 
 class UserPath(
-    private var myPath: MutableList<Menu>,
+    private var path: MutableList<Menu>,
     val data: MutableMap<String, String> = mutableMapOf()
 ) {
 
-    fun myAddToPath(newPart: Menu) {
-        myPath.add(newPart)
+    fun addToPath(newPart: Menu) {
+        path.add(newPart)
     }
 
-    fun myRemoveFromPath(): Menu {
-        return myPath.removeLast()
+    fun returnBack(): Menu {
+        return path.removeLast()
     }
 
-    fun myCanReturn() = myPath.size > 1
+    fun canReturn() = path.size > 1
 
-    fun myLast() = myPath.last()
+    fun last() = path.last()
 
     fun setData(key: String, data: String) {
         this.data[key] = data
@@ -32,7 +32,7 @@ class UserPath(
         val objectMapper = ObjectMapper()
         val objectWriter = objectMapper.writer()
         val mainNode = objectMapper.createObjectNode()
-        mainNode.put("objectPath", myPath.map { it.name }.joinToString { "/" })
+        mainNode.put("objectPath", path.map { it.name }.joinToString { "/" })
         return objectWriter.writeValueAsString(mainNode)
     }
 }

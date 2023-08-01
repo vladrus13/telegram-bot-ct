@@ -13,10 +13,8 @@ class PluginsParser : DataBaseEntity<UserPlugins>() {
         val plugins = varchar("plugins", 1023)
     }
 
-    override val table: Table
-        get() = Plugins
-    override val columnId: Column<Long>
-        get() = Plugins.id
+    override val table: Table = Plugins
+    override val columnId: Column<Long> = Plugins.id
 
     override fun getNew(chatId: Long): UserPlugins = UserPlugins(chatId)
 

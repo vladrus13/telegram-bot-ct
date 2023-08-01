@@ -2,33 +2,21 @@ package ru.vladrus13.itmobot.plugin.homework
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.plugin.homework.TeamRoleDatabase.*
-import ru.vladrus13.itmobot.utils.Utils
+import ru.vladrus13.itmobot.plugin.homework.TeamRoleDatabase.TeamRole
 
 class JoinTeamCommand : Menu(arrayOf()) {
-    override val menuHelp: String
-        get() = "Позволяет вам зайти в команду"
-    override val name: String
-        get() = "Присоединиться к команде"
+    override val menuHelp = "Позволяет вам зайти в команду"
+    override val name = "Присоединиться к команде"
 
-    override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val rows: MutableList<KeyboardRow> = if (user.path.getData("teamId") == null) {
+    override fun getAdditionalButtonsForReply(user: User): List<String> {
+        return if (user.path.getData("teamId") == null) {
             val teamsOfUser = TeamRoleDatabase.getAllTeamsForUser(user.chatId)
-            Utils.splitBy(
-                TeamDatabase.getAllTeamsExcept(teamsOfUser)
-            )
+            TeamDatabase.getAllTeamsExcept(teamsOfUser)
         } else {
             mutableListOf()
         }
-        val backRow = KeyboardRow()
-        backRow.add("<< Назад")
-        rows.add(backRow)
-        return ReplyKeyboardMarkup(rows)
     }
 
     override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
@@ -44,18 +32,18 @@ class JoinTeamCommand : Menu(arrayOf()) {
             } else {
                 if (team.password == password) {
                     TeamRoleDatabase.put(TeamRole(user.chatId, teamId, 1))
-                    user.path.myRemoveFromPath()
+                    user.path.returnBack()
                     user.send(
                         bot = bot,
                         text = "Вы успешно вошли",
-                        replyKeyboard = user.path.myLast().getReplyKeyboard(user)
+                        replyKeyboard = user.path.last().getReplyKeyboard(user)
                     )
                 } else {
-                    user.path.myRemoveFromPath()
+                    user.path.returnBack()
                     user.send(
                         bot = bot,
                         text = "НЕКОрректный пароль!",
-                        replyKeyboard = user.path.myLast().getReplyKeyboard(user)
+                        replyKeyboard = user.path.last().getReplyKeyboard(user)
                     )
                 }
             }

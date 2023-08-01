@@ -79,7 +79,7 @@ abstract class Menu(val children: Array<out Foldable>) : Foldable {
                     replyKeyboard = child.getReplyKeyboard(user)
                 )
                 child.onEnter(bot, user)
-                user.path.myAddToPath(child)
+                user.path.addToPath(child)
             }
 
             else -> child.onUpdate(update, bot, user)
@@ -90,12 +90,12 @@ abstract class Menu(val children: Array<out Foldable>) : Foldable {
         user: User,
         bot: TelegramLongPollingBot
     ) {
-        if (user.path.myCanReturn()) {
-            user.path.myRemoveFromPath()
+        if (user.path.canReturn()) {
+            user.path.returnBack()
             user.send(
                 bot = bot,
                 text = "Возвращаемся...",
-                replyKeyboard = user.path.myLast().getReplyKeyboard(user)
+                replyKeyboard = user.path.last().getReplyKeyboard(user)
             )
         } else {
             user.send(bot, "Возвращаться некуда.")
@@ -109,12 +109,18 @@ abstract class Menu(val children: Array<out Foldable>) : Foldable {
             row.addAll(part.map { name })
             rows.add(row)
         }
+        val additionalRows = getAdditionalButtonsForReply(user)
+            .chunked(2)
+            .map { row -> KeyboardRow().also { it.addAll(row) } }
+        rows.addAll(additionalRows)
         val backRow = KeyboardRow()
         backRow.add("Помощь")
         backRow.add("<< Назад")
         rows.add(backRow)
         return ReplyKeyboardMarkup(rows)
     }
+
+    open fun getAdditionalButtonsForReply(user: User): List<String> = listOf()
 
     open fun onEnter(bot: TelegramLongPollingBot, user: User) = Unit
 }

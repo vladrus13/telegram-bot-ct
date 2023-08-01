@@ -14,10 +14,8 @@ import ru.vladrus13.itmobot.tables.schedule.ScheduleRegistry
 
 class SubjectSettingsMenu @Inject constructor(private val scheduleRegistry: ScheduleRegistry) :
     Menu(arrayOf()) {
-    override val menuHelp: String
-        get() = "Меню выбора предметов (для предметов по выбору)"
-    override val name: String
-        get() = "Настройки предметов"
+    override val menuHelp = "Меню выбора предметов (для предметов по выбору)"
+    override val name = "Настройки предметов"
 
     override fun getReplyKeyboard(user: User): ReplyKeyboard {
         val options = recollect(user.getSubjects(), scheduleRegistry.table.getSubjects())
@@ -34,10 +32,14 @@ class SubjectSettingsMenu @Inject constructor(private val scheduleRegistry: Sche
         return ReplyKeyboardMarkup(rows)
     }
 
+    override fun getAdditionalButtonsForReply(user: User): List<String> {
+        return recollect(user.getSubjects(), scheduleRegistry.table.getSubjects())
+    }
+
     private fun recollect(
         usersSubjects: UsersSubjects,
         subjects: Collection<String>
-    ): Collection<String> {
+    ): List<String> {
         val array = ArrayList<String>()
         subjects.forEach {
             array.add(

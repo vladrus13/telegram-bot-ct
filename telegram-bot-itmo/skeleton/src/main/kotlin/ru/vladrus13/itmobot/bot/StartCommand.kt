@@ -7,10 +7,8 @@ import ru.vladrus13.itmobot.command.Command
 import java.nio.file.Path
 
 class StartCommand : Command() {
-    override val name: String
-        get() = "/start"
-    override val help: String
-        get() = "Команда старта"
+    override val name = "/start"
+    override val help = "Команда старта"
 
     override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {
         user.send(
@@ -56,7 +54,7 @@ class StartCommand : Command() {
                     1) Если вы заметили в боте некорректное поведение, которое показалось вам необычным или какие либо ошибки, то можете смело писать @vladrus13. Он постарается закрыть все баги очень оперативно.
                     2) Вы можете писать @vladrus13 о предложениях по улучшению бота, добавлению возможностей и различных плагинов. https://github.com/vladrus13/telegram-bot-ct - здесь вы можете посмотреть все, что вам может потребоваться для написания плагинов. Если вы хотите что то реализовать сами, то такое только приветствуется
                     """.trimIndent(),
-            replyKeyboard = user.path.myLast().getReplyKeyboard(user),
+            replyKeyboard = user.path.last().getReplyKeyboard(user),
             image = Path.of("../telegram-bot-itmo-data/images/memes/mem_open_source.jpg")
         )
     }

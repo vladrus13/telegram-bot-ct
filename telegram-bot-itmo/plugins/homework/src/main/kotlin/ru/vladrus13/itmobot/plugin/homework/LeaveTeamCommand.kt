@@ -2,26 +2,16 @@ package ru.vladrus13.itmobot.plugin.homework
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.utils.Utils
 
 class LeaveTeamCommand : Menu(arrayOf()) {
     override val menuHelp = "Позволяет покинуть команду"
     override val name = "Покинуть команду"
 
-    override fun getReplyKeyboard(user: User): ReplyKeyboard {
+    override fun getAdditionalButtonsForReply(user: User): List<String> {
         val teamsForUser = TeamRoleDatabase.getAllTeamsForUser(user.chatId)
-        val list : MutableList<KeyboardRow> = Utils.splitBy(
-            TeamDatabase.getAllTeamsWithIdFrom(teamsForUser)
-        )
-        val backRow = KeyboardRow()
-        backRow.add("<< Назад")
-        list.add(backRow)
-        return ReplyKeyboardMarkup(list)
+        return TeamDatabase.getAllTeamsWithIdFrom(teamsForUser)
     }
 
     override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
@@ -47,11 +37,11 @@ class LeaveTeamCommand : Menu(arrayOf()) {
                     )
                 } else {
                     TeamRoleDatabase.deleteByTeamAndUser(user.chatId, team.id)
-                    user.path.myRemoveFromPath()
+                    user.path.returnBack()
                     user.send(
                         bot = bot,
                         text = "Вы успешно покинули группу!",
-                        replyKeyboard = user.path.myLast().getReplyKeyboard(user)
+                        replyKeyboard = user.path.last().getReplyKeyboard(user)
                     )
                 }
             }

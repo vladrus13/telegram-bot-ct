@@ -2,33 +2,21 @@ package ru.vladrus13.itmobot.plugin.homework
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.database.DataBase
-import ru.vladrus13.itmobot.utils.Utils
 
 class RemoveTeamCommand : Menu(arrayOf()) {
-    override val menuHelp: String
-        get() = "Удаление команд"
-    override val name: String
-        get() = "Роспуск команды"
+    override val menuHelp = "Удаление команд"
+    override val name = "Роспуск команды"
 
-    override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val rows = if (user.path.getData("selectedTeam") == null) {
-            Utils.splitBy(
-                TeamRoleDatabase.getAllTeamsWhereUserIsAdmin(user.chatId)
-            )
+    override fun getAdditionalButtonsForReply(user: User): List<String> {
+        return if (user.path.getData("selectedTeam") == null) {
+            TeamRoleDatabase.getAllTeamsWhereUserIsAdmin(user.chatId)
         } else {
             val team = TeamDatabase.getById(user.path.getData("selectedTeam")!!.toLong())!!
-            arrayListOf(KeyboardRow().apply { add(team.name) })
+            arrayListOf(team.name)
         }
-        val backRow = KeyboardRow()
-        backRow.add("<< Назад")
-        rows.add(backRow)
-        return ReplyKeyboardMarkup(rows)
     }
 
     override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
@@ -39,11 +27,11 @@ class RemoveTeamCommand : Menu(arrayOf()) {
                 TeamRoleDatabase.deleteByTeamId(team.id)
                 TeamDatabase.deleteByTeamId(team.id)
                 TeamTaskDatabase.deleteByTeamId(team.id)
-                user.path.myRemoveFromPath()
+                user.path.returnBack()
                 user.send(
                     bot = bot,
                     text = "Успешно! Происходит отправка о роспуске всем участникам...",
-                    replyKeyboard = user.path.myLast().getReplyKeyboard(user)
+                    replyKeyboard = user.path.last().getReplyKeyboard(user)
                 )
                 users.forEach { role ->
                     DataBase.get<User>(role.userId).send(
@@ -52,11 +40,11 @@ class RemoveTeamCommand : Menu(arrayOf()) {
                     )
                 }
             } else {
-                user.path.myRemoveFromPath()
+                user.path.returnBack()
                 user.send(
                     bot = bot,
                     text = "Неверно!",
-                    replyKeyboard = user.path.myLast().getReplyKeyboard(user)
+                    replyKeyboard = user.path.last().getReplyKeyboard(user)
                 )
             }
         } else {

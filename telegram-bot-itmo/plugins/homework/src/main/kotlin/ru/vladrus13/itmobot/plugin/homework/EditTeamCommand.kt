@@ -2,34 +2,22 @@ package ru.vladrus13.itmobot.plugin.homework
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.database.entities.UserParser
-import ru.vladrus13.itmobot.utils.Utils
 
 class EditTeamCommand : Menu(arrayOf()) {
-    override val menuHelp: String
-        get() = "Редактирование команды. Позволяет командам, где вы главный администратор, назначать модификаторов, которые смогут загружать файлы в эту группу"
-    override val name: String
-        get() = "Редактирование команды"
+    override val menuHelp = "Редактирование команды. Позволяет командам, где вы главный администратор, назначать модификаторов, которые смогут загружать файлы в эту группу"
+    override val name = "Редактирование команды"
 
-    override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val rows = Utils.splitBy(
-            if (user.path.getData("target") == null) {
-                TeamRoleDatabase.getAllTeamsWhereUserIsAdmin(user.chatId)
-            } else {
-                val teamId = user.path.getData("target")!!.toLong()
-                TeamRoleDatabase.getAllNonAdminTeamMembers(teamId)
-            }
-        )
-        val backRow = KeyboardRow()
-        backRow.add("<< Назад")
-        rows.add(backRow)
-        return ReplyKeyboardMarkup(rows)
+    override fun getAdditionalButtonsForReply(user: User): List<String> {
+        return if (user.path.getData("target") == null) {
+            TeamRoleDatabase.getAllTeamsWhereUserIsAdmin(user.chatId)
+        } else {
+            val teamId = user.path.getData("target")!!.toLong()
+            TeamRoleDatabase.getAllNonAdminTeamMembers(teamId)
+        }
     }
 
     override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {

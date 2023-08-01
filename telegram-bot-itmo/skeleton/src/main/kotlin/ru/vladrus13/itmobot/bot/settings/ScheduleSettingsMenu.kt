@@ -2,27 +2,15 @@ package ru.vladrus13.itmobot.bot.settings
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Menu
 
 class ScheduleSettingsMenu : Menu(arrayOf()) {
-    override val menuHelp: String = "Настройки формата расписания"
-    override val name: String = "Настройки расписания"
+    override val menuHelp = "Настройки формата расписания"
+    override val name = "Настройки расписания"
 
-    override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val rows = ArrayList<KeyboardRow>()
-        for (part in user.settings.getStatus().chunked(2)) {
-            val row = KeyboardRow()
-            row.addAll(part.map { name })
-            rows.add(row)
-        }
-        val backRow = KeyboardRow()
-        backRow.add("<< Назад")
-        rows.add(backRow)
-        return ReplyKeyboardMarkup(rows)
+    override fun getAdditionalButtonsForReply(user: User): List<String> {
+        return user.settings.getStatus()
     }
 
     override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {

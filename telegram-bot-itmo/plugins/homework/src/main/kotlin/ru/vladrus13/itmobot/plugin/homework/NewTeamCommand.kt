@@ -42,11 +42,11 @@ class NewTeamCommand : Menu(arrayOf()) {
             val name = enteredTeamNamesByUser[user.chatId]!!
             val password = if (message.isNullOrBlank()) null else message
             if (TeamDatabase.put(name, password)) {
-                user.path.myRemoveFromPath()
+                user.path.returnBack()
                 user.send(
                     bot = bot,
                     text = "Команда успешно создана!",
-                    replyKeyboard = user.path.myLast().getReplyKeyboard(user)
+                    replyKeyboard = user.path.last().getReplyKeyboard(user)
                 )
                 TeamRoleDatabase.put(
                     TeamRoleDatabase.TeamRole(

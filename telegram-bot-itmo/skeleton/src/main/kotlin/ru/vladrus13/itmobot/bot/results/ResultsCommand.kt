@@ -9,10 +9,8 @@ import ru.vladrus13.itmobot.tables.PointTablesRegistry
 
 class ResultsCommand @Inject constructor(private val pointTablesRegistry: PointTablesRegistry) :
     Command() {
-    override val name: String
-        get() = "Результаты"
-    override val help: String
-        get() = "Получение результатов"
+    override val name = "Результаты"
+    override val help = "Получение результатов"
 
     override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {
         if (user.group == null) {

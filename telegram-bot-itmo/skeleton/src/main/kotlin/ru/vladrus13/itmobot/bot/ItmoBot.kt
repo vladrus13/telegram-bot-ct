@@ -32,7 +32,7 @@ class ItmoBot(
             return
         }
         logger.info("Receive message from user: ${user.username}: ${update.message.text}")
-        user.path.myLast().onUpdate(update, this, user)
+        user.path.last().onUpdate(update, this, user)
         DataBase.put(user.chatId, user)
     }
 

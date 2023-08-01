@@ -107,6 +107,14 @@ open class TeamRoleDatabase {
                 .map { it.teamId }
         }
 
+        fun getAllTeamsWhereUserCanAddHomework(userId: Long): List<String> {
+            return getAllByFilter {
+                (TeamRoleTable.userId eq userId) and
+                        (TeamRoleTable.role neq 1)
+            }
+                .mapNotNull { TeamDatabase.getById(it.teamId)?.name }
+        }
+
         override fun get(result: ResultRow): TeamRole =
             TeamRole(
                 result[TeamRoleTable.userId],
