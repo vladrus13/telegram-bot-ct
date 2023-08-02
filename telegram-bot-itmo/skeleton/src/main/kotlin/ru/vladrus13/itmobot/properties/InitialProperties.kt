@@ -1,12 +1,12 @@
 package ru.vladrus13.itmobot.properties
 
-import org.telegram.telegrambots.bots.TelegramLongPollingBot
+import org.apache.logging.log4j.kotlin.Logging
+import ru.vladrus13.itmobot.bot.ItmoBot
 import java.io.IOException
 import java.nio.file.Path
 import java.util.*
-import java.util.logging.Logger
 
-class InitialProperties {
+class InitialProperties : Logging {
     companion object {
         val mainProperties: Properties
             get() {
@@ -14,9 +14,13 @@ class InitialProperties {
                 try {
                     properties.load(InitialProperties::class.java.getResourceAsStream("/main.properties"))
                 } catch (e: IOException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/main.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/main.properties").toFile()
+                    )
                 } catch (e: NullPointerException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/main.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/main.properties").toFile()
+                    )
                 }
                 return properties
             }
@@ -27,16 +31,20 @@ class InitialProperties {
                 try {
                     properties.load(InitialProperties::class.java.getResourceAsStream("/datatable.properties"))
                 } catch (e: IOException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/datatable.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/datatable.properties").toFile()
+                    )
                 } catch (e: NullPointerException) {
-                    throw NoSuchFileException(Path.of("src/main/resources/datatable.properties").toFile())
+                    throw NoSuchFileException(
+                        Path.of("src/main/resources/datatable.properties").toFile()
+                    )
                 }
                 return properties
             }
 
-        private var nullableBot: TelegramLongPollingBot? = null
+        private var nullableBot: ItmoBot? = null
 
-        var bot: TelegramLongPollingBot
+        var bot: ItmoBot
             get() {
                 check(nullableBot != null) { "Bot must be initialize" }
                 return nullableBot!!
@@ -45,17 +53,8 @@ class InitialProperties {
                 nullableBot = value
             }
 
-        const val timeToReloadTable = 5 * 60 * 1000L
-
-        private var nullableLogger: Logger? = null
-
-        var logger: Logger
-            get() {
-                check(nullableLogger != null) { "Logger must be initialize" }
-                return nullableLogger!!
-            }
-            set(value) {
-                nullableLogger = value
-            }
+        const val timeToReloadMainTable = 5 * 60 * 1000L
+        const val timeToReloadPointsTable = 5 * 60 * 1000L
+        const val timeToReloadScheduleTable = 20 * 1000L
     }
 }

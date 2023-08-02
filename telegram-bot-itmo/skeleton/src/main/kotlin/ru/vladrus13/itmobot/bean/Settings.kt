@@ -17,7 +17,7 @@ class Settings(byte: Int = 0) {
         return getBool(isShowEnd) * 1 + getBool(isShowTeacher) * 2 + getBool(isCompact) * 4
     }
 
-    fun getStatus(): Collection<String> {
+    fun getStatus(): List<String> {
         return listOf(
             "Показывать конец пары (${if (isShowEnd) "включено" else "выключено"})",
             "Показывать преподавателя (${if (isShowTeacher) "включено" else "выключено"})",

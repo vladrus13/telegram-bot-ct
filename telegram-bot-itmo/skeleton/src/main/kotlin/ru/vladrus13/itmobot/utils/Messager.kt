@@ -57,19 +57,5 @@ class Messager {
             }
             return sendMessage
         }
-
-        fun getMessage(
-            chatId: Long,
-            text: String? = null,
-            replyKeyboardMarkup: ReplyKeyboard? = null,
-            image: Path
-        ): SendPhoto {
-            val sendMessage = SendPhoto()
-            sendMessage.chatId = chatId.toString()
-            if (text != null) sendMessage.caption = text
-            if (replyKeyboardMarkup != null) sendMessage.replyMarkup = replyKeyboardMarkup
-            sendMessage.photo = InputFile(image.toFile())
-            return sendMessage
-        }
     }
 }

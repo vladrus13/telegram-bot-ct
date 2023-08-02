@@ -1,51 +1,28 @@
 package ru.vladrus13.itmobot.plugin.homework
 
-import org.jetbrains.exposed.sql.and
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.methods.ForwardMessage
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
-import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.database.DataBase
-import ru.vladrus13.itmobot.utils.Utils
 
-class AddHWCommand(override val parent: Menu) : Menu(parent) {
-    override val childes: Array<Foldable> = arrayOf()
+class AddHWCommand : Menu(arrayOf()) {
+    override val menuHelp = "Пункт добавления ДЗ"
+    override val name = listOf("Добавление ДЗ")
 
-    override fun menuHelp(): String = "Пункт добавления ДЗ"
-
-    override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val replyKeyboardMarkup = ReplyKeyboardMarkup()
-        if (user.path.getData("teamId") == null) {
-            val list = Utils.splitBy(
-                HomeworkPlugin.TeamRoleDatabase.getAllByFilter {
-                    (HomeworkPlugin.TeamRoleTable.userId eq user.chatId) and
-                            (HomeworkPlugin.TeamRoleTable.role neq 1)
-                }
-                    .mapNotNull { HomeworkPlugin.TeamDatabase.getById(it.teamId)?.name }
-            )
-            val backRow = KeyboardRow()
-            backRow.add("<< Назад")
-            list.add(backRow)
-            replyKeyboardMarkup.keyboard = list
+    override fun getAdditionalButtonsForReply(user: User): List<String> {
+        return if (user.path.getData("teamId") == null) {
+            TeamRoleDatabase.getAllTeamsWhereUserCanAddHomework(user.chatId)
         } else {
-            replyKeyboardMarkup.keyboard = listOf(KeyboardRow().apply {
-                add("END")
-                add("<< Назад")
-            })
+            return listOf("END")
         }
-        return replyKeyboardMarkup
     }
 
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
-        if (standardCommand(update, bot, user)) return
+    override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
         if (user.path.getData("teamId") == null) {
             val name = update.message.text
-            val team = HomeworkPlugin.TeamDatabase.getByName(name)
+            val team = TeamDatabase.getByName(name)
             if (team == null) {
                 user.send(
                     bot = bot,
@@ -64,8 +41,11 @@ class AddHWCommand(override val parent: Menu) : Menu(parent) {
                 val teamId = user.path.getData("teamId")!!.toLong()
                 val messages = user.path.getData("messages") ?: ""
                 val listOfMessages = messages.split("|").filter { it.isNotBlank() }
-                HomeworkPlugin.TeamTaskDatabase.put(teamId, "${user.chatId}#${listOfMessages.joinToString(separator = "|")}")
-                val roles = HomeworkPlugin.TeamRoleDatabase.getByTeamId(teamId)
+                TeamTaskDatabase.put(
+                    teamId,
+                    "${user.chatId}#${listOfMessages.joinToString(separator = "|")}"
+                )
+                val roles = TeamRoleDatabase.getByTeamId(teamId)
                 roles.forEach { role ->
                     val sub = DataBase.get<User>(role.userId)
                     sub.send(
@@ -80,11 +60,11 @@ class AddHWCommand(override val parent: Menu) : Menu(parent) {
                         bot.execute(message)
                     }
                 }
-                user.path.setPath(parent.path)
+                user.path.returnBack()
                 user.send(
                     bot = bot,
                     text = "Успешно завершено!",
-                    replyKeyboard = parent.getReplyKeyboard(user)
+                    replyKeyboard = user.path.last().getReplyKeyboard(user)
                 )
             } else {
                 val messages = user.path.getData("messages") ?: ""
@@ -92,12 +72,6 @@ class AddHWCommand(override val parent: Menu) : Menu(parent) {
                 user.path.setData("chatId", update.message.chatId.toString())
             }
         }
+        return true
     }
-
-    override val name: String = "Добавление ДЗ"
-    override val systemName: String = "addHW"
-
-    override fun isAccept(update: Update): Boolean =
-        update.message.text == name
-
 }

@@ -1,16 +1,17 @@
 package ru.vladrus13.itmobot.database
 
+import org.apache.logging.log4j.kotlin.Logging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
-import ru.vladrus13.itmobot.plugins.PluginsHolder
+import ru.vladrus13.itmobot.plugins.Plugin
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.xml.XMLParser
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 class DataBaseParser {
-    companion object {
+    companion object : Logging {
 
         val connection = Database.connect(
             url = InitialProperties.databaseProperties.getProperty("url"),
@@ -52,30 +53,31 @@ class DataBaseParser {
 
         @Throws(IllegalArgumentException::class)
         fun init() {
-            DataBase.logger.info("=== Start load databases from XML")
+            logger.info("=== Start load databases from XML")
             for (it in XMLParser.datatableList) {
                 parsers[it.subclass] = it.clazz.createInstance()
             }
-            DataBase.logger.info("=== Finish load databases from XML")
-            DataBase.logger.info("=== Start initialize databases")
+            logger.info("=== Finish load databases from XML")
+            logger.info("=== Start initialize databases")
+            // TODO добавить DI
+            val plugins = HashMap<String, Plugin>()
             transaction(connection) {
                 addLogger(StdOutSqlLogger)
-                for (plugin in PluginsHolder.plugins) {
+                for (plugin in plugins.values) {
                     for (table in plugin.getDataBases()) {
                         parsers[table.first] = table.second
                     }
                 }
                 for (parser in parsers.values) {
-                    DataBase.logger.info("==== Initialize database ${parser::class.simpleName}")
+                    logger.info("==== Initialize database ${parser::class.simpleName}")
                     parser.init()
                 }
             }
-            DataBase.logger.info("=== Finish initialize databases")
+            logger.info("=== Finish initialize databases")
         }
     }
 }
 
-@Suppress("UNCHECKED_CAST")
 abstract class DataBaseEntity<T> {
 
     abstract val name: String
@@ -108,6 +110,7 @@ abstract class DataBaseEntity<T> {
                 1 -> {
                     get(entities.single())
                 }
+
                 else -> throw IllegalStateException("More than 1 entities with id: $chatId")
             }
         }
@@ -124,6 +127,7 @@ abstract class DataBaseEntity<T> {
         }
         return list
     }
+
 
     fun put(o: T, chatId: Long) {
         transaction(DataBaseParser.connection) {

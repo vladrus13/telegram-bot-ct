@@ -1,14 +1,11 @@
 plugins {
     kotlin("jvm")
     idea
+    id("io.freefair.lombok") version "8.1.0"
 }
 
 group = "ru.vladrus13.itmobot"
 version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation("org.telegram:telegrambots:5.2.0")
@@ -24,4 +21,10 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
 
     implementation("com.google.apis:google-api-services-sheets:v4-rev614-1.18.0-rc")
+
+    implementation(libs.bundles.logging)
+    implementation(libs.bundles.di)
+//    implementation(project(mapOf("path" to ":plugins:alarm")))
+//    implementation(project(mapOf("path" to ":plugins:simple")))
+//    implementation(project(mapOf("path" to ":plugins:homework")))
 }

@@ -13,10 +13,6 @@ abstract class Table(val updateCoolDown: Long) {
         groups[name] = nameOfTable
     }
 
-    fun addGroup(names: List<Pair<String, String>>) {
-        groups.putAll(names)
-    }
-
     fun isDepends(name: String): Boolean {
         while (true) {
             try {
@@ -24,10 +20,6 @@ abstract class Table(val updateCoolDown: Long) {
             } catch (ignored: Exception) {
             }
         }
-    }
-
-    fun getGroups(): List<Pair<String, String>> {
-        return groups.toList()
     }
 
 }

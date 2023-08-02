@@ -15,10 +15,8 @@ class SubjectsParser : DataBaseEntity<UsersSubjects>() {
         val exclude = varchar("exclude", 1023)
     }
 
-    override val table: Table
-        get() = Subjects
-    override val columnId: Column<Long>
-        get() = Subjects.id
+    override val table: Table = Subjects
+    override val columnId: Column<Long> = Subjects.id
 
     override fun getNew(chatId: Long): UsersSubjects = UsersSubjects(chatId)
 

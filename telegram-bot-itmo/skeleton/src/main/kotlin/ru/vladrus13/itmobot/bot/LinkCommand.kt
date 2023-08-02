@@ -1,30 +1,17 @@
 package ru.vladrus13.itmobot.bot
 
+import com.google.inject.Inject
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import ru.vladrus13.itmobot.bean.Chat
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
-import ru.vladrus13.itmobot.command.Menu
-import ru.vladrus13.itmobot.tables.MainTableHolder
-import ru.vladrus13.itmobot.utils.Messager
+import ru.vladrus13.itmobot.tables.PointTablesRegistry
 
-class LinkCommand(override val parent: Menu) : Command() {
+class LinkCommand @Inject constructor(private val pointTablesRegistry: PointTablesRegistry) : Command() {
+    override val name = listOf("Ссылки")
+    override val help = "Возвращает ссылки"
 
-    override fun help(): String {
-        return "Возвращает ссылки"
-    }
-
-    override val name: String
-        get() = "Ссылки"
-    override val systemName: String
-        get() = "link"
-
-    override fun isAccept(update: Update): Boolean {
-        return update.message.text!! == name
-    }
-
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
+    override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {
         if (user.group == null) {
             user.send(
                 bot = bot,
@@ -32,7 +19,7 @@ class LinkCommand(override val parent: Menu) : Command() {
             )
         } else {
             val group = user.group!!
-            var message = MainTableHolder.links[group]
+            var message = pointTablesRegistry.linksByGroup[group]
                 ?: "Ошибка при поиске вашей таблички. Возможные проблемы: у бота проблемы с табличками, у вашей группы нет таблички"
             if (message.isEmpty()) {
                 message = "Табличка для вашей группы была создана, но, к сожалению, не содержит ссылок"
@@ -45,28 +32,6 @@ class LinkCommand(override val parent: Menu) : Command() {
                     it.disableWebPagePreview()
                 }
             )
-        }
-    }
-
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat) {
-        if (user.group == null) {
-            bot.execute(
-                Messager.getMessage(
-                    chatId = chat.chatId,
-                    "Пожалуйста, выберите группу в меню настроек!"
-                )
-            )
-        } else {
-            val group = user.group!!
-            var message = MainTableHolder.links[group]
-                ?: "Ошибка при поиске вашей таблички. Возможные проблемы: у бота проблемы с табличками, у вашей группы нет таблички"
-            if (message.isEmpty()) {
-                message = "Табличка для вашей группы была создана, но, к сожалению, не содержит ссылок"
-            }
-            val sendMessage = Messager.getMessage(chat.chatId, message)
-            sendMessage.enableHtml(true)
-            sendMessage.disableWebPagePreview()
-            bot.execute(sendMessage)
         }
     }
 }

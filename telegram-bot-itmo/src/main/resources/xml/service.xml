@@ -1,11 +1,5 @@
 <?xml version="1.0"?>
 <root>
-    <table id="gosha_html"
-           class="ru.vladrus13.itmobot.tables.parsers.GoshaHtmlTable"
-           trigger="gosha-html"/>
-    <table id="google_two_column_table"
-           class="ru.vladrus13.itmobot.tables.parsers.GoogleTwoColumnTable"
-           trigger="google-sheets"/>
     <datatable id="user_table"
                class="ru.vladrus13.itmobot.database.entities.UserParser"
                subclass="ru.vladrus13.itmobot.bean.User"/>
@@ -15,14 +9,10 @@
     <datatable id="subjects_table"
                class="ru.vladrus13.itmobot.database.entities.SubjectsParser"
                subclass="ru.vladrus13.itmobot.bean.UsersSubjects"/>
-    <datatable id="chat_table"
-               class="ru.vladrus13.itmobot.database.entities.ChatParser"
-               subclass="ru.vladrus13.itmobot.bean.Chat"/>
     <datatable id="updates_user_table"
                class="ru.vladrus13.itmobot.database.entities.UpdateUserParser"
                subclass="ru.vladrus13.itmobot.bean.UpdateBotUser"/>
     <plugin id="schedule_timer" class="ru.vladrus13.itmobot.plugin.alarm.ScheduleTimerPlugin"/>
-    <plugin id="shipper_plugin" class="ru.vladrus13.itmobot.plugin.shipper.ShipperPlugin"/>
     <plugin id="simple_plugin" class="ru.vladrus13.itmobot.plugin.simple.SimplePlugin"/>
     <plugin id="homework" class="ru.vladrus13.itmobot.plugin.homework.HomeworkPlugin"/>
 </root>

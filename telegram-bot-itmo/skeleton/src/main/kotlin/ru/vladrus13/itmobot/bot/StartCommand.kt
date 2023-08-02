@@ -2,30 +2,16 @@ package ru.vladrus13.itmobot.bot
 
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import ru.vladrus13.itmobot.bean.Chat
-import ru.vladrus13.itmobot.bean.Chatted
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Command
-import ru.vladrus13.itmobot.command.Menu
 import java.nio.file.Path
 
-class StartCommand(override val parent: Menu) : Command() {
+class StartCommand : Command() {
+    override val name = listOf("Старт", "/start")
+    override val help = "Команда старта"
 
-    override fun help(): String {
-        return "Команда старта"
-    }
-
-    override val name: String
-        get() = "Старт"
-    override val systemName: String
-        get() = "start"
-
-    override fun isAccept(update: Update): Boolean {
-        return update.message.text!! == "/start" || update.message.text!! == "Старт"
-    }
-
-    private fun get(bot: TelegramLongPollingBot, user: User, chatted: Chatted, isKeyboard: Boolean) {
-        chatted.send(
+    override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {
+        user.send(
             bot = bot,
             text = """
                         Привет!
@@ -42,7 +28,7 @@ class StartCommand(override val parent: Menu) : Command() {
                         5) Плагины! Это разделы от пользователей, которые могут расширять возможности бота. Например, реализация API, для того, чтобы просить у бота их вызвать (очень удобно)
                     """.trimIndent()
         )
-        chatted.send(
+        user.send(
             bot = bot,
             text = """
                     НЕМНОГО О НАМЕРЕННОЙ ПОЛОМКЕ БОТА
@@ -53,14 +39,14 @@ class StartCommand(override val parent: Menu) : Command() {
                     """.trimIndent(),
             image = Path.of("../telegram-bot-itmo-data/images/memes/we_will_banned_you.png")
         )
-        chatted.send(
+        user.send(
             bot = bot,
             text = """
                     Как делать не надо. Если вы хотите потестировать бота, напишите об этом @vladrus13
                     """.trimIndent(),
             image = Path.of("../telegram-bot-itmo-data/images/memes/tester.jpg")
         )
-        chatted.send(
+        user.send(
             bot = bot,
             text = """
                     НЕМНОГО О ФИЧАХ И ОШИБКАХ В БОТЕ
@@ -68,16 +54,8 @@ class StartCommand(override val parent: Menu) : Command() {
                     1) Если вы заметили в боте некорректное поведение, которое показалось вам необычным или какие либо ошибки, то можете смело писать @vladrus13. Он постарается закрыть все баги очень оперативно.
                     2) Вы можете писать @vladrus13 о предложениях по улучшению бота, добавлению возможностей и различных плагинов. https://github.com/vladrus13/telegram-bot-ct - здесь вы можете посмотреть все, что вам может потребоваться для написания плагинов. Если вы хотите что то реализовать сами, то такое только приветствуется
                     """.trimIndent(),
-            replyKeyboard = if (isKeyboard) parent.getReplyKeyboard(user) else null,
+            replyKeyboard = user.path.last().getReplyKeyboard(user),
             image = Path.of("../telegram-bot-itmo-data/images/memes/mem_open_source.jpg")
         )
-    }
-
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
-        get(bot, user, user, true)
-    }
-
-    override fun get(update: Update, bot: TelegramLongPollingBot, user: User, chat: Chat) {
-        get(bot, user, chat, false)
     }
 }
