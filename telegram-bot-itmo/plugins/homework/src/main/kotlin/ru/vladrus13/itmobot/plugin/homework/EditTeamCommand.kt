@@ -9,7 +9,7 @@ import ru.vladrus13.itmobot.database.entities.UserParser
 
 class EditTeamCommand : Menu(arrayOf()) {
     override val menuHelp = "Редактирование команды. Позволяет командам, где вы главный администратор, назначать модификаторов, которые смогут загружать файлы в эту группу"
-    override val name = "Редактирование команды"
+    override val name = listOf("Редактирование команды")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         return if (user.path.getData("target") == null) {

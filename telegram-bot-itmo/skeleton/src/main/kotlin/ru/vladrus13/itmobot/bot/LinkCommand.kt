@@ -8,8 +8,8 @@ import ru.vladrus13.itmobot.command.Command
 import ru.vladrus13.itmobot.tables.PointTablesRegistry
 
 class LinkCommand @Inject constructor(private val pointTablesRegistry: PointTablesRegistry) : Command() {
-    override val name: String = "Ссылки"
-    override val help: String = "Возвращает ссылки"
+    override val name = listOf("Ссылки")
+    override val help = "Возвращает ссылки"
 
     override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {
         if (user.group == null) {

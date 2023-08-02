@@ -8,7 +8,7 @@ import ru.vladrus13.itmobot.database.DataBase
 
 class RemoveTeamCommand : Menu(arrayOf()) {
     override val menuHelp = "Удаление команд"
-    override val name = "Роспуск команды"
+    override val name = listOf("Роспуск команды")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         return if (user.path.getData("selectedTeam") == null) {

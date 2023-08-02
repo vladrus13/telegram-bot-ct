@@ -10,7 +10,7 @@ import ru.vladrus13.itmobot.tables.schedule.ScheduleRegistry
 class GroupChooseMenu @Inject constructor(private val scheduleRegistry: ScheduleRegistry) :
     Menu(arrayOf()) {
     override val menuHelp = "Пункт выбора группы"
-    override val name = "Выбор группы"
+    override val name = listOf("Выбор группы")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         return scheduleRegistry.table.getGroups()

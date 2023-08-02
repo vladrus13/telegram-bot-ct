@@ -9,7 +9,7 @@ import ru.vladrus13.itmobot.database.DataBase
 
 class AddHWCommand : Menu(arrayOf()) {
     override val menuHelp = "Пункт добавления ДЗ"
-    override val name = "Добавление ДЗ"
+    override val name = listOf("Добавление ДЗ")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         return if (user.path.getData("teamId") == null) {

@@ -8,7 +8,7 @@ import ru.vladrus13.itmobot.plugin.homework.TeamRoleDatabase.TeamRole
 
 class JoinTeamCommand : Menu(arrayOf()) {
     override val menuHelp = "Позволяет вам зайти в команду"
-    override val name = "Присоединиться к команде"
+    override val name = listOf("Присоединиться к команде")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         return if (user.path.getData("teamId") == null) {

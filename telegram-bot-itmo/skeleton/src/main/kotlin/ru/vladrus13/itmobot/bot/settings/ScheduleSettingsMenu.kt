@@ -7,7 +7,7 @@ import ru.vladrus13.itmobot.command.Menu
 
 class ScheduleSettingsMenu : Menu(arrayOf()) {
     override val menuHelp = "Настройки формата расписания"
-    override val name = "Настройки расписания"
+    override val name = listOf("Настройки расписания")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         return user.settings.getStatus()

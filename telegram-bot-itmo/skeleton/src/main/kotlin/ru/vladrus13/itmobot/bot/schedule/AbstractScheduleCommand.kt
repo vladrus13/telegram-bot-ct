@@ -21,7 +21,7 @@ abstract class AbstractScheduleCommand constructor(private val scheduleRegistry:
         val answer = scheduleRegistry.table.toStringBuilder(
             user,
             user.getSubjects(),
-            getDay()
+            getDay(update.message.text)
         ).toString()
         user.send(
             bot = bot,
@@ -32,5 +32,5 @@ abstract class AbstractScheduleCommand constructor(private val scheduleRegistry:
         )
     }
 
-    abstract fun getDay(): Int?
+    abstract fun getDay(text: String): Int?
 }

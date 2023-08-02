@@ -3,9 +3,6 @@ package ru.vladrus13.itmobot.bot.settings
 import com.google.inject.Inject
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.bean.UsersSubjects
 import ru.vladrus13.itmobot.command.Menu
@@ -15,22 +12,7 @@ import ru.vladrus13.itmobot.tables.schedule.ScheduleRegistry
 class SubjectSettingsMenu @Inject constructor(private val scheduleRegistry: ScheduleRegistry) :
     Menu(arrayOf()) {
     override val menuHelp = "Меню выбора предметов (для предметов по выбору)"
-    override val name = "Настройки предметов"
-
-    override fun getReplyKeyboard(user: User): ReplyKeyboard {
-        val options = recollect(user.getSubjects(), scheduleRegistry.table.getSubjects())
-        val rows = ArrayList<KeyboardRow>()
-        for (part in options.chunked(2)) {
-            val row = KeyboardRow()
-            row.addAll(part.map { name })
-            rows.add(row)
-        }
-        val backRow = KeyboardRow()
-        backRow.add("Помощь")
-        backRow.add("<< Назад")
-        rows.add(backRow)
-        return ReplyKeyboardMarkup(rows)
-    }
+    override val name = listOf("Настройки предметов")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         return recollect(user.getSubjects(), scheduleRegistry.table.getSubjects())

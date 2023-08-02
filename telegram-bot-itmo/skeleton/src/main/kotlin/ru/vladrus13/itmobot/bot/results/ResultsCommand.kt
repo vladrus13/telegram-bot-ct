@@ -9,7 +9,7 @@ import ru.vladrus13.itmobot.tables.PointTablesRegistry
 
 class ResultsCommand @Inject constructor(private val pointTablesRegistry: PointTablesRegistry) :
     Command() {
-    override val name = "Результаты"
+    override val name = listOf("Результаты")
     override val help = "Получение результатов"
 
     override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {

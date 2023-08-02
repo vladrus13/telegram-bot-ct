@@ -5,5 +5,5 @@ import ru.vladrus13.itmobot.command.Menu
 
 class ResultsMenu @Inject constructor(resultsCommand: ResultsCommand) : Menu(arrayOf(resultsCommand)) {
     override val menuHelp = "Меню результатов"
-    override val name = "Результаты"
+    override val name = listOf("Результаты")
 }

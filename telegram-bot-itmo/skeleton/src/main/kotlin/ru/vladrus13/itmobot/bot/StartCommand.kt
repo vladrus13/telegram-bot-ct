@@ -7,7 +7,7 @@ import ru.vladrus13.itmobot.command.Command
 import java.nio.file.Path
 
 class StartCommand : Command() {
-    override val name = "/start"
+    override val name = listOf("Старт", "/start")
     override val help = "Команда старта"
 
     override fun onUpdate(update: Update, bot: TelegramLongPollingBot, user: User) {

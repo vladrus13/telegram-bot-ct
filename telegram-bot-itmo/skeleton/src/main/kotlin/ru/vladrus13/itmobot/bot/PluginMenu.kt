@@ -12,10 +12,10 @@ import ru.vladrus13.itmobot.plugins.Plugin
 class PluginMenu @Inject constructor(@Named("plugins") private val plugins: Map<String, Plugin>) :
     Menu(arrayOf()) {
     override val menuHelp = "Меню плагинов"
-    override val name = "Плагины"
+    override val name = listOf("Плагины")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
-        return plugins.values.map { name }
+        return plugins.values.flatMap { name }
     }
 
     override fun onCustomUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {

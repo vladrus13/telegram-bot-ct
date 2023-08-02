@@ -7,7 +7,7 @@ import ru.vladrus13.itmobot.command.Menu
 
 class LeaveTeamCommand : Menu(arrayOf()) {
     override val menuHelp = "Позволяет покинуть команду"
-    override val name = "Покинуть команду"
+    override val name = listOf("Покинуть команду")
 
     override fun getAdditionalButtonsForReply(user: User): List<String> {
         val teamsForUser = TeamRoleDatabase.getAllTeamsForUser(user.chatId)

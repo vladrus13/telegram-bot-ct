@@ -10,5 +10,5 @@ class SettingsMenu @Inject constructor(
     subjectSettingsMenu: SubjectSettingsMenu
 ) : Menu(arrayOf(groupChooseMenu, nameChooseMenu, scheduleSettingsMenu, subjectSettingsMenu)) {
     override val menuHelp = "Меню настроек"
-    override val name = "Настройки"
+    override val name = listOf("Настройки")
 }

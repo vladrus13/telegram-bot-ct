@@ -21,5 +21,5 @@ class HomeworkMenu @Inject constructor(
     )
 ) {
     override val menuHelp = "Раздел домашних заданий"
-    override val name = "ДЗ"
+    override val name = listOf("ДЗ")
 }

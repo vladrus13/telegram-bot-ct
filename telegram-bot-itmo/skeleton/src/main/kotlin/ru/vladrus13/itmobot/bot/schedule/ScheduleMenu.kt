@@ -4,30 +4,16 @@ import com.google.inject.Inject
 import ru.vladrus13.itmobot.command.Menu
 
 class ScheduleMenu @Inject constructor(
-    today: TodayScheduleCommand,
-    tommorow: TommorowScheduleCommand,
+    relative: RelativeScheduleCommand,
     all: AllScheduleCommand,
-    monday: MondayScheduleCommand,
-    tuesday: TuesdayScheduleCommand,
-    wednesday: WednesdayScheduleCommand,
-    thursday: ThursdayScheduleCommand,
-    friday: FridayScheduleCommand,
-    saturday: SaturdayScheduleCommand,
-    sunday: SundayScheduleCommand
+    allWeek: AllWeekScheduleCommand
 ) : Menu(
     arrayOf(
-        today,
-        tommorow,
+        relative,
         all,
-        monday,
-        tuesday,
-        wednesday,
-        thursday,
-        friday,
-        saturday,
-        sunday
+        allWeek
     )
 ) {
-    override val menuHelp: String = "Меню расписания"
-    override val name: String = "Меню расписания"
+    override val menuHelp = "Меню расписания"
+    override val name = listOf("Меню расписания")
 }

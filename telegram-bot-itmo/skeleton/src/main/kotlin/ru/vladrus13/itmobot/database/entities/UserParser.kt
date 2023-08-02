@@ -69,7 +69,7 @@ class UserParser @Inject constructor(private val mainMenu: MainMenu) : DataBaseE
                 val pathParts = objectPathText.split("/")
                 // first is always main menu
                 for (part in pathParts.drop(1)) {
-                    current = current.children.find { it.name == part } as Menu
+                    current = current.children.find { part in it.name } as Menu
                     objectPath.add(current)
                 }
             }

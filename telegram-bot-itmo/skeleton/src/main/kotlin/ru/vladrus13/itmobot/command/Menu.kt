@@ -10,7 +10,7 @@ import ru.vladrus13.itmobot.bean.User
 abstract class Menu(val children: Array<out Foldable>) : Foldable {
     abstract val menuHelp: String
 
-    protected val childrenNames = children.map { name }
+    protected val childrenNames = children.flatMap { name }
 
     override val help: String
 
@@ -58,7 +58,7 @@ abstract class Menu(val children: Array<out Foldable>) : Foldable {
         update: Update
     ) {
         for (child in children) {
-            if (text == child.name) {
+            if (text in child.name) {
                 enterChild(child, user, bot, update)
                 break
             }
@@ -106,7 +106,7 @@ abstract class Menu(val children: Array<out Foldable>) : Foldable {
         val rows = ArrayList<KeyboardRow>()
         for (part in children.asList().chunked(2)) {
             val row = KeyboardRow()
-            row.addAll(part.map { name })
+            row.addAll(part.flatMap { name })
             rows.add(row)
         }
         val additionalRows = getAdditionalButtonsForReply(user)

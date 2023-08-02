@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class NewTeamCommand : Menu(arrayOf()) {
     override val menuHelp = "Создание новой команды"
-    override val name = "Новая команда"
+    override val name = listOf("Новая команда")
 
     private val enteredTeamNamesByUser = ConcurrentHashMap<Long, String>()
 
