@@ -62,7 +62,7 @@ class GoogleSheetUtils {
         }
 
         /**
-         * @param title is "Д[0-9]+" or MAIN_LIST_NAME
+         * @param title is "Д[0-9]+" or <code>MAIN_LIST_NAME</code>
          */
         private fun fillInStudents(sheetsService: Sheets, id: String, students: List<String>, title: String, getTotalCount: Function<Int, String>) {
             val listBody = mutableListOf(listOf(FCS_COLUMN, TOTAL_SCORES_COLUMN))
