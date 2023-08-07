@@ -18,7 +18,7 @@ class GoogleSheetUtils {
         private const val ONE_PRACTICE_TASKS_COLUMN = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
-        fun generateList(sheetsService: Sheets, id: String, students: List<String>, tasks: List<String>) {
+        fun generateSheet(sheetsService: Sheets, id: String, students: List<String>, tasks: List<String>) {
             // make new list
             val homeworkCount = sheetsService.spreadsheets().get(id).execute().sheets.size
             val title = "Д$homeworkCount"
@@ -44,7 +44,7 @@ class GoogleSheetUtils {
                 .execute()
         }
 
-        fun generateMainList(sheetsService: Sheets, id: String, students: List<String>) {
+        fun generateMainSheet(sheetsService: Sheets, id: String, students: List<String>) {
             // rename list to $MAIN_LIST_NAME
             val properties = SheetProperties().setIndex(0).setTitle(MAIN_LIST_NAME)
             val update = UpdateSheetPropertiesRequest()

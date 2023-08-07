@@ -58,10 +58,10 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val id: String = dictData["spreadsheetId"] ?: ""
         val url: String = dictData["spreadsheetUrl"] ?: ""
 
-        GoogleSheetUtils.generateMainList(sheetsService, id, peopleList)
+        GoogleSheetUtils.generateMainSheet(sheetsService, id, peopleList)
 
-        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
-        GoogleSheetUtils.generateList(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
+        GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
+        GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
 
         val service = createDriveService()
         insertPermission(service, id)
