@@ -42,12 +42,15 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         // Example input:
         // """
         // TestNameTable
+        // link to tasks
+        //
         // Grunskii Alexey
         // Vladimir Kuznetsov
         // """
 
         val name: String = listTexts[0]
-        val peopleList = listTexts.subList(1, listTexts.size)
+        val link: String = listTexts[1]
+        val peopleList = listTexts.subList(2, listTexts.size)
 
         val spreadsheet = Spreadsheet()
             .setProperties(
@@ -65,7 +68,7 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
         GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
 
-        val parser = NeercParserInfo(id, "http://neerc.ifmo.ru/wiki/index.php?title=Список_заданий_по_ДМ_2к_2023_весна")
+        val parser = NeercParserInfo(id, link)
         runBlocking {
             val actualTasks: List<String> = parser.getTasks()
             val currentTasks = GoogleSheetUtils.getTasksList(sheetsService, id).flatten()
@@ -79,17 +82,6 @@ class AddTable(override val parent: Menu) : Menu(parent) {
                 )
             }
         }
-
-
-//
-//        val list = GoogleSheetUtils.getTasksList(sheetsService, id);
-//        for (i in list.indices) {
-//            print("$i: ")
-//            for (task in list[i]) {
-//                print("$task, ")
-//            }
-//            println()
-//        }
 
         val service = createDriveService()
         insertPermission(service, id)
