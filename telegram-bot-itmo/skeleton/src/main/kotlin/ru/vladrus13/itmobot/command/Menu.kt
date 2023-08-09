@@ -69,14 +69,10 @@ abstract class Menu(
         }
     }
 
-    override fun help(): String {
-        val sb = StringBuilder()
-        sb.append(menuHelp() + "\nКоманды:\n\n")
-        for (it in childes) {
-            sb.append(it.name + ": " + (if (it is Menu) it.menuHelp() else it.help()) + "\n\n")
-        }
-        return sb.toString()
-    }
+    override fun help() = childes.joinToString(
+        separator = "\n\n",
+        prefix = "\nКоманды:\n\n",
+    ) { it.name + ": " + (if (it is Menu) it.menuHelp() else it.help()) }
 
     fun groupHelp(tab: Int, userPlugins: UserPlugins): String {
         val sb = StringBuilder()
@@ -86,6 +82,7 @@ abstract class Menu(
                 is Menu -> {
                     sb.appendLine(fold.groupHelp(tab + 1, userPlugins))
                 }
+
                 is Command -> {
                     sb.appendLine("${"=".repeat(tab + 1)}C /${fold.path} - ${fold.help()}")
                 }
@@ -97,6 +94,7 @@ abstract class Menu(
                     is Menu -> {
                         sb.appendLine(fold.groupHelp(tab + 1, userPlugins))
                     }
+
                     is Command -> {
                         sb.appendLine("${"=".repeat(tab + 1)}C /${fold.path}- ${fold.help()}")
                     }
@@ -136,6 +134,7 @@ abstract class Menu(
                 }
                 return true
             }
+
             "Помощь", "Help", "/help" -> {
                 user.send(
                     bot = bot,
@@ -197,11 +196,8 @@ abstract class Menu(
         )
     }
 
-    fun classicUpdate(update: Update, bot: TelegramLongPollingBot, user: User): Boolean {
-        if (standardCommand(update, bot, user)) return true
-        if (mapping(update, bot, user)) return true
-        return false
-    }
+    fun classicUpdate(update: Update, bot: TelegramLongPollingBot, user: User) =
+        standardCommand(update, bot, user) || mapping(update, bot, user)
 
     abstract fun menuHelp(): String
 

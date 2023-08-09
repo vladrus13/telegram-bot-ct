@@ -10,6 +10,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0")
     implementation("org.telegram:telegrambots:5.2.0")
 
     implementation(project("plugins:alarm"))
@@ -17,6 +18,7 @@ dependencies {
     implementation(project("plugins:shipper"))
     implementation(project("plugins:simple"))
     implementation(project("plugins:homework"))
+    implementation(project("plugins:practiceplugin"))
     implementation(project("skeleton"))
 
 }
