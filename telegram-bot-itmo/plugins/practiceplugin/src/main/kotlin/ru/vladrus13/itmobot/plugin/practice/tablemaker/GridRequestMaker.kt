@@ -96,15 +96,6 @@ class GridRequestMaker(
             rectangle.lastColumn
         )
 
-        fun getRequests(
-            service: Sheets,
-            id: String,
-            title: String,
-            vararg updateCells: Rectangle
-        ): List<Request> =
-            updateCells.map {
-                rect -> rect.actions.map{ action -> action(createGridRequestMaker(service, id, title, rect)) }
-            }.flatten()
 
         /**
          * This function return correct range string
