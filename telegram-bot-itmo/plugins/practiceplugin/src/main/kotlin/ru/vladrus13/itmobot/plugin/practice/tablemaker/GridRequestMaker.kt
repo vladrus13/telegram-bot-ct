@@ -78,9 +78,33 @@ class GridRequestMaker(
             sheetTitle: String,
             firstRow: Int, lastRow: Int,
             firstColumn: Int, lastColumn: Int
-        ): GridRequestMaker = GridRequestMaker(
+        ) = GridRequestMaker(
             getSheetIdFromTitle(sheetService, id, sheetTitle), firstRow, lastRow, firstColumn, lastColumn
         )
+
+        fun createGridRequestMaker(
+            service: Sheets, id: String,
+            title: String,
+            rectangle: Rectangle
+        ) = createGridRequestMaker(
+            service,
+            id,
+            title,
+            rectangle.firstRow,
+            rectangle.lastRow,
+            rectangle.firstColumn,
+            rectangle.lastColumn
+        )
+
+        fun getRequests(
+            service: Sheets,
+            id: String,
+            title: String,
+            vararg updateCells: Rectangle
+        ): List<Request> =
+            updateCells.map {
+                rect -> rect.actions.map{ action -> action(createGridRequestMaker(service, id, title, rect)) }
+            }.flatten()
 
         /**
          * This function return correct range string
@@ -98,7 +122,7 @@ class GridRequestMaker(
             firstColumn: Int, lastColumn: Int
         ): String = "$sheetTitle!${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
 
-        fun nToAZ(n: Int) : String {
+        fun nToAZ(n: Int): String {
             if (n < 0) return ""
             return nToAZ(n / 26 - 1) + (65 + (n % 26)).toChar()
         }

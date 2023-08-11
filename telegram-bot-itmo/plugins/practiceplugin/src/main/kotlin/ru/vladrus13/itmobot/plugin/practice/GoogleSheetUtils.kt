@@ -10,9 +10,12 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getR
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getWhiteColor
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getYellowDeclinedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getYellowScores
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getRequests
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.nToAZ
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 
 class GoogleSheetUtils {
     companion object {
@@ -64,6 +67,11 @@ class GoogleSheetUtils {
         private val TASK_FIRST_COLUMN_CHAR = nToAZ(TASK_FIRST_COLUMN_INDEX)
         private val FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_CHAR =
             nToAZ(FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX)
+
+        private val RUSSIAN_T = 'Т'
+        private val ENGLISH_T = 'T'
+        private val RUSSIAN_P = 'Р'
+        private val ENGLISH_P = 'P'
 
         private fun getValueRange(sheetsService: Sheets, id: String, range: String) = sheetsService
             .spreadsheets()
@@ -297,7 +305,6 @@ class GoogleSheetUtils {
                 }
             )
 
-
         private fun getConditionalFormatRequest(
             service: Sheets,
             id: String,
@@ -381,43 +388,28 @@ class GoogleSheetUtils {
                 .execute()
 
             // format new column
-            executeRequestsSequence(
-                sheetsService, id,
-                listOf(
-                    createGridRequestMaker(
-                        sheetsService,
-                        id,
-                        MAIN_LIST_NAME,
-                        TASKS_NAMES_MAIN_LIST_ROW_INDEX,
-                        maxStudentRowNumber,
-                        width,
-                        width + 1
-                    ).colorizeBordersAndFormatCells(),
-                    createGridRequestMaker(
-                        sheetsService,
-                        id,
-                        MAIN_LIST_NAME,
-                        TASKS_NAMES_MAIN_LIST_ROW_INDEX,
-                        TASKS_NAMES_MAIN_LIST_ROW_NUMBER,
-                        width,
-                        width + 1
-                    ).colorizeBordersAndFormatCells()
-                ).flatten()
+            val requests = getRequests(
+                sheetsService, id, MAIN_LIST_NAME,
+                Rectangle(
+                    TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1,
+                    listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
+                ),
+                Rectangle(
+                    TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_NUMBER, width, width + 1,
+                    listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
+                )
             )
+
+            executeRequestsSequence(sheetsService, id, requests)
         }
 
         private fun getCountIfRussianEnglishIsT(range: String) =
-            "${getCountIf(range, getRussianT())} + ${getCountIf(range, getEnglishT())}"
+            "${getCountIf(range, RUSSIAN_T)} + ${getCountIf(range, ENGLISH_T)}"
 
         private fun getCountIfRussianEnglishIsP(range: String) =
-            "${getCountIf(range, getRussianP())} + ${getCountIf(range, getEnglishP())}"
+            "${getCountIf(range, RUSSIAN_P)} + ${getCountIf(range, ENGLISH_P)}"
 
         private fun getCountIf(range: String, char: Char) = "$COUNT_IF_FORMULA($range;\"$char\")"
-
-        private fun getRussianT() = 'Т'
-        private fun getEnglishT() = 'T'
-        private fun getRussianP() = 'Р'
-        private fun getEnglishP() = 'P'
 
         fun generateMainSheet(sheetsService: Sheets, id: String, students: List<String>) {
             // rename list to $MAIN_LIST_NAME
@@ -505,58 +497,27 @@ class GoogleSheetUtils {
                 .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
                 .execute()
 
-            val requests = mutableListOf<Request>()
-            // Border
-            requests.add(
-                createGridRequestMaker(
-                    sheetsService,
-                    id,
-                    title,
-                    TASKS_NAMES_ROW_INDEX,
-                    listBody.size,
-                    FCS_COLUMN_INDEX,
-                    FCS_COLUMN_NUMBER
-                ).colorizeBorders()
+            val requests = getRequests(
+                sheetsService, id, title,
+                Rectangle(
+                    TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER,
+                    listOf(GridRequestMaker::colorizeBorders)
+                ),
+                Rectangle(
+                    TASKS_NAMES_ROW_INDEX, listBody.size, TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER,
+                    listOf(GridRequestMaker::colorizeBorders)
+                ),
+                Rectangle(
+                    TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER, FCS_COLUMN_INDEX, listBody.first().size,
+                    listOf(GridRequestMaker::colorizeBorders)
+                ),
+                Rectangle(
+                    TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER,
+                    listOf(GridRequestMaker::formatCells)
+                ),
             )
-            requests.add(
-                createGridRequestMaker(
-                    sheetsService,
-                    id,
-                    title,
-                    TASKS_NAMES_ROW_INDEX,
-                    listBody.size,
-                    TOTAL_SCORES_COLUMN_INDEX,
-                    TOTAL_SCORES_COLUMN_NUMBER
-                ).colorizeBorders()
-            )
-            requests.add(
-                createGridRequestMaker(
-                    sheetsService,
-                    id,
-                    title,
-                    TASKS_NAMES_ROW_INDEX,
-                    TASKS_NAMES_ROW_NUMBER,
-                    FCS_COLUMN_INDEX,
-                    listBody.first().size
-                ).colorizeBorders()
-            )
-            // Align
-            requests.add(
-                createGridRequestMaker(
-                    sheetsService,
-                    id,
-                    title,
-                    TASKS_NAMES_ROW_INDEX,
-                    listBody.size,
-                    FCS_COLUMN_INDEX,
-                    TOTAL_SCORES_COLUMN_NUMBER
-                ).formatCells()
-            )
-            val req = BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
-            sheetsService.spreadsheets().batchUpdate(
-                id,
-                req
-            ).execute()
+
+            executeRequestsSequence(sheetsService, id, requests)
         }
     }
 }
