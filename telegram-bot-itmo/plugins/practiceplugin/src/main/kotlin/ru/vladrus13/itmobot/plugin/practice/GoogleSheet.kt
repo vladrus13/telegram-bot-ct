@@ -27,40 +27,37 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         val update = UpdateSheetPropertiesRequest()
             .setProperties(properties)
             .setFields("title")
-        val requests = listOf(Request().setUpdateSheetProperties(update))
-        executeRequestsSequence(requests)
+        executeRequestsSequence(Request().setUpdateSheetProperties(update))
 
         fillInStudents(MAIN_LIST_NAME, this::getSumScoresFormula)
 
         // Conditional Format
         executeRequestsSequence(
-            listOf(
-                getConditionalFormatRequest(
-                    MAIN_LIST_NAME,
-                    MIN_STUDENT_ROW_INDEX, MIN_STUDENT_ROW_INDEX + students.size,
-                    TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
-                ) {
-                    it.setGradientRule(
-                        GradientRule()
-                            .setMinpoint(
-                                InterpolationPoint()
-                                    .setType(INTERPOLATION_POINT_TYPE_MIN)
-                                    .setColor(getRedScores())
-                            )
-                            .setMidpoint(
-                                InterpolationPoint()
-                                    .setType(INTERPOLATION_POINT_TYPE_PERCENTILE)
-                                    .setColor(getYellowScores())
-                                    .setValue("50")
-                            )
-                            .setMaxpoint(
-                                InterpolationPoint()
-                                    .setType(INTERPOLATION_POINT_TYPE_MAX)
-                                    .setColor(getGreenScores())
-                            )
-                    )
-                }
-            )
+            getConditionalFormatRequest(
+                MAIN_LIST_NAME,
+                MIN_STUDENT_ROW_INDEX, MIN_STUDENT_ROW_INDEX + students.size,
+                TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
+            ) {
+                it.setGradientRule(
+                    GradientRule()
+                        .setMinpoint(
+                            InterpolationPoint()
+                                .setType(INTERPOLATION_POINT_TYPE_MIN)
+                                .setColor(getRedScores())
+                        )
+                        .setMidpoint(
+                            InterpolationPoint()
+                                .setType(INTERPOLATION_POINT_TYPE_PERCENTILE)
+                                .setColor(getYellowScores())
+                                .setValue("50")
+                        )
+                        .setMaxpoint(
+                            InterpolationPoint()
+                                .setType(INTERPOLATION_POINT_TYPE_MAX)
+                                .setColor(getGreenScores())
+                        )
+                )
+            }
         )
     }
 
@@ -76,11 +73,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         val homeworkCount = service.spreadsheets().get(id).execute().sheets.size
         val title = "Д$homeworkCount"
         val properties = SheetProperties().setTitle(title)
-        executeRequestsSequence(
-            listOf(
-                Request().setAddSheet(AddSheetRequest().setProperties(properties))
-            )
-        )
+        executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 
         fillInStudents(title, this::getActualScoreFormula)
 
@@ -118,84 +111,82 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
 
         // Conditional Format
         executeRequestsSequence(
-            listOf(
-                getListRules(
-                    title, MIN_STUDENT_ROW_INDEX,
-                    maxStudentRowNumber,
-                    TASK_COUNTER_COLUMN_INDEX,
-                    TASK_COUNTER_COLUMN_NUMBER,
-                    {
-                        it.setGradientRule(
-                            GradientRule()
-                                .setMinpoint(
-                                    InterpolationPoint()
-                                        .setType(INTERPOLATION_POINT_TYPE_MIN)
-                                        .setColor(getWhiteColor())
-                                )
-                                .setMaxpoint(
-                                    InterpolationPoint()
-                                        .setType(INTERPOLATION_POINT_TYPE_MAX)
-                                        .setColor(getGreenCountTasksColor())
-                                )
-                        )
-                    },
-                    {
-                        it.setBooleanRule(
-                            BooleanRule()
-                                .setCondition(
-                                    BooleanCondition()
-                                        .setType(CONDITION_TYPE.NUMBER_EQ.toString())
-                                        .setValues(listOf(ConditionValue().setUserEnteredValue("0")))
-                                )
-                                .setFormat(CellFormat().setBackgroundColor(getWhiteColor()))
-                        )
-                    }
-                ),
-                getListRules(
-                    title,
-                    lastRowIndex, lastRowNumber,
-                    TASK_FIRST_COLUMN_INDEX, listBody.size,
-                    *getListBooleanConditionsOfAcceptedOrNotTask(
-                        "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$TASK_FIRST_COLUMN_CHAR$maxStudentRowNumber"
-                    ).map { it }.toTypedArray()
-                ),
-                getListRules(
-                    title,
-                    MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
-                    FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER,
-                    *getListBooleanConditionsOfAcceptedOrNotTask(
-                        "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$MIN_STUDENT_ROW_NUMBER"
-                    ).map { it }.toTypedArray()
-                ),
-                getListRules(
-                    title,
-                    MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
-                    TASK_FIRST_COLUMN_INDEX, listBody.size,
-                    *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
-                ),
-                getRequests(
-                    title,
-                    *getEqualsActionsRectangles(
-                        listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
-                        Rectangle(
-                            TASKS_NAMES_ROW_INDEX, lastRowNumber,
-                            FCS_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
-                        ),
-                        Rectangle(
-                            MIN_STUDENT_ROW_INDEX, lastRowNumber,
-                            TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_NUMBER
-                        ),
-                        Rectangle(
-                            TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER,
-                            TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
-                        ),
-                        Rectangle(
-                            lastRowIndex, lastRowNumber,
-                            TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
-                        )
-                    ).toTypedArray()
-                )
-            ).flatten()
+            *getListRules(
+                title, MIN_STUDENT_ROW_INDEX,
+                maxStudentRowNumber,
+                TASK_COUNTER_COLUMN_INDEX,
+                TASK_COUNTER_COLUMN_NUMBER,
+                {
+                    it.setGradientRule(
+                        GradientRule()
+                            .setMinpoint(
+                                InterpolationPoint()
+                                    .setType(INTERPOLATION_POINT_TYPE_MIN)
+                                    .setColor(getWhiteColor())
+                            )
+                            .setMaxpoint(
+                                InterpolationPoint()
+                                    .setType(INTERPOLATION_POINT_TYPE_MAX)
+                                    .setColor(getGreenCountTasksColor())
+                            )
+                    )
+                },
+                {
+                    it.setBooleanRule(
+                        BooleanRule()
+                            .setCondition(
+                                BooleanCondition()
+                                    .setType(CONDITION_TYPE.NUMBER_EQ.toString())
+                                    .setValues(listOf(ConditionValue().setUserEnteredValue("0")))
+                            )
+                            .setFormat(CellFormat().setBackgroundColor(getWhiteColor()))
+                    )
+                }
+            ).toTypedArray(),
+            *getListRules(
+                title,
+                lastRowIndex, lastRowNumber,
+                TASK_FIRST_COLUMN_INDEX, listBody.size,
+                *getListBooleanConditionsOfAcceptedOrNotTask(
+                    "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$TASK_FIRST_COLUMN_CHAR$maxStudentRowNumber"
+                ).map { it }.toTypedArray()
+            ).toTypedArray(),
+            *getListRules(
+                title,
+                MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
+                FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER,
+                *getListBooleanConditionsOfAcceptedOrNotTask(
+                    "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$MIN_STUDENT_ROW_NUMBER"
+                ).map { it }.toTypedArray()
+            ).toTypedArray(),
+            *getListRules(
+                title,
+                MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
+                TASK_FIRST_COLUMN_INDEX, listBody.size,
+                *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
+            ).toTypedArray(),
+            *getRequests(
+                title,
+                *getEqualsActionsRectangles(
+                    listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
+                    Rectangle(
+                        TASKS_NAMES_ROW_INDEX, lastRowNumber,
+                        FCS_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                    ),
+                    Rectangle(
+                        MIN_STUDENT_ROW_INDEX, lastRowNumber,
+                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_NUMBER
+                    ),
+                    Rectangle(
+                        TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER,
+                        TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                    ),
+                    Rectangle(
+                        lastRowIndex, lastRowNumber,
+                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                    )
+                ).toTypedArray()
+            ).toTypedArray()
         )
     }
 
@@ -310,10 +301,10 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         .setType(CONDITION_TYPE.CUSTOM_FORMULA.toString())
         .setValues(listOf(ConditionValue().setUserEnteredValue(userEnteredValue)))
 
-    private fun executeRequestsSequence(requests: List<Request>) = service.spreadsheets()
+    private fun executeRequestsSequence(vararg requests: Request) = service.spreadsheets()
         .batchUpdate(
             id,
-            BatchUpdateSpreadsheetRequest().setRequests(requests)
+            BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
         ).execute()
 
     private fun addNewMainListColumn(titleSheet: String) {
@@ -356,16 +347,16 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             .execute()
 
         // format new column
-        val requests = getRequests(
-            MAIN_LIST_NAME,
-            *getEqualsActionsRectangles(
-                listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
-                Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
-                Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_NUMBER, width, width + 1)
+        executeRequestsSequence(
+            *getRequests(
+                MAIN_LIST_NAME,
+                *getEqualsActionsRectangles(
+                    listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
+                    Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
+                    Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_NUMBER, width, width + 1)
+                ).toTypedArray()
             ).toTypedArray()
         )
-
-        executeRequestsSequence(requests)
     }
 
     private fun getCountIfRussianEnglishIsT(range: String) =
@@ -394,18 +385,31 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
             .execute()
 
-        val requests = getRequests(
-            title,
-            *getEqualsActionsRectangles(
-                listOf(GridRequestMaker::colorizeBorders),
-                Rectangle(TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER),
-                Rectangle(TASKS_NAMES_ROW_INDEX, listBody.size, TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER),
-                Rectangle(TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER, FCS_COLUMN_INDEX, listBody.first().size),
-                Rectangle(TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER)
+
+        executeRequestsSequence(
+            *getRequests(
+                title,
+                *getEqualsActionsRectangles(
+                    listOf(GridRequestMaker::colorizeBorders),
+                    Rectangle(
+                        TASKS_NAMES_ROW_INDEX, listBody.size,
+                        FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER
+                    ),
+                    Rectangle(
+                        TASKS_NAMES_ROW_INDEX, listBody.size,
+                        TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
+                    ),
+                    Rectangle(
+                        TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER,
+                        FCS_COLUMN_INDEX, listBody.first().size
+                    ),
+                    Rectangle(
+                        TASKS_NAMES_ROW_INDEX, listBody.size,
+                        FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
+                    )
+                ).toTypedArray()
             ).toTypedArray()
         )
-
-        executeRequestsSequence(requests)
     }
 
     private fun getRequests(
