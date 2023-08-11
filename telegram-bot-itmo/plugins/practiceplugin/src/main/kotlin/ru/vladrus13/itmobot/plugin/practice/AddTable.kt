@@ -50,7 +50,7 @@ class AddTable(override val parent: Menu) : Menu(parent) {
 
         val name: String = listTexts[0]
         val link: String = listTexts[1]
-        val peopleList = listTexts.subList(2, listTexts.size)
+        val students = listTexts.subList(2, listTexts.size)
 
         val spreadsheet = Spreadsheet()
             .setProperties(
@@ -63,28 +63,27 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val id: String = dictData["spreadsheetId"] ?: ""
         val url: String = dictData["spreadsheetUrl"] ?: ""
 
-        GoogleSheetUtils.generateMainSheet(sheetsService, id, peopleList)
+        val googleSheet = GoogleSheet(sheetsService, id, students)
 
-        GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (1 .. 8).map(Int::toString))
-        GoogleSheetUtils.generateSheet(sheetsService, id, peopleList, (9 .. 20).map(Int::toString))
+        googleSheet.generateMainSheet()
+
+        googleSheet.generateSheet((1 .. 8).map(Int::toString))
+        googleSheet.generateSheet((9 .. 20).map(Int::toString))
 
         val parser = NeercParserInfo(id, link)
         runBlocking {
             val actualTasks: List<String> = parser.getTasks()
-            val currentTasks = GoogleSheetUtils.getTasksList(sheetsService, id).flatten()
+            val currentTasks = googleSheet.getTasksList().flatten()
 
             if (currentTasks.size < actualTasks.size) {
-                GoogleSheetUtils.generateSheet(
-                    sheetsService,
-                    id,
-                    peopleList,
+                googleSheet.generateSheet(
                     actualTasks.subList(currentTasks.size, actualTasks.size)
                 )
             }
         }
 
-        val service = createDriveService()
-        insertPermission(service, id)
+        val driveService = createDriveService()
+        insertPermission(driveService, id)
 
         user.send(
             bot = bot,
