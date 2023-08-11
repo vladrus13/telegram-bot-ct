@@ -10,6 +10,7 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getR
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getWhiteColor
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getYellowDeclinedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getYellowScores
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.FormattedRectangle
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
@@ -174,26 +175,25 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                 ),
                 getRequests(
                     title,
-                    Rectangle(
-                        TASKS_NAMES_ROW_INDEX, lastRowNumber,
-                        FCS_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width,
-                        listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
-                    ),
-                    Rectangle(
-                        MIN_STUDENT_ROW_INDEX, lastRowNumber,
-                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_NUMBER,
-                        listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
-                    ),
-                    Rectangle(
-                        TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER,
-                        TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width,
-                        listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
-                    ),
-                    Rectangle(
-                        lastRowIndex, lastRowNumber,
-                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width,
-                        listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
-                    )
+                    *getEqualsActionsRectangles(
+                        listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
+                        Rectangle(
+                            TASKS_NAMES_ROW_INDEX, lastRowNumber,
+                            FCS_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                        ),
+                        Rectangle(
+                            MIN_STUDENT_ROW_INDEX, lastRowNumber,
+                            TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_NUMBER
+                        ),
+                        Rectangle(
+                            TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER,
+                            TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                        ),
+                        Rectangle(
+                            lastRowIndex, lastRowNumber,
+                            TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                        )
+                    ).toTypedArray()
                 )
             ).flatten()
         )
@@ -358,14 +358,11 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         // format new column
         val requests = getRequests(
             MAIN_LIST_NAME,
-            Rectangle(
-                TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1,
-                listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
-            ),
-            Rectangle(
-                TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_NUMBER, width, width + 1,
-                listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells)
-            )
+            *getEqualsActionsRectangles(
+                listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
+                Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
+                Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_NUMBER, width, width + 1)
+            ).toTypedArray()
         )
 
         executeRequestsSequence(requests)
@@ -382,12 +379,12 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
     /**
      * @param title is "Д[0-9]+" or <code>MAIN_LIST_NAME</code>
      */
-    private fun fillInStudents(title: String, getTotalCount: (Int) -> String) {
-        val listBody = mutableListOf(listOf(FCS_COLUMN_NAME, TOTAL_SCORES_COLUMN_NAME))
-        listBody.addAll(students.mapIndexed { studentIndex, name ->
-            listOf(name, getTotalCount(MIN_STUDENT_ROW_NUMBER + studentIndex))
-        })
-        val body = ValueRange().setValues(listBody.toList())
+    private fun fillInStudents(title: String, scoresFormula: (Int) -> String) {
+        val listBody =
+            listOf(listOf(FCS_COLUMN_NAME, TOTAL_SCORES_COLUMN_NAME)) + students.mapIndexed { studentIndex, name ->
+                listOf(name, scoresFormula(MIN_STUDENT_ROW_NUMBER + studentIndex))
+            }
+        val body = ValueRange().setValues(listBody)
         val range = getPrettyRange(
             title,
             TASKS_NAMES_MAIN_LIST_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
@@ -399,22 +396,13 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
 
         val requests = getRequests(
             title,
-            Rectangle(
-                TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER,
-                listOf(GridRequestMaker::colorizeBorders)
-            ),
-            Rectangle(
-                TASKS_NAMES_ROW_INDEX, listBody.size, TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER,
-                listOf(GridRequestMaker::colorizeBorders)
-            ),
-            Rectangle(
-                TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER, FCS_COLUMN_INDEX, listBody.first().size,
-                listOf(GridRequestMaker::colorizeBorders)
-            ),
-            Rectangle(
-                TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER,
-                listOf(GridRequestMaker::formatCells)
-            ),
+            *getEqualsActionsRectangles(
+                listOf(GridRequestMaker::colorizeBorders),
+                Rectangle(TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER),
+                Rectangle(TASKS_NAMES_ROW_INDEX, listBody.size, TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER),
+                Rectangle(TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER, FCS_COLUMN_INDEX, listBody.first().size),
+                Rectangle(TASKS_NAMES_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER)
+            ).toTypedArray()
         )
 
         executeRequestsSequence(requests)
@@ -422,11 +410,16 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
 
     private fun getRequests(
         title: String,
-        vararg updateCells: Rectangle
+        vararg updateCells: FormattedRectangle
     ): List<Request> =
         updateCells.map { rect ->
-            rect.actions.map { action -> action(createGridRequestMaker(service, id, title, rect)) }
+            rect.actions.map { action -> action(createGridRequestMaker(service, id, title, rect.rectangle)) }
         }.flatten()
+
+    private fun getEqualsActionsRectangles(
+        actions: List<(GridRequestMaker) -> Request>,
+        vararg rectangles: Rectangle
+    ): List<FormattedRectangle> = rectangles.map { rect -> FormattedRectangle(rect, actions) }
 
     companion object {
         enum class WHO_ENTERED {

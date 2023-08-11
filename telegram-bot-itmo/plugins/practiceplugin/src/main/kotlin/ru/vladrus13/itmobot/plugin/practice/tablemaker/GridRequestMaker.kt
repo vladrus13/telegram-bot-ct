@@ -111,7 +111,7 @@ class GridRequestMaker(
             sheetTitle: String,
             firstRow: Int, lastRow: Int,
             firstColumn: Int, lastColumn: Int
-        ): String = "$sheetTitle!${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
+        ) = "$sheetTitle!${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
 
         fun nToAZ(n: Int): String {
             if (n < 0) return ""
