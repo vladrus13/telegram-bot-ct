@@ -17,6 +17,9 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 
 class GoogleSheet(private val service: Sheets, private val id: String, private val students: List<String>) {
+    private fun getSumScoresFormula(index: Int) =
+        "=$SUM_FORMULA($FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_CHAR$index:$index)*$SCORES_FOR_DISCRETE_MATH_TASK"
+
     fun generateMainSheet() {
         // rename list to $MAIN_LIST_NAME
         val properties = SheetProperties().setIndex(0).setTitle(MAIN_LIST_NAME)
@@ -26,9 +29,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         val requests = listOf(Request().setUpdateSheetProperties(update))
         executeRequestsSequence(requests)
 
-        fillInStudents(
-            MAIN_LIST_NAME
-        ) { ind -> "=$SUM_FORMULA($FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_CHAR$ind:$ind)*$SCORES_FOR_DISCRETE_MATH_TASK" }
+        fillInStudents(MAIN_LIST_NAME, this::getSumScoresFormula)
 
         // Conditional Format
         executeRequestsSequence(
@@ -62,6 +63,8 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         )
     }
 
+    private fun getActualScoreFormula(index: Int) = "=$MAIN_LIST_NAME!$TOTAL_SCORES_COLUMN_CHAR$index"
+
     fun generateSheet(tasks: List<String>) {
         val maxStudentRowIndex = students.size
         val maxStudentRowNumber = maxStudentRowIndex + 1
@@ -78,7 +81,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             )
         )
 
-        fillInStudents(title) { ind -> "=$MAIN_LIST_NAME!$TOTAL_SCORES_COLUMN_CHAR$ind" }
+        fillInStudents(title, this::getActualScoreFormula)
 
         val listBody = mutableListOf(mutableListOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks)
         for (rowNumber in MIN_STUDENT_ROW_NUMBER..maxStudentRowNumber) {
