@@ -50,6 +50,13 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
 
     private fun getActualScoreFormula(index: Int) = "=$MAIN_LIST_NAME!$TOTAL_SCORES_COLUMN_CHAR${index + 1}"
 
+    private fun updateBody(range: String, body: List<List<String>>) = service
+        .spreadsheets()
+        .values()
+        .update(id, range, ValueRange().setValues(body))
+        .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
+        .execute()
+
     fun generateSheet(tasks: List<String>) {
         val maxStudentRowIndex = students.size
         val lastRowIndex = students.size + 1
@@ -63,7 +70,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
 
         fillInStudents(title, this::getActualScoreFormula)
 
-        val listBody = listOf(listOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks) +
+        val body = listOf(listOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks) +
                 (MIN_STUDENT_ROW_INDEX..maxStudentRowIndex).map {
                     listOf(getCountAFormula(getPrettyLongRowRange(it, it + 1, TASK_FIRST_COLUMN_INDEX)))
                 } +
@@ -79,21 +86,14 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                     }
                 )
 
-        val body = ValueRange().setValues(listBody)
-        service.spreadsheets().values()
-            .update(
-                id,
-                getPrettyRange(
-                    title,
-                    TASKS_NAMES_ROW_INDEX,
-                    lastRowIndex + 1,
-                    TASK_COUNTER_COLUMN_INDEX,
-                    TASK_COUNTER_COLUMN_INDEX + width
-                ),
-                body
-            )
-            .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
-            .execute()
+        updateBody(
+            getPrettyRange(
+                title,
+                TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
+                TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+            ),
+            body
+        )
 
         addNewMainListColumn(title)
 
@@ -120,7 +120,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             *getListRules(
                 title,
                 lastRowIndex, lastRowIndex + 1,
-                TASK_FIRST_COLUMN_INDEX, listBody.size,
+                TASK_FIRST_COLUMN_INDEX, body.size,
                 *getListBooleanConditionsOfAcceptedOrNotTask(
                     "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$TASK_FIRST_COLUMN_CHAR${maxStudentRowIndex + 1}"
                 ).map { it }.toTypedArray()
@@ -136,7 +136,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             *getListRules(
                 title,
                 MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
-                TASK_FIRST_COLUMN_INDEX, listBody.size,
+                TASK_FIRST_COLUMN_INDEX, body.size,
                 *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
             ).toTypedArray(),
             *getRequests(
@@ -297,28 +297,20 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             return
         }
 
-        val listBody = mutableListOf(mutableListOf(titleSheet))
+        val body = mutableListOf(mutableListOf(titleSheet))
         for (studentRowNumber in students.indices.map { index -> MIN_STUDENT_ROW_NUMBER + index }) {
             val range = "$titleSheet!$TASK_FIRST_COLUMN_CHAR$studentRowNumber:$studentRowNumber"
             // There are russian 'Т' and English 'T'.
-            listBody.add(mutableListOf("=${getCountIfRussianEnglishIsT(range)}"))
+            body.add(mutableListOf("=${getCountIfRussianEnglishIsT(range)}"))
         }
 
-        val body = ValueRange().setValues(listBody.toList())
-        service.spreadsheets().values()
-            .update(
-                id,
-                getPrettyRange(
-                    MAIN_LIST_NAME,
-                    TASKS_NAMES_MAIN_LIST_ROW_INDEX,
-                    maxStudentRowNumber,
-                    width,
-                    width + 1
-                ),
-                body
-            )
-            .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
-            .execute()
+        updateBody(
+            getPrettyRange(
+                MAIN_LIST_NAME,
+                TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1
+            ),
+            body,
+        )
 
         // format new column
         executeRequestsSequence(
@@ -338,20 +330,18 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
      * @param title is "Д[0-9]+" or <code>MAIN_LIST_NAME</code>
      */
     private fun fillInStudents(title: String, scoresFormula: (Int) -> String) {
-        val listBody =
+        val body =
             listOf(listOf(FCS_COLUMN_NAME, TOTAL_SCORES_COLUMN_NAME)) + students.mapIndexed { studentIndex, name ->
                 listOf(name, scoresFormula(MIN_STUDENT_ROW_INDEX + studentIndex))
             }
-        val body = ValueRange().setValues(listBody)
-        val range = getPrettyRange(
-            title,
-            TASKS_NAMES_MAIN_LIST_ROW_INDEX, listBody.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
-        )
-        service.spreadsheets().values()
-            .update(id, range, body)
-            .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
-            .execute()
 
+        updateBody(
+            getPrettyRange(
+                title,
+                TASKS_NAMES_MAIN_LIST_ROW_INDEX, body.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
+            ),
+            body,
+        )
 
         executeRequestsSequence(
             *getRequests(
@@ -359,19 +349,19 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                 *getEqualsActionsRectangles(
                     listOf(GridRequestMaker::colorizeBorders),
                     Rectangle(
-                        TASKS_NAMES_ROW_INDEX, listBody.size,
+                        TASKS_NAMES_ROW_INDEX, body.size,
                         FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER
                     ),
                     Rectangle(
-                        TASKS_NAMES_ROW_INDEX, listBody.size,
+                        TASKS_NAMES_ROW_INDEX, body.size,
                         TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
                     ),
                     Rectangle(
                         TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_NUMBER,
-                        FCS_COLUMN_INDEX, listBody.first().size
+                        FCS_COLUMN_INDEX, body.first().size
                     ),
                     Rectangle(
-                        TASKS_NAMES_ROW_INDEX, listBody.size,
+                        TASKS_NAMES_ROW_INDEX, body.size,
                         FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
                     )
                 ).toTypedArray()
