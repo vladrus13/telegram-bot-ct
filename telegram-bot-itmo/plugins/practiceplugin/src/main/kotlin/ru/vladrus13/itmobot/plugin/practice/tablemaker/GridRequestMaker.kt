@@ -102,21 +102,29 @@ class GridRequestMaker(
         /**
          * This function return correct range string
          *
-         * @param sheetTitle is $title
+         * @param title is $title
          * @param firstRow in [0, t)
          * @param lastRow in [0, t)
          * @param firstColumn in [0, t)
          * @param lastColumn in [0, t)
          * @return "$title![A-Z]+NUM:[A-Z]+NUM", where NUM is natural number in [1, +inf)
          */
-        fun getPrettyRange(sheetTitle: String, firstRow: Int, lastRow: Int, firstColumn: Int, lastColumn: Int) =
-            "$sheetTitle!${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
+        fun getTitlePrettyRange(title: String, firstRow: Int, lastRow: Int, firstColumn: Int, lastColumn: Int) =
+            title + "!" + getPrettyRange(firstRow, lastRow, firstColumn, lastColumn)
 
         fun getPrettyRange(firstRow: Int, lastRow: Int, firstColumn: Int, lastColumn: Int) =
-            "${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
+            "${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}$lastRow"
+
+        fun getTitlePrettyOnlyRowRange(title: String, firstRow: Int, lastRow: Int) =
+            "$title!${firstRow + 1}:$lastRow"
 
         fun getPrettyLongRowRange(firstRow: Int, lastRow: Int, firstColumn: Int) =
             getPrettyRange(firstRow, lastRow, firstColumn, INF)
+
+        fun getTitlePrettyLongRowRange(title: String, firstRow: Int, lastRow: Int, firstColumn: Int) =
+            getTitlePrettyRange(title, firstRow, lastRow, firstColumn, INF)
+
+        fun getTitlePrettyCell(title: String, row: Int, column: Int) = "$title!${nToAZ(column)}${row + 1}"
 
         fun nToAZ(n: Int): String {
             if (n < 0) return ""
