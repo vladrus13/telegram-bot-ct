@@ -13,13 +13,20 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getY
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.FormattedRectangle
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.nToAZ
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 
 class GoogleSheet(private val service: Sheets, private val id: String, private val students: List<String>) {
     private fun getSumScoresFormula(index: Int) =
-        "=$SUM_FORMULA($FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_CHAR$index:$index)*$SCORES_FOR_DISCRETE_MATH_TASK"
+        "=SUM(${
+            getPrettyLongRowRange(
+                index,
+                index,
+                FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX
+            )
+        })*$SCORES_FOR_DISCRETE_MATH_TASK"
 
     fun generateMainSheet() {
         // rename list to $MAIN_LIST_NAME
@@ -41,45 +48,45 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         )
     }
 
-
-    private fun getActualScoreFormula(index: Int) = "=$MAIN_LIST_NAME!$TOTAL_SCORES_COLUMN_CHAR$index"
+    private fun getActualScoreFormula(index: Int) = "=$MAIN_LIST_NAME!$TOTAL_SCORES_COLUMN_CHAR${index + 1}"
 
     fun generateSheet(tasks: List<String>) {
         val maxStudentRowIndex = students.size
-        val maxStudentRowNumber = maxStudentRowIndex + 1
         val lastRowIndex = students.size + 1
-        val lastRowNumber = lastRowIndex + 1
 
         // make new list
         val homeworkCount = service.spreadsheets().get(id).execute().sheets.size
         val title = "Д$homeworkCount"
         val properties = SheetProperties().setTitle(title)
+        val width = tasks.size + 1
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 
         fillInStudents(title, this::getActualScoreFormula)
 
-        val listBody = mutableListOf(mutableListOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks)
-        for (rowNumber in MIN_STUDENT_ROW_NUMBER..maxStudentRowNumber) {
-            listBody.add(mutableListOf("=$COUNT_A_FORMULA($TASK_FIRST_COLUMN_CHAR$rowNumber:$rowNumber)"))
-        }
-        val width = listBody[0].size
+        val listBody = listOf(listOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks) +
+                (MIN_STUDENT_ROW_INDEX..maxStudentRowIndex).map {
+                    listOf(getCountAFormula(getPrettyLongRowRange(it, it + 1, TASK_FIRST_COLUMN_INDEX)))
+                } +
+                listOf(
+                    listOf(
+                        getCountIfFormula(
+                            getPrettyLongRowRange(lastRowIndex, lastRowIndex + 1, TASK_FIRST_COLUMN_INDEX), ">0"
+                        )
+                    ) + tasks.indices.map { it + TASK_FIRST_COLUMN_INDEX }.map {
+                        getCountAFormula(
+                            getPrettyRange(MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1, it, it + 1)
+                        )
+                    }
+                )
 
-        val lastRow =
-            mutableListOf("=$COUNT_IF_FORMULA($TASK_FIRST_COLUMN_CHAR$lastRowNumber:$lastRowNumber; \">0\")")
-        for (taskIndex in tasks.indices) {
-            val columnName = nToAZ(taskIndex + TASK_FIRST_COLUMN_INDEX)
-            lastRow.add("=$COUNT_A_FORMULA($columnName$MIN_STUDENT_ROW_NUMBER:$columnName$maxStudentRowNumber)")
-        }
-        listBody.add(lastRow)
-
-        val body = ValueRange().setValues(listBody.toList())
+        val body = ValueRange().setValues(listBody)
         service.spreadsheets().values()
             .update(
                 id,
                 getPrettyRange(
                     title,
                     TASKS_NAMES_ROW_INDEX,
-                    lastRowNumber,
+                    lastRowIndex + 1,
                     TASK_COUNTER_COLUMN_INDEX,
                     TASK_COUNTER_COLUMN_INDEX + width
                 ),
@@ -94,7 +101,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         executeRequestsSequence(
             *getListRules(
                 title, MIN_STUDENT_ROW_INDEX,
-                maxStudentRowNumber,
+                maxStudentRowIndex + 1,
                 TASK_COUNTER_COLUMN_INDEX,
                 TASK_COUNTER_COLUMN_NUMBER,
                 { it.setGradientRule(LOCAL_SCORED_GRADIENT) },
@@ -112,15 +119,15 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             ).toTypedArray(),
             *getListRules(
                 title,
-                lastRowIndex, lastRowNumber,
+                lastRowIndex, lastRowIndex + 1,
                 TASK_FIRST_COLUMN_INDEX, listBody.size,
                 *getListBooleanConditionsOfAcceptedOrNotTask(
-                    "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$TASK_FIRST_COLUMN_CHAR$maxStudentRowNumber"
+                    "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$TASK_FIRST_COLUMN_CHAR${maxStudentRowIndex + 1}"
                 ).map { it }.toTypedArray()
             ).toTypedArray(),
             *getListRules(
                 title,
-                MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
+                MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 FCS_COLUMN_INDEX, FCS_COLUMN_NUMBER,
                 *getListBooleanConditionsOfAcceptedOrNotTask(
                     "$TASK_FIRST_COLUMN_CHAR$MIN_STUDENT_ROW_NUMBER:$MIN_STUDENT_ROW_NUMBER"
@@ -128,7 +135,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             ).toTypedArray(),
             *getListRules(
                 title,
-                MIN_STUDENT_ROW_INDEX, maxStudentRowNumber,
+                MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 TASK_FIRST_COLUMN_INDEX, listBody.size,
                 *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
             ).toTypedArray(),
@@ -137,11 +144,11 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                 *getEqualsActionsRectangles(
                     listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
                     Rectangle(
-                        TASKS_NAMES_ROW_INDEX, lastRowNumber,
+                        TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
                         FCS_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
                     ),
                     Rectangle(
-                        MIN_STUDENT_ROW_INDEX, lastRowNumber,
+                        MIN_STUDENT_ROW_INDEX, lastRowIndex + 1,
                         TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_NUMBER
                     ),
                     Rectangle(
@@ -149,7 +156,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                         TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
                     ),
                     Rectangle(
-                        lastRowIndex, lastRowNumber,
+                        lastRowIndex, lastRowIndex + 1,
                         TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
                     )
                 ).toTypedArray()
@@ -326,13 +333,6 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         )
     }
 
-    private fun getCountIfRussianEnglishIsT(range: String) =
-        "${getCountIf(range, RUSSIAN_T)} + ${getCountIf(range, ENGLISH_T)}"
-
-    private fun getCountIfRussianEnglishIsP(range: String) =
-        "${getCountIf(range, RUSSIAN_P)} + ${getCountIf(range, ENGLISH_P)}"
-
-    private fun getCountIf(range: String, char: Char) = "$COUNT_IF_FORMULA($range;\"$char\")"
 
     /**
      * @param title is "Д[0-9]+" or <code>MAIN_LIST_NAME</code>
@@ -340,7 +340,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
     private fun fillInStudents(title: String, scoresFormula: (Int) -> String) {
         val listBody =
             listOf(listOf(FCS_COLUMN_NAME, TOTAL_SCORES_COLUMN_NAME)) + students.mapIndexed { studentIndex, name ->
-                listOf(name, scoresFormula(MIN_STUDENT_ROW_NUMBER + studentIndex))
+                listOf(name, scoresFormula(MIN_STUDENT_ROW_INDEX + studentIndex))
             }
         val body = ValueRange().setValues(listBody)
         val range = getPrettyRange(
@@ -419,9 +419,17 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             .setMinpoint(getInterpolationPoint(getWhiteColor(), "0"))
             .setMaxpoint(getInterpolationPoint(getGreenCountTasksColor(), "100"))
 
-        private const val COUNT_A_FORMULA = "COUNTA"
-        private const val COUNT_IF_FORMULA = "COUNTIF"
-        private const val SUM_FORMULA = "SUM"
+        private fun getCountAFormula(range: String) = "=COUNTA($range)"
+
+        private fun getCountIfRussianEnglishIsT(range: String) =
+            getCountIf(range, RUSSIAN_T) + " + " + getCountIf(range, ENGLISH_T)
+
+        private fun getCountIfRussianEnglishIsP(range: String) =
+            getCountIf(range, RUSSIAN_P) + " + " + getCountIf(range, ENGLISH_P)
+
+        private fun getCountIf(range: String, condition: String) = "COUNTIF($range;\"$condition\")"
+
+        private fun getCountIfFormula(range: String, condition: String) = "=" + getCountIf(range, condition)
 
         private const val MAIN_LIST_NAME = "Results"
         private const val FCS_COLUMN_NAME = "ФИО"
@@ -454,9 +462,9 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         private val FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_CHAR =
             nToAZ(FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX)
 
-        private val RUSSIAN_T = 'Т'
-        private val ENGLISH_T = 'T'
-        private val RUSSIAN_P = 'Р'
-        private val ENGLISH_P = 'P'
+        private const val RUSSIAN_T = "Т"
+        private const val ENGLISH_T = "T"
+        private const val RUSSIAN_P = "Р"
+        private const val ENGLISH_P = "P"
     }
 }

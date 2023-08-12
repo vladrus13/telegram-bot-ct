@@ -65,6 +65,8 @@ class GridRequestMaker(
     }
 
     companion object {
+        private const val INF = 1000
+
         private fun getSheetIdFromTitle(sheetsService: Sheets, id: String, title: String): Int {
             for (sheet in sheetsService.spreadsheets().get(id).execute().sheets) {
                 if (sheet.properties.title == title)
@@ -107,11 +109,14 @@ class GridRequestMaker(
          * @param lastColumn in [0, t)
          * @return "$title![A-Z]+NUM:[A-Z]+NUM", where NUM is natural number in [1, +inf)
          */
-        fun getPrettyRange(
-            sheetTitle: String,
-            firstRow: Int, lastRow: Int,
-            firstColumn: Int, lastColumn: Int
-        ) = "$sheetTitle!${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
+        fun getPrettyRange(sheetTitle: String, firstRow: Int, lastRow: Int, firstColumn: Int, lastColumn: Int) =
+            "$sheetTitle!${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
+
+        fun getPrettyRange(firstRow: Int, lastRow: Int, firstColumn: Int, lastColumn: Int) =
+            "${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
+
+        fun getPrettyLongRowRange(firstRow: Int, lastRow: Int, firstColumn: Int) =
+            getPrettyRange(firstRow, lastRow, firstColumn, INF)
 
         fun nToAZ(n: Int): String {
             if (n < 0) return ""
