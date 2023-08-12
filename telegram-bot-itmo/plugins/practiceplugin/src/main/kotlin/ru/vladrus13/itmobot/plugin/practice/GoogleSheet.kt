@@ -37,29 +37,10 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                 MAIN_LIST_NAME,
                 MIN_STUDENT_ROW_INDEX, MIN_STUDENT_ROW_INDEX + students.size,
                 TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_NUMBER
-            ) {
-                it.setGradientRule(
-                    GradientRule()
-                        .setMinpoint(
-                            InterpolationPoint()
-                                .setType(INTERPOLATION_POINT_TYPE_MIN)
-                                .setColor(getRedScores())
-                        )
-                        .setMidpoint(
-                            InterpolationPoint()
-                                .setType(INTERPOLATION_POINT_TYPE_PERCENTILE)
-                                .setColor(getYellowScores())
-                                .setValue("50")
-                        )
-                        .setMaxpoint(
-                            InterpolationPoint()
-                                .setType(INTERPOLATION_POINT_TYPE_MAX)
-                                .setColor(getGreenScores())
-                        )
-                )
-            }
+            ) { it.setGradientRule(MAIN_SCORES_GRADIENT) }
         )
     }
+
 
     private fun getActualScoreFormula(index: Int) = "=$MAIN_LIST_NAME!$TOTAL_SCORES_COLUMN_CHAR$index"
 
@@ -116,21 +97,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                 maxStudentRowNumber,
                 TASK_COUNTER_COLUMN_INDEX,
                 TASK_COUNTER_COLUMN_NUMBER,
-                {
-                    it.setGradientRule(
-                        GradientRule()
-                            .setMinpoint(
-                                InterpolationPoint()
-                                    .setType(INTERPOLATION_POINT_TYPE_MIN)
-                                    .setColor(getWhiteColor())
-                            )
-                            .setMaxpoint(
-                                InterpolationPoint()
-                                    .setType(INTERPOLATION_POINT_TYPE_MAX)
-                                    .setColor(getGreenCountTasksColor())
-                            )
-                    )
-                },
+                { it.setGradientRule(LOCAL_SCORED_GRADIENT) },
                 {
                     it.setBooleanRule(
                         BooleanRule()
@@ -436,9 +403,21 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             TEXT_EQ
         }
 
-        private const val INTERPOLATION_POINT_TYPE_MIN = "MIN"
-        private const val INTERPOLATION_POINT_TYPE_MAX = "MAX"
         private const val INTERPOLATION_POINT_TYPE_PERCENTILE = "PERCENTILE"
+
+        private fun getInterpolationPoint(color: Color, percentile: String) = InterpolationPoint()
+            .setType(INTERPOLATION_POINT_TYPE_PERCENTILE)
+            .setColor(color)
+            .setValue(percentile)
+
+        private val MAIN_SCORES_GRADIENT = GradientRule()
+            .setMinpoint(getInterpolationPoint(getRedScores(), "0"))
+            .setMidpoint(getInterpolationPoint(getYellowScores(), "50"))
+            .setMaxpoint(getInterpolationPoint(getGreenScores(), "100"))
+
+        private val LOCAL_SCORED_GRADIENT = GradientRule()
+            .setMinpoint(getInterpolationPoint(getWhiteColor(), "0"))
+            .setMaxpoint(getInterpolationPoint(getGreenCountTasksColor(), "100"))
 
         private const val COUNT_A_FORMULA = "COUNTA"
         private const val COUNT_IF_FORMULA = "COUNTIF"

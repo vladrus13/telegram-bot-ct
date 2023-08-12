@@ -1,6 +1,8 @@
 package ru.vladrus13.itmobot.plugin.practice.tablemaker
 
 import com.google.api.services.sheets.v4.model.Color
+import com.google.api.services.sheets.v4.model.InterpolationPoint
+import ru.vladrus13.itmobot.plugin.practice.GoogleSheet.Companion.INTERPOLATION_POINT_TYPE_PERCENTILE
 
 class ColorMaker {
     companion object {
@@ -17,5 +19,7 @@ class ColorMaker {
         fun getGreenScores() = getColor(0.341f, 0.733f, 0.541f)
         fun getBlackColor() = getColor(0f, 0f, 0f)
         fun getWhiteColor() = getColor(1f, 1f, 1f)
+
+
     }
 }
