@@ -22,15 +22,6 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 
 class GoogleSheet(private val service: Sheets, private val id: String, private val students: List<String>) {
-    private fun getSumScoresFormula(index: Int) =
-        "=SUM(${
-            getPrettyLongRowRange(
-                index,
-                index,
-                FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX
-            )
-        })*$SCORES_FOR_DISCRETE_MATH_TASK"
-
     fun generateMainSheet() {
         // rename list to $MAIN_LIST_NAME
         val properties = SheetProperties().setIndex(0).setTitle(MAIN_LIST_NAME)
@@ -39,7 +30,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             .setFields("title")
         executeRequestsSequence(Request().setUpdateSheetProperties(update))
 
-        fillInStudents(MAIN_LIST_NAME, this::getSumScoresFormula)
+        fillInStudents(MAIN_LIST_NAME, GoogleSheet::getSumScoresFormula)
 
         // Conditional Format
         executeRequestsSequence(
@@ -50,16 +41,6 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             ) { it.setGradientRule(MAIN_SCORES_GRADIENT) }
         )
     }
-
-    private fun getActualScoreFormula(index: Int) =
-        "=" + getTitlePrettyCell(MAIN_LIST_NAME, TOTAL_SCORES_COLUMN_INDEX, index)
-
-    private fun updateBody(range: String, body: List<List<String>>) = service
-        .spreadsheets()
-        .values()
-        .update(id, range, ValueRange().setValues(body))
-        .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
-        .execute()
 
     fun generateSheet(tasks: List<String>) {
         val maxStudentRowIndex = students.size
@@ -72,7 +53,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         val width = tasks.size + 1
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 
-        fillInStudents(title, this::getActualScoreFormula)
+        fillInStudents(title, GoogleSheet::getActualScoreFormula)
 
         val body = listOf(listOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks) +
                 (MIN_STUDENT_ROW_INDEX..maxStudentRowIndex).map {
@@ -186,6 +167,13 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         }
         return tasksList
     }
+
+    private fun updateBody(range: String, body: List<List<String>>) = service
+        .spreadsheets()
+        .values()
+        .update(id, range, ValueRange().setValues(body))
+        .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
+        .execute()
 
     private fun getValueRange(range: String) = service
         .spreadsheets()
@@ -421,6 +409,16 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             .setMinpoint(getInterpolationPoint(getWhiteColor(), "0"))
             .setMaxpoint(getInterpolationPoint(getGreenCountTasksColor(), "100"))
 
+        private fun getSumScoresFormula(index: Int) =
+            "=SUM(${
+                getPrettyLongRowRange(
+                    index,
+                    index,
+                    FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX
+                )
+            })*$SCORES_FOR_DISCRETE_MATH_TASK"
+
+
         private fun getCountIf(range: String, condition: String) = "COUNTIF($range;\"$condition\")"
 
         private fun getCountAFormula(range: String) = "=COUNTA($range)"
@@ -432,6 +430,9 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
 
         private fun getCountIfRussianEnglishIsPFormula(range: String) = "=" +
                 getCountIf(range, RUSSIAN_P) + " + " + getCountIf(range, ENGLISH_P)
+
+        private fun getActualScoreFormula(index: Int) =
+            "=" + getTitlePrettyCell(MAIN_LIST_NAME, TOTAL_SCORES_COLUMN_INDEX, index)
 
         private const val MAIN_LIST_NAME = "Results"
         private const val FCS_COLUMN_NAME = "ФИО"
