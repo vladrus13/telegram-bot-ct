@@ -12,12 +12,14 @@ class GridRequestMaker(
     firstRow: Int, lastRow: Int,
     firstColumn: Int, lastColumn: Int
 ) {
-    private val range: GridRange = GridRange()
+    val range: GridRange = GridRange()
         .setSheetId(sheetId)
         .setStartRowIndex(firstRow)
         .setEndRowIndex(lastRow)
         .setStartColumnIndex(firstColumn)
         .setEndColumnIndex(lastColumn)
+
+    fun colorizeBordersAndFormatCells(): List<Request> = listOf(colorizeBorders(), formatCells())
 
     fun colorizeBorders(): Request {
         val border = Border()
@@ -63,6 +65,8 @@ class GridRequestMaker(
     }
 
     companion object {
+        private const val FARTHEST_COLUMN_INDEX = 1000
+
         private fun getSheetIdFromTitle(sheetsService: Sheets, id: String, title: String): Int {
             for (sheet in sheetsService.spreadsheets().get(id).execute().sheets) {
                 if (sheet.properties.title == title)
@@ -76,27 +80,53 @@ class GridRequestMaker(
             sheetTitle: String,
             firstRow: Int, lastRow: Int,
             firstColumn: Int, lastColumn: Int
-        ): GridRequestMaker = GridRequestMaker(
+        ) = GridRequestMaker(
             getSheetIdFromTitle(sheetService, id, sheetTitle), firstRow, lastRow, firstColumn, lastColumn
         )
+
+        fun createGridRequestMaker(
+            service: Sheets, id: String,
+            title: String,
+            rectangle: Rectangle
+        ) = createGridRequestMaker(
+            service,
+            id,
+            title,
+            rectangle.firstRow,
+            rectangle.lastRow,
+            rectangle.firstColumn,
+            rectangle.lastColumn
+        )
+
 
         /**
          * This function return correct range string
          *
-         * @param sheetTitle is $title
+         * @param title is $title
          * @param firstRow in [0, t)
          * @param lastRow in [0, t)
          * @param firstColumn in [0, t)
          * @param lastColumn in [0, t)
          * @return "$title![A-Z]+NUM:[A-Z]+NUM", where NUM is natural number in [1, +inf)
          */
-        fun getPrettyRange(
-            sheetTitle: String,
-            firstRow: Int, lastRow: Int,
-            firstColumn: Int, lastColumn: Int
-        ): String = "$sheetTitle!${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}${lastRow}"
+        fun getTitlePrettyRange(title: String, firstRow: Int, lastRow: Int, firstColumn: Int, lastColumn: Int) =
+            title + "!" + getPrettyRange(firstRow, lastRow, firstColumn, lastColumn)
 
-        fun nToAZ(n: Int) : String {
+        fun getPrettyRange(firstRow: Int, lastRow: Int, firstColumn: Int, lastColumn: Int) =
+            "${nToAZ(firstColumn)}${firstRow + 1}:${nToAZ(lastColumn - 1)}$lastRow"
+
+        fun getTitlePrettyOnlyRowRange(title: String, firstRow: Int, lastRow: Int) =
+            "$title!${firstRow + 1}:$lastRow"
+
+        fun getPrettyLongRowRange(firstRow: Int, lastRow: Int, firstColumn: Int) =
+            getPrettyRange(firstRow, lastRow, firstColumn, FARTHEST_COLUMN_INDEX)
+
+        fun getTitlePrettyLongRowRange(title: String, firstRow: Int, lastRow: Int, firstColumn: Int) =
+            getTitlePrettyRange(title, firstRow, lastRow, firstColumn, FARTHEST_COLUMN_INDEX)
+
+        fun getTitlePrettyCell(title: String, row: Int, column: Int) = "$title!${nToAZ(column)}${row + 1}"
+
+        fun nToAZ(n: Int): String {
             if (n < 0) return ""
             return nToAZ(n / 26 - 1) + (65 + (n % 26)).toChar()
         }
