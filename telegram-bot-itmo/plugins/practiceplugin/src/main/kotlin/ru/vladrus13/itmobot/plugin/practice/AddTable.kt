@@ -22,7 +22,7 @@ class AddTable(override val parent: Menu) : Menu(parent) {
     override fun menuHelp() = "Пункт создания таблицы"
 
     override val name: String
-        get() = "Создать новую таблицу (введите название таблицы, а в следующих строка ФИО студентов)"
+        get() = "Создать новую таблицу (в первой строке - название таблицы; во второй - ссылку на сайт; в следующих строках ФИО студентов)"
     override val systemName: String
         get() = "makeTable"
 

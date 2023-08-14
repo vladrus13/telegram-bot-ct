@@ -17,7 +17,5 @@ class ColorMaker {
         fun getGreenScores() = getColor(0.341f, 0.733f, 0.541f)
         fun getBlackColor() = getColor(0f, 0f, 0f)
         fun getWhiteColor() = getColor(1f, 1f, 1f)
-
-
     }
 }

@@ -65,7 +65,7 @@ class GridRequestMaker(
     }
 
     companion object {
-        private const val INF = 1000
+        private const val FARTHEST_COLUMN_INDEX = 1000
 
         private fun getSheetIdFromTitle(sheetsService: Sheets, id: String, title: String): Int {
             for (sheet in sheetsService.spreadsheets().get(id).execute().sheets) {
@@ -119,10 +119,10 @@ class GridRequestMaker(
             "$title!${firstRow + 1}:$lastRow"
 
         fun getPrettyLongRowRange(firstRow: Int, lastRow: Int, firstColumn: Int) =
-            getPrettyRange(firstRow, lastRow, firstColumn, INF)
+            getPrettyRange(firstRow, lastRow, firstColumn, FARTHEST_COLUMN_INDEX)
 
         fun getTitlePrettyLongRowRange(title: String, firstRow: Int, lastRow: Int, firstColumn: Int) =
-            getTitlePrettyRange(title, firstRow, lastRow, firstColumn, INF)
+            getTitlePrettyRange(title, firstRow, lastRow, firstColumn, FARTHEST_COLUMN_INDEX)
 
         fun getTitlePrettyCell(title: String, row: Int, column: Int) = "$title!${nToAZ(column)}${row + 1}"
 
