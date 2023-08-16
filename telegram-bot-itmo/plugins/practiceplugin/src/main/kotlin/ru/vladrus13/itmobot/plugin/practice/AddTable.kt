@@ -2,6 +2,7 @@ package ru.vladrus13.itmobot.plugin.practice
 
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -12,6 +13,7 @@ import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createDriveServ
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getTableInfo
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.insertPermission
+import ru.vladrus13.itmobot.parallel.CoroutineThreadOverseer
 import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import java.util.logging.Logger
 
@@ -67,23 +69,28 @@ class AddTable(override val parent: Menu) : Menu(parent) {
 
         googleSheet.generateMainSheet()
 
-        googleSheet.generateSheet((1 .. 8).map(Int::toString))
-        googleSheet.generateSheet((9 .. 20).map(Int::toString))
+        googleSheet.generateSheet((1..8).map(Int::toString))
+        googleSheet.generateSheet((9..20).map(Int::toString))
 
         val parser = NeercParserInfo(id, link)
-        runBlocking {
-            val actualTasks: List<String> = parser.getTasks()
-            val currentTasks = googleSheet.getTasksList().flatten()
-
-            if (currentTasks.size < actualTasks.size) {
-                googleSheet.generateSheet(
-                    actualTasks.subList(currentTasks.size, actualTasks.size)
-                )
-            }
-        }
 
         val driveService = createDriveService()
         insertPermission(driveService, id)
+
+        CoroutineThreadOverseer.addTask(
+            runBlocking {
+                launch {
+                    val actualTasks: List<String> = parser.getTasks()
+                    val currentTasks = googleSheet.getTasksList().flatten()
+
+                    if (currentTasks.size < actualTasks.size) {
+                        googleSheet.generateSheet(
+                            actualTasks.subList(currentTasks.size, actualTasks.size)
+                        )
+                    }
+                }
+            }
+        )
 
         user.send(
             bot = bot,
