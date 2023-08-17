@@ -10,7 +10,7 @@ import java.util.logging.Logger
 class NeercParserInfo(override val idTable: String, override val urlInfo: String) : ParserInfo {
     private val logger: Logger = InitialProperties.logger
 
-    override suspend fun getTasks(): List<String> {
+    override fun getTasks(): List<String> {
         logger.info("== Starts parse data in neerc")
 
         val doc: Document

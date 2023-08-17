@@ -10,5 +10,5 @@ interface ParserInfo {
     /**
      * getDifference between tasks
      */
-    suspend fun getTasks(): List<String>
+    fun getTasks(): List<String>
 }

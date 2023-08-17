@@ -1,21 +1,16 @@
 package ru.vladrus13.itmobot.parallel
 
-import kotlinx.coroutines.Job
-
 class CoroutineThreadOverseer {
     companion object {
-        private val jobs: MutableList<Job> = mutableListOf()
+        private val jobs: MutableList<() -> Unit> = mutableListOf()
 
-        fun addTask(job: Job) {
+        fun addTask(job: () -> Unit) {
             jobs.add(job)
         }
 
-        suspend fun runTasks() {
-            for (item in jobs) {
-                item.start()
-            }
-            for (item in jobs) {
-                item.join()
+        fun runTasks() {
+            for (action in jobs) {
+                action()
             }
         }
     }
