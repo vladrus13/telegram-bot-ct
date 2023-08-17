@@ -14,11 +14,11 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.FormattedRectangle
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyLongRowRange
-import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyCell
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyOnlyRowRange
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 
 class GoogleSheet(private val service: Sheets, private val id: String, private val students: List<String>) {
@@ -432,7 +432,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                 getCountIf(range, RUSSIAN_P) + " + " + getCountIf(range, ENGLISH_P)
 
         private fun getActualScoreFormula(index: Int) =
-            "=" + getTitlePrettyCell(MAIN_LIST_NAME, TOTAL_SCORES_COLUMN_INDEX, index)
+            "=" + getTitlePrettyCell(MAIN_LIST_NAME, index, TOTAL_SCORES_COLUMN_INDEX)
 
         private const val MAIN_LIST_NAME = "Results"
         private const val FCS_COLUMN_NAME = "ФИО"
