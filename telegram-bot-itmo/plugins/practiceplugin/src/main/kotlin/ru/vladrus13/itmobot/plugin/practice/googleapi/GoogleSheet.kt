@@ -15,7 +15,6 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
-import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getSheetIdFromTitle
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyCell
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyOnlyRowRange
@@ -148,7 +147,28 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                         lastRowIndex, lastRowIndex + 1,
                         TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
                     )
-                ).toTypedArray()
+                ).toTypedArray(),
+                *getEqualsActionsRectangles(
+                    listOf { grid -> grid.setWidth(73) },
+                    Rectangle(
+                        NONE_INDEX, NONE_INDEX,
+                        TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
+                    )
+                ).toTypedArray(),
+                *getEqualsActionsRectangles(
+                    listOf { grid -> grid.setWidth(37) },
+                    Rectangle(
+                        NONE_INDEX, NONE_INDEX,
+                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + 1
+                    )
+                ).toTypedArray(),
+                *getEqualsActionsRectangles(
+                    listOf { grid -> grid.setWidth(32) },
+                    Rectangle(
+                        NONE_INDEX, NONE_INDEX,
+                        TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                    )
+                ).toTypedArray(),
             ).toTypedArray(),
         )
     }
@@ -318,7 +338,11 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             *getRequests(
                 MAIN_LIST_NAME,
                 *getEqualsActionsRectangles(
-                    listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
+                    listOf(
+                        GridRequestMaker::colorizeBorders,
+                        GridRequestMaker::formatCells,
+                        { grid -> grid.setWidth(30) }
+                    ),
                     Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
                     Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_INDEX + 1, width, width + 1)
                 ).toTypedArray()
@@ -365,20 +389,15 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                         TASKS_NAMES_ROW_INDEX, body.size,
                         FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
                     )
-                ).toTypedArray()
-            ).toTypedArray(),
-            Request().setUpdateDimensionProperties(
-                UpdateDimensionPropertiesRequest()
-                    .setRange(
-                        DimensionRange()
-                            .setSheetId(getSheetIdFromTitle(service, id, title))
-                            .setDimension("COLUMNS")
-                            .setStartIndex(FCS_COLUMN_INDEX)
-                            .setEndIndex(FCS_COLUMN_INDEX + 1)
+                ).toTypedArray(),
+                *getEqualsActionsRectangles(
+                    listOf { grid -> grid.setWidth(200) },
+                    Rectangle(
+                        NONE_INDEX, NONE_INDEX,
+                        FCS_COLUMN_INDEX, FCS_COLUMN_INDEX + 1
                     )
-                    .setProperties(DimensionProperties().setPixelSize(200))
-                    .setFields("pixelSize")
-            )
+                ).toTypedArray(),
+            ).toTypedArray(),
         )
     }
 
@@ -453,6 +472,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         private const val ONE_PRACTICE_TASKS_COLUMN_NAME = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
+        private const val NONE_INDEX = -1
         private const val MIN_STUDENT_ROW_INDEX = 1
         private const val TASKS_NAMES_ROW_INDEX = 0
         private const val TASKS_NAMES_MAIN_LIST_ROW_INDEX = 0
