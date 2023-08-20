@@ -1,4 +1,4 @@
-package ru.vladrus13.itmobot.plugin.practice
+package ru.vladrus13.itmobot.plugin.practice.googleapi
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.sheets.v4.Sheets
@@ -30,7 +30,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             .setFields("title")
         executeRequestsSequence(Request().setUpdateSheetProperties(update))
 
-        fillInStudents(MAIN_LIST_NAME, GoogleSheet::getSumScoresFormula)
+        fillInStudents(MAIN_LIST_NAME, Companion::getSumScoresFormula)
 
         // Conditional Format
         executeRequestsSequence(
@@ -53,7 +53,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         val width = tasks.size + 1
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 
-        fillInStudents(title, GoogleSheet::getActualScoreFormula)
+        fillInStudents(title, Companion::getActualScoreFormula)
 
         val body = listOf(listOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks) +
                 (MIN_STUDENT_ROW_INDEX..maxStudentRowIndex).map {

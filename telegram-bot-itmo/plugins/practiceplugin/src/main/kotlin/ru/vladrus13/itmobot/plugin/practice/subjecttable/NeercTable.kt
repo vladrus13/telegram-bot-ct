@@ -1,4 +1,4 @@
-package ru.vladrus13.itmobot.plugin.practice
+package ru.vladrus13.itmobot.plugin.practice.subjecttable
 
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties
@@ -12,10 +12,11 @@ import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsSer
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getTableInfo
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.insertPermission
 import ru.vladrus13.itmobot.parallel.CoroutineThreadOverseer
+import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet
 import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import java.util.logging.Logger
 
-class AddTable(override val parent: Menu) : Menu(parent) {
+class NeercTable(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf()
 
@@ -43,7 +44,6 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         // """
         // TestNameTable
         // link to tasks
-        //
         // Grunskii Alexey
         // Vladimir Kuznetsov
         // """
