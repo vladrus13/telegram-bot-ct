@@ -148,13 +148,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                         TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
                     )
                 ).toTypedArray(),
-                *getEqualsActionsRectangles(
-                    listOf { grid -> grid.setWidth(73) },
-                    Rectangle(
-                        NONE_INDEX, NONE_INDEX,
-                        TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
-                    )
-                ).toTypedArray(),
+
                 *getEqualsActionsRectangles(
                     listOf { grid -> grid.setWidth(37) },
                     Rectangle(
@@ -341,7 +335,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                     listOf(
                         GridRequestMaker::colorizeBorders,
                         GridRequestMaker::formatCells,
-                        { grid -> grid.setWidth(30) }
+                        { grid -> grid.setWidth(32) }
                     ),
                     Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
                     Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_INDEX + 1, width, width + 1)
@@ -372,7 +366,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             *getRequests(
                 title,
                 *getEqualsActionsRectangles(
-                    listOf(GridRequestMaker::colorizeBorders),
+                    listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
                     Rectangle(
                         TASKS_NAMES_ROW_INDEX, body.size,
                         FCS_COLUMN_INDEX, FCS_COLUMN_INDEX + 1
@@ -395,6 +389,13 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                     Rectangle(
                         NONE_INDEX, NONE_INDEX,
                         FCS_COLUMN_INDEX, FCS_COLUMN_INDEX + 1
+                    )
+                ).toTypedArray(),
+                *getEqualsActionsRectangles(
+                    listOf { grid -> grid.setWidth(73) },
+                    Rectangle(
+                        NONE_INDEX, NONE_INDEX,
+                        TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
                     )
                 ).toTypedArray(),
             ).toTypedArray(),
