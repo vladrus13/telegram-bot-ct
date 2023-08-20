@@ -49,7 +49,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         // make new list
         val homeworkCount = service.spreadsheets().get(id).execute().sheets.size
         val title = "Д$homeworkCount"
-        val properties = SheetProperties().setTitle(title)
+        val properties = SheetProperties().setTitle(title).setIndex(1)
         val width = tasks.size + 1
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 

@@ -75,7 +75,7 @@ class NeercTable(override val parent: Menu) : Menu(parent) {
             val actualTasks: List<String> = parser.getTasks()
             val currentTasks = googleSheet.getTasksList().flatten()
 
-            if (currentTasks.size < actualTasks.size) {
+            if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
                 googleSheet.generateSheet(
                     actualTasks.subList(currentTasks.size, actualTasks.size)
                 )
