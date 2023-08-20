@@ -65,14 +65,28 @@ class GridRequestMaker(
     }
 
     companion object {
+        private data class SheetTable(
+            val serviceHash: Sheets,
+            val id: String,
+            val title: String
+        )
+
+        private val infoToId = mutableMapOf<SheetTable, Int>()
+
         private const val FARTHEST_COLUMN_INDEX = 1000
 
-        private fun getSheetIdFromTitle(sheetsService: Sheets, id: String, title: String): Int {
-            for (sheet in sheetsService.spreadsheets().get(id).execute().sheets) {
-                if (sheet.properties.title == title)
-                    return sheet.properties.sheetId
+        fun getSheetIdFromTitle(service: Sheets, id: String, title: String): Int {
+            val sheetTable = SheetTable(service, id, title)
+            val result: Int = try {
+                infoToId[sheetTable] ?: service.spreadsheets().get(id).execute().sheets
+                    .map(Sheet::getProperties)
+                    .first { properties -> properties.title == title }
+                    .sheetId
+            } catch (e:  NoSuchElementException) {
+                throw IllegalArgumentException("No sheet with current title")
             }
-            throw IllegalArgumentException("No sheet with current title")
+            infoToId[sheetTable] = result
+            return result
         }
 
         fun createGridRequestMaker(
@@ -97,7 +111,6 @@ class GridRequestMaker(
             rectangle.firstColumn,
             rectangle.lastColumn
         )
-
 
         /**
          * This function return correct range string

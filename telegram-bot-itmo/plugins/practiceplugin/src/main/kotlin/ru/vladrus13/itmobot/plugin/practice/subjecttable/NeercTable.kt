@@ -66,6 +66,9 @@ class NeercTable(override val parent: Menu) : Menu(parent) {
         val googleSheet = GoogleSheet(sheetsService, id, students)
         googleSheet.generateMainSheet()
 
+        googleSheet.generateSheet((1..5).map(Int::toString))
+        googleSheet.generateSheet((6..100).map(Int::toString))
+
         val parser = NeercParserInfo(id, link)
 
         val driveService = createDriveService()

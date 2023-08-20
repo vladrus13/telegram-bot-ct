@@ -15,6 +15,7 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getSheetIdFromTitle
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyCell
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyOnlyRowRange
@@ -148,7 +149,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                         TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
                     )
                 ).toTypedArray()
-            ).toTypedArray()
+            ).toTypedArray(),
         )
     }
 
@@ -276,7 +277,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
         ).execute()
 
-    private fun addNewMainListColumn(titleSheet: String) {
+    private fun addNewMainListColumn(title: String) {
         val maxStudentRowIndex = students.size
         val maxStudentRowNumber = maxStudentRowIndex + 1
 
@@ -295,11 +296,11 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             return
         }
 
-        val body = listOf(listOf(titleSheet)) +
+        val body = listOf(listOf(title)) +
                 students.indices.map { it + MIN_STUDENT_ROW_INDEX }.map {
                     listOf(
                         getCountIfRussianEnglishIsTFormula(
-                            getTitlePrettyLongRowRange(titleSheet, it, it + 1, TASK_FIRST_COLUMN_INDEX)
+                            getTitlePrettyLongRowRange(title, it, it + 1, TASK_FIRST_COLUMN_INDEX)
                         )
                     )
                 }
@@ -321,7 +322,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                     Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
                     Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_INDEX + 1, width, width + 1)
                 ).toTypedArray()
-            ).toTypedArray()
+            ).toTypedArray(),
         )
     }
 
@@ -365,7 +366,19 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                         FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
                     )
                 ).toTypedArray()
-            ).toTypedArray()
+            ).toTypedArray(),
+            Request().setUpdateDimensionProperties(
+                UpdateDimensionPropertiesRequest()
+                    .setRange(
+                        DimensionRange()
+                            .setSheetId(getSheetIdFromTitle(service, id, title))
+                            .setDimension("COLUMNS")
+                            .setStartIndex(FCS_COLUMN_INDEX)
+                            .setEndIndex(FCS_COLUMN_INDEX + 1)
+                    )
+                    .setProperties(DimensionProperties().setPixelSize(200))
+                    .setFields("pixelSize")
+            )
         )
     }
 
@@ -413,7 +426,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             "=SUM(${
                 getPrettyLongRowRange(
                     index,
-                    index,
+                    index + 1,
                     FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX
                 )
             })*$SCORES_FOR_DISCRETE_MATH_TASK"
