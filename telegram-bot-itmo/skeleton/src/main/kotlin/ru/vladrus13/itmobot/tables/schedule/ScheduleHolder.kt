@@ -17,7 +17,11 @@ class ScheduleHolder {
             val full = Jsoup.connect(link).timeout(timeoutTableGet).get().getElementsByTag("table")[0].getElementsByTag(
                 "tbody"
             )[0]
-            table = ScheduleTable.Table(TableUtils.getTableFromHTML(full), Date())
+            try {
+                table = ScheduleTable.Table(TableUtils.getTableFromHTML(full), Date())
+            } catch (e : Exception) {
+                throw Exception("Exception while parsing schedule table", e)
+            }
         }
     }
 }

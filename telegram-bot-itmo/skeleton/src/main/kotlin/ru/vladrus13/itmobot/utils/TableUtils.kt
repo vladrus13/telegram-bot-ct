@@ -17,20 +17,10 @@ class TableUtils {
                 val tds: Elements = tr.getElementsByTag("td")
                 for (td in tds) {
                     while (true) {
-                        var isExist = false
-                        for (skip in skips) {
-                            if (skip.startRow == row && skip.startColumn == column) {
-                                isExist = true
-                                break
-                            }
-                        }
-                        if (!isExist) {
-                            break
-                        }
                         val finalColumn1 = column
-                        val skip = skips.stream()
-                            .filter { element: ScheduleTable.Skip -> element.startRow == row && element.startColumn == finalColumn1 }
-                            .findAny().get()
+                        val skip = skips.firstOrNull { element: ScheduleTable.Skip ->
+                            element.startRow == row && element.startColumn == finalColumn1
+                        } ?: break
                         for (i in 0 until skip.sizeColumn) {
                             tableFull[row].add(skip.text)
                             column++
@@ -62,6 +52,21 @@ class TableUtils {
                         if (skip.sizeRow != 0) {
                             skips.add(skip)
                         }
+                    }
+                }
+                // TODO backlog: copy-pasta
+                while (true) {
+                    val finalColumn1 = column
+                    val skip = skips.firstOrNull { element: ScheduleTable.Skip ->
+                        element.startRow == row && element.startColumn == finalColumn1
+                    } ?: break
+                    for (i in 0 until skip.sizeColumn) {
+                        tableFull[row].add(skip.text)
+                        column++
+                    }
+                    skip.down()
+                    if (skip.sizeRow == 0) {
+                        skips.remove(skip)
                     }
                 }
                 column = 0
