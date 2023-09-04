@@ -21,8 +21,10 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 
-class GoogleSheet(private val service: Sheets, private val id: String, private val students: List<String>) {
-    fun generateMainSheet() {
+class GoogleSheet(private val service: Sheets, private val id: String) {
+    private val MAX_STUDENTS_COUNT = 100
+
+    fun generateMainSheet(students: List<String>) {
         // rename list to $MAIN_LIST_NAME
         val properties = SheetProperties().setIndex(0).setTitle(MAIN_LIST_NAME)
         val update = UpdateSheetPropertiesRequest()
@@ -30,7 +32,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             .setFields("title")
         executeRequestsSequence(Request().setUpdateSheetProperties(update))
 
-        fillInStudents(MAIN_LIST_NAME, Companion::getSumScoresFormula)
+        fillInStudents(MAIN_LIST_NAME, Companion::getSumScoresFormula, students)
 
         // Conditional Format
         executeRequestsSequence(
@@ -43,6 +45,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
     }
 
     fun generateSheet(tasks: List<String>) {
+        val students = getStudentList()
         val maxStudentRowIndex = students.size
         val lastRowIndex = students.size + 1
 
@@ -53,7 +56,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
         val width = tasks.size + 1
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 
-        fillInStudents(title, Companion::getActualScoreFormula)
+        fillInStudents(title, Companion::getActualScoreFormula, students)
 
         val body = listOf(listOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks) +
                 (MIN_STUDENT_ROW_INDEX..maxStudentRowIndex).map {
@@ -80,7 +83,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             body
         )
 
-        addNewMainListColumn(title)
+        addNewMainListColumn(title, students)
 
         // Conditional Format
         executeRequestsSequence(
@@ -165,6 +168,16 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
                 ).toTypedArray(),
             ).toTypedArray(),
         )
+    }
+
+    private fun getStudentList(): List<String> = try {
+        getValueRange("$MAIN_LIST_NAME!A${MIN_STUDENT_ROW_INDEX + 1}:A$MAX_STUDENTS_COUNT")
+            .getValues()
+            .map { list -> list.first() }
+            .map(Any::toString)
+            .filter(String::isNotBlank)
+    } catch (_: GoogleJsonResponseException) {
+        emptyList()
     }
 
     fun getTasksList(): List<List<String>> {
@@ -291,7 +304,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
             BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
         ).execute()
 
-    private fun addNewMainListColumn(title: String) {
+    private fun addNewMainListColumn(title: String, students: List<String>) {
         val maxStudentRowIndex = students.size
         val maxStudentRowNumber = maxStudentRowIndex + 1
 
@@ -348,7 +361,7 @@ class GoogleSheet(private val service: Sheets, private val id: String, private v
     /**
      * @param title is "Д[0-9]+" or <code>MAIN_LIST_NAME</code>
      */
-    private fun fillInStudents(title: String, scoresFormula: (Int) -> String) {
+    private fun fillInStudents(title: String, scoresFormula: (Int) -> String, students: List<String>) {
         val body =
             listOf(listOf(FCS_COLUMN_NAME, TOTAL_SCORES_COLUMN_NAME)) + students.mapIndexed { studentIndex, name ->
                 listOf(name, scoresFormula(MIN_STUDENT_ROW_INDEX + studentIndex))
