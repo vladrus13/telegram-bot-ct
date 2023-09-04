@@ -1,8 +1,7 @@
-package ru.vladrus13.itmobot.plugin.practice
+package ru.vladrus13.itmobot.plugin.practice.subjecttable
 
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.SpreadsheetProperties
-import kotlinx.coroutines.runBlocking
 import org.telegram.telegrambots.bots.TelegramLongPollingBot
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
@@ -12,10 +11,12 @@ import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createDriveServ
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getTableInfo
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.insertPermission
+import ru.vladrus13.itmobot.parallel.CoroutineThreadOverseer
+import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet
 import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import java.util.logging.Logger
 
-class AddTable(override val parent: Menu) : Menu(parent) {
+class NeercTable(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf()
 
@@ -43,7 +44,6 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         // """
         // TestNameTable
         // link to tasks
-        //
         // Grunskii Alexey
         // Vladimir Kuznetsov
         // """
@@ -64,26 +64,23 @@ class AddTable(override val parent: Menu) : Menu(parent) {
         val url: String = dictData["spreadsheetUrl"] ?: ""
 
         val googleSheet = GoogleSheet(sheetsService, id, students)
-
         googleSheet.generateMainSheet()
 
-        googleSheet.generateSheet((1 .. 8).map(Int::toString))
-        googleSheet.generateSheet((9 .. 20).map(Int::toString))
-
         val parser = NeercParserInfo(id, link)
-        runBlocking {
+
+        val driveService = createDriveService()
+        insertPermission(driveService, id)
+
+        CoroutineThreadOverseer.addTask {
             val actualTasks: List<String> = parser.getTasks()
             val currentTasks = googleSheet.getTasksList().flatten()
 
-            if (currentTasks.size < actualTasks.size) {
+            if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
                 googleSheet.generateSheet(
                     actualTasks.subList(currentTasks.size, actualTasks.size)
                 )
             }
         }
-
-        val driveService = createDriveService()
-        insertPermission(driveService, id)
 
         user.send(
             bot = bot,

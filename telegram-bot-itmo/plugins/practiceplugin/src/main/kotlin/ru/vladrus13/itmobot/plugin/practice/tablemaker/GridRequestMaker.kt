@@ -8,9 +8,9 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getB
  * first, last = [, )
  */
 class GridRequestMaker(
-    sheetId: Int,
+    private val sheetId: Int,
     firstRow: Int, lastRow: Int,
-    firstColumn: Int, lastColumn: Int
+    private val firstColumn: Int, private val lastColumn: Int
 ) {
     val range: GridRange = GridRange()
         .setSheetId(sheetId)
@@ -18,8 +18,6 @@ class GridRequestMaker(
         .setEndRowIndex(lastRow)
         .setStartColumnIndex(firstColumn)
         .setEndColumnIndex(lastColumn)
-
-    fun colorizeBordersAndFormatCells(): List<Request> = listOf(colorizeBorders(), formatCells())
 
     fun colorizeBorders(): Request {
         val border = Border()
@@ -35,6 +33,22 @@ class GridRequestMaker(
             .setRight(border)
 
         return Request().setUpdateBorders(updateBorders)
+    }
+
+    fun setWidth(pixelSize: Int): Request {
+        val range = DimensionRange()
+            .setSheetId(sheetId)
+            .setDimension("COLUMNS")
+            .setStartIndex(firstColumn)
+            .setEndIndex(lastColumn)
+        val properties = DimensionProperties().setPixelSize(pixelSize)
+        val fields = "pixelSize"
+        val updateDimensionProperties = UpdateDimensionPropertiesRequest()
+            .setRange(range)
+            .setProperties(properties)
+            .setFields(fields)
+
+        return Request().setUpdateDimensionProperties(updateDimensionProperties)
     }
 
     fun formatCells(): Request {
@@ -65,14 +79,28 @@ class GridRequestMaker(
     }
 
     companion object {
+        private data class SheetTable(
+            val serviceHash: Sheets,
+            val id: String,
+            val title: String
+        )
+
+        private val infoToId = mutableMapOf<SheetTable, Int>()
+
         private const val FARTHEST_COLUMN_INDEX = 1000
 
-        private fun getSheetIdFromTitle(sheetsService: Sheets, id: String, title: String): Int {
-            for (sheet in sheetsService.spreadsheets().get(id).execute().sheets) {
-                if (sheet.properties.title == title)
-                    return sheet.properties.sheetId
+        fun getSheetIdFromTitle(service: Sheets, id: String, title: String): Int {
+            val sheetTable = SheetTable(service, id, title)
+            val result: Int = try {
+                infoToId[sheetTable] ?: service.spreadsheets().get(id).execute().sheets
+                    .map(Sheet::getProperties)
+                    .first { properties -> properties.title == title }
+                    .sheetId
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException("No sheet with current title")
             }
-            throw IllegalArgumentException("No sheet with current title")
+            infoToId[sheetTable] = result
+            return result
         }
 
         fun createGridRequestMaker(
@@ -97,7 +125,6 @@ class GridRequestMaker(
             rectangle.firstColumn,
             rectangle.lastColumn
         )
-
 
         /**
          * This function return correct range string
