@@ -63,8 +63,8 @@ class NeercTable(override val parent: Menu) : Menu(parent) {
         val id: String = dictData["spreadsheetId"] ?: ""
         val url: String = dictData["spreadsheetUrl"] ?: ""
 
-        val googleSheet = GoogleSheet(sheetsService, id, students)
-        googleSheet.generateMainSheet()
+        val googleSheet = GoogleSheet(sheetsService, id)
+        googleSheet.generateMainSheet(students)
 
         val parser = NeercParserInfo(id, link)
 

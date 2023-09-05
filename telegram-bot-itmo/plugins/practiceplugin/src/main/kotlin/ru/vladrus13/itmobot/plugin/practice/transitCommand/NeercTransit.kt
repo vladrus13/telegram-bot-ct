@@ -17,7 +17,7 @@ class NeercTransit(override val parent: Menu) : Menu(parent) {
     override fun menuHelp() = "NeercTransit page"
 
     override val name: String
-        get() = "NeercTransit"
+        get() = "ДМ"
     override val systemName: String
         get() = "neercSubject"
 
