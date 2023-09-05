@@ -22,7 +22,7 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 
 class GoogleSheet(private val service: Sheets, private val id: String) {
-    private val MAX_STUDENTS_COUNT = 100
+    private val MAX_STUDENTS_COUNT = 500
 
     fun generateMainSheet(students: List<String>) {
         // rename list to $MAIN_LIST_NAME
