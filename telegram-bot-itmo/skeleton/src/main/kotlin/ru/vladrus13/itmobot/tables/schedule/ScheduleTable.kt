@@ -24,6 +24,14 @@ class ScheduleTable {
             this.groups.putAll(groups)
         }
 
+        private fun parseGroup(table: MutableList<MutableList<String>>, lastPosition: Int, lastNotBlank: Int, groupName: String): TableGroup {
+            return try {
+                TableGroup(table, lastPosition, lastNotBlank)
+            } catch (e : Exception) {
+                throw Exception("Exception while parsing group $groupName", e)
+            }
+        }
+
         constructor(table: MutableList<MutableList<String>>, time: Date) : this(time) {
             var lastGroup: String? = null
             var lastPosition = -1
@@ -36,7 +44,7 @@ class ScheduleTable {
                     } else {
                         if (lastGroup != table[0][i]) {
                             // there is new group
-                            groups[lastGroup] = TableGroup(table, lastPosition, lastNotBlank)
+                            groups[lastGroup] = parseGroup(table, lastPosition, lastNotBlank, lastGroup)
                             lastGroup = table[0][i]
                             lastPosition = i
                         }
@@ -45,7 +53,7 @@ class ScheduleTable {
                 }
             }
             if (!lastGroup.isNullOrBlank() && !groups.containsKey(lastGroup)) {
-                groups[lastGroup] = TableGroup(table, lastPosition, lastNotBlank)
+                groups[lastGroup] = parseGroup(table, lastPosition, lastNotBlank, lastGroup)
             }
             for (group in groups.values) {
                 subjects.addAll(group.getSubjects())
@@ -105,6 +113,14 @@ class ScheduleTable {
             this.days.addAll(groups)
         }
 
+        private fun parseDay(table: MutableList<MutableList<String>>, startColumn: Int, finishColumn: Int, startRow: Int, finishRow: Int, dayNumber: Int): TableDay {
+            return try {
+                TableDay(table, startColumn, finishColumn, startRow, finishRow)
+            } catch (e : Exception) {
+                throw Exception("Exception while parsing day $dayNumber", e)
+            }
+        }
+
         constructor(table: MutableList<MutableList<String>>, startColumn: Int, finishColumn: Int) : this() {
             var lastDay: String? = null
             var lastPosition = -1
@@ -116,7 +132,7 @@ class ScheduleTable {
                         lastPosition = i
                     } else {
                         if (lastDay != table[i][0]) {
-                            days.add(TableDay(table, startColumn, finishColumn, lastPosition, lastNotBlank))
+                            days.add(parseDay(table, startColumn, finishColumn, lastPosition, lastNotBlank, days.size + 1))
                             lastDay = table[i][0]
                             lastPosition = i
                         }
@@ -124,7 +140,7 @@ class ScheduleTable {
                     lastNotBlank = i
                 }
             }
-            days.add(TableDay(table, startColumn, finishColumn, lastPosition, lastNotBlank))
+            days.add(parseDay(table, startColumn, finishColumn, lastPosition, lastNotBlank, days.size + 1))
         }
 
         fun toStringBuilder(user: Chatted): StringBuilder {
