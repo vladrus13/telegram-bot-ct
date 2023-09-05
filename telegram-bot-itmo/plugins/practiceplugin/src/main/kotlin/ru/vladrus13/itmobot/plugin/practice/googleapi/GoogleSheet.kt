@@ -20,8 +20,11 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyOnlyRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
+import ru.vladrus13.itmobot.properties.InitialProperties
+import java.util.logging.Logger
 
 class GoogleSheet(private val service: Sheets, private val id: String) {
+    private val logger: Logger = InitialProperties.logger
     private val MAX_STUDENTS_COUNT = 500
 
     fun generateMainSheet(students: List<String>) {
@@ -177,6 +180,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             .map(Any::toString)
             .filter(String::isNotBlank)
     } catch (_: GoogleJsonResponseException) {
+        logger.info("Not found students in google sheet")
         emptyList()
     }
 
