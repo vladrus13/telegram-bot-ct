@@ -13,7 +13,8 @@ class PracticePlugin : Plugin() {
     override val isAvailableUser = true
     override val isAvailableChat = false
 
-    override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> = listOf()
+    override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> =
+        listOf(Pair(SheetJob::class, SheetJobParser()))
 
     override fun init() {}
 
@@ -22,6 +23,7 @@ class PracticePlugin : Plugin() {
             is MainFolder -> {
                 arrayListOf(Pair(this, PracticeCommand(current)))
             }
+
             else -> arrayListOf()
         }
     }

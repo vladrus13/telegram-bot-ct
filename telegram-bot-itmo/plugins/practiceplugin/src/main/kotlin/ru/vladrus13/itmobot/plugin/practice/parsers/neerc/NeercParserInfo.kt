@@ -7,7 +7,7 @@ import ru.vladrus13.itmobot.properties.InitialProperties
 import java.io.IOException
 import java.util.logging.Logger
 
-class NeercParserInfo(override val idTable: String, override val urlInfo: String) : ParserInfo {
+class NeercParserInfo(override val urlInfo: String) : ParserInfo {
     private val logger: Logger = InitialProperties.logger
 
     override fun getTasks(): List<String> {
