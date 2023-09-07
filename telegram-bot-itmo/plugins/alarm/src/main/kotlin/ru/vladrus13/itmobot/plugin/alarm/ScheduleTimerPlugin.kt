@@ -66,7 +66,7 @@ class ScheduleTimerPlugin : Plugin() {
     override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> =
         listOf(Pair(ScheduleTimerRow::class, OnPluginChatId()))
 
-    override fun init() {
+    override suspend fun init() {
         val nextDay = getCurrentTime()
         nextDay.set(Calendar.HOUR_OF_DAY, 9)
         nextDay.set(Calendar.MINUTE, 0)

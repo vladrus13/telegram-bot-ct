@@ -19,7 +19,7 @@ class PluginsHolder {
             return null
         }
 
-        fun init() {
+        suspend fun init() {
             for (plugin in plugins) {
                 logger.info("=== Initialize plugin ${plugin.systemName}")
                 plugin.init()

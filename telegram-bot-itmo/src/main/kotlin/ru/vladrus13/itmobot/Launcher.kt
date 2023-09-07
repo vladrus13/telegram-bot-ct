@@ -2,7 +2,10 @@
 
 package ru.vladrus13.itmobot
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.telegram.telegrambots.meta.TelegramBotsApi
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession
@@ -10,7 +13,6 @@ import org.xml.sax.SAXException
 import ru.vladrus13.itmobot.bot.ItmoBot
 import ru.vladrus13.itmobot.database.DataBase
 import ru.vladrus13.itmobot.exceptions.XMLClassCastException
-import ru.vladrus13.itmobot.parallel.CoroutineThreadOverseer
 import ru.vladrus13.itmobot.parallel.TableChangesHolder
 import ru.vladrus13.itmobot.plugins.PluginsHolder
 import ru.vladrus13.itmobot.properties.InitialProperties
@@ -20,7 +22,6 @@ import ru.vladrus13.itmobot.xml.XMLParser
 import java.util.*
 import java.util.logging.LogManager
 import java.util.logging.Logger
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
 
 class Launcher {
     companion object {
@@ -32,7 +33,7 @@ class Launcher {
 
 fun main() {
     runBlocking {
-        val mainLaunch = launch {
+        launch {
             try {
 
                 try {
@@ -94,7 +95,9 @@ fun main() {
                 Launcher.logger.info("== Finish loading database")
 
                 Launcher.logger.info("== Start initial plugins")
-                PluginsHolder.init()
+                launch {
+                    PluginsHolder.init()
+                }
                 Launcher.logger.info("== Finish initial plugins")
 
                 Launcher.logger.info("== Start creating bot API")
@@ -113,17 +116,6 @@ fun main() {
                 this.cancel()
             }
         }
-        launch {
-            try {
-                while (true) {
-                    if (mainLaunch.isCancelled) throw CancellationException()
-                    CoroutineThreadOverseer.runTasks()
-                    delay(timeToReloadJobs)
-                }
 
-            } catch (e: CancellationException) {
-                this.cancel()
-            }
-        }
     }
 }

@@ -1,7 +1,6 @@
 package ru.vladrus13.itmobot.plugin.homework
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.joda.time.DateTime
@@ -10,7 +9,6 @@ import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.database.DataBaseEntity
 import ru.vladrus13.itmobot.database.DataBaseParser
 import ru.vladrus13.itmobot.plugins.Plugin
-import java.lang.UnsupportedOperationException
 import kotlin.reflect.KClass
 
 class HomeworkPlugin : Plugin() {
@@ -218,7 +216,7 @@ class HomeworkPlugin : Plugin() {
         Pair(TeamTask::class, TeamTaskDatabase)
     )
 
-    override fun init() {
+    override suspend fun init() {
     }
 
     override fun addFoldable(current: Foldable): List<Pair<Plugin, Foldable>> {

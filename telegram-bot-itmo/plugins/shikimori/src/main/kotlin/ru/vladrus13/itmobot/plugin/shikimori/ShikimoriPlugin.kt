@@ -20,7 +20,7 @@ class ShikimoriPlugin : Plugin() {
 
     override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> = listOf()
 
-    override fun init() {}
+    override suspend fun init() {}
 
     override fun addFoldable(current: Foldable): List<Pair<Plugin, Foldable>> {
         return when (current) {
