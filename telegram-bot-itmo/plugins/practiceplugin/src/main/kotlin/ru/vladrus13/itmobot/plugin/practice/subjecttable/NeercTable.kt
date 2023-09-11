@@ -11,9 +11,9 @@ import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createDriveServ
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getTableInfo
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.insertPermission
-import ru.vladrus13.itmobot.parallel.CoroutineThreadOverseer
+import ru.vladrus13.itmobot.plugin.practice.CoroutineJob
+import ru.vladrus13.itmobot.plugin.practice.CoroutineJob.Companion.NEERC_JOB
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet
-import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import java.util.logging.Logger
 
 class NeercTable(override val parent: Menu) : Menu(parent) {
@@ -66,21 +66,10 @@ class NeercTable(override val parent: Menu) : Menu(parent) {
         val googleSheet = GoogleSheet(sheetsService, id)
         googleSheet.generateMainSheet(students)
 
-        val parser = NeercParserInfo(id, link)
-
         val driveService = createDriveService()
         insertPermission(driveService, id)
 
-        CoroutineThreadOverseer.addTask {
-            val actualTasks: List<String> = parser.getTasks()
-            val currentTasks = googleSheet.getTasksList().flatten()
-
-            if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
-                googleSheet.generateSheet(
-                    actualTasks.subList(currentTasks.size, actualTasks.size)
-                )
-            }
-        }
+        CoroutineJob.addTask(NEERC_JOB, link, url, id, user.chatId)
 
         user.send(
             bot = bot,

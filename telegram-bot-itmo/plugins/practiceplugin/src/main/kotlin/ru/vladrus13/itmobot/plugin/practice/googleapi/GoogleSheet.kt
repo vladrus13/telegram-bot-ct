@@ -50,13 +50,14 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     fun generateSheet(tasks: List<String>) {
         val students = getStudentList()
         val maxStudentRowIndex = students.size
+        val taskCounterRowIndex = maxStudentRowIndex + 1
         val lastRowIndex = students.size + 1
 
         // make new list
         val homeworkCount = service.spreadsheets().get(id).execute().sheets.size
         val title = "Д$homeworkCount"
         val properties = SheetProperties().setTitle(title).setIndex(1)
-        val width = tasks.size + 1
+        val lastTaskColumnIndex = TASK_COUNTER_COLUMN_INDEX + tasks.size
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 
         fillInStudents(title, Companion::getActualScoreFormula, students)
@@ -81,7 +82,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             getTitlePrettyRange(
                 title,
                 TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
-                TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                TASK_COUNTER_COLUMN_INDEX, lastTaskColumnIndex + 1
             ),
             body
         )
@@ -90,28 +91,18 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
 
         // Conditional Format
         executeRequestsSequence(
-            *getListRules(
-                title, MIN_STUDENT_ROW_INDEX,
-                maxStudentRowIndex + 1,
-                TASK_COUNTER_COLUMN_INDEX,
-                TASK_COUNTER_COLUMN_INDEX + 1,
-                { it.setGradientRule(LOCAL_SCORED_GRADIENT) },
-                {
-                    it.setBooleanRule(
-                        BooleanRule()
-                            .setCondition(
-                                BooleanCondition()
-                                    .setType(CONDITION_TYPE.NUMBER_EQ.toString())
-                                    .setValues(listOf(ConditionValue().setUserEnteredValue("0")))
-                            )
-                            .setFormat(CellFormat().setBackgroundColor(getWhiteColor()))
-                    )
-                }
+            *colorCellsByTaskGreenGradient(
+                title, MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
+                TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + 1
+            ).toTypedArray(),
+            *colorCellsByTaskGreenGradient(
+                title, taskCounterRowIndex, taskCounterRowIndex + 1,
+                TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
             ).toTypedArray(),
             *getListRules(
                 title,
                 lastRowIndex, lastRowIndex + 1,
-                TASK_FIRST_COLUMN_INDEX, body.size,
+                TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1,
                 *getListBooleanConditionsOfAcceptedOrNotTask(
                     getPrettyRange(
                         MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
@@ -130,7 +121,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             *getListRules(
                 title,
                 MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
-                TASK_FIRST_COLUMN_INDEX, body.size,
+                TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1,
                 *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
             ).toTypedArray(),
             *getRequests(
@@ -139,7 +130,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                     listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
                     Rectangle(
                         TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
-                        FCS_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                        FCS_COLUMN_INDEX, lastTaskColumnIndex + 1
                     ),
                     Rectangle(
                         MIN_STUDENT_ROW_INDEX, lastRowIndex + 1,
@@ -147,11 +138,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                     ),
                     Rectangle(
                         TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_INDEX + 1,
-                        TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                        TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
                     ),
                     Rectangle(
                         lastRowIndex, lastRowIndex + 1,
-                        TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                        TASK_COUNTER_COLUMN_INDEX, lastTaskColumnIndex + 1
                     )
                 ).toTypedArray(),
 
@@ -166,12 +157,35 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                     listOf { grid -> grid.setWidth(32) },
                     Rectangle(
                         NONE_INDEX, NONE_INDEX,
-                        TASK_FIRST_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + width
+                        TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
                     )
                 ).toTypedArray(),
             ).toTypedArray(),
         )
     }
+
+    private fun colorCellsByTaskGreenGradient(
+        title: String,
+        beginRowIndex: Int, endRowIndex: Int,
+        beginColumnIndex: Int, endColumnIndex: Int
+    ) = getListRules(
+        title, beginRowIndex,
+        endRowIndex,
+        beginColumnIndex,
+        endColumnIndex,
+        { it.setGradientRule(LOCAL_SCORED_GRADIENT) },
+        {
+            it.setBooleanRule(
+                BooleanRule()
+                    .setCondition(
+                        BooleanCondition()
+                            .setType(CONDITION_TYPE.NUMBER_EQ.toString())
+                            .setValues(listOf(ConditionValue().setUserEnteredValue("0")))
+                    )
+                    .setFormat(CellFormat().setBackgroundColor(getWhiteColor()))
+            )
+        }
+    )
 
     private fun getStudentList(): List<String> = try {
         getValueRange("$MAIN_LIST_NAME!A${MIN_STUDENT_ROW_INDEX + 1}:A$MAX_STUDENTS_COUNT")

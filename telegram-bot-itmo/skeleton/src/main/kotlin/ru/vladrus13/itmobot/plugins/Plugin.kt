@@ -15,7 +15,7 @@ abstract class Plugin {
 
     abstract fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>>
 
-    abstract fun init()
+    abstract suspend fun init()
 
     abstract fun addFoldable(current: Foldable): List<Pair<Plugin, Foldable>>
 
