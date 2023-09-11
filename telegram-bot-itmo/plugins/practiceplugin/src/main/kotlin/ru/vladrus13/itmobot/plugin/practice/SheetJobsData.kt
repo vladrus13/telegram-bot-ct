@@ -16,7 +16,7 @@ class SheetJob(
 )
 
 object SheetJobTable : Table() {
-    val id = long("id")
+    val id = long("id").autoIncrement("AUTOINCREMENT")
     val jobId = long("job_id")
     val sourceLink = text("source_link")
     val tableLink = text("table_link")
