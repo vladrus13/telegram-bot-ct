@@ -26,7 +26,6 @@ class CoroutineJob {
 
         fun runTasks() {
             transaction(DataBaseParser.connection) {
-                println("1")
                 SheetJobTable
                     .selectAll()
                     .forEach { row ->
@@ -48,7 +47,6 @@ class CoroutineJob {
                             }
                         }
                     }
-                println("2")
             }
         }
     }

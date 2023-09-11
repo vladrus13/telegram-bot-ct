@@ -1,12 +1,14 @@
 package ru.vladrus13.itmobot.plugin.practice
 
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import ru.vladrus13.itmobot.bot.MainFolder
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.database.DataBaseEntity
 import ru.vladrus13.itmobot.plugins.Plugin
 import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
 class PracticePlugin : Plugin() {
@@ -20,13 +22,11 @@ class PracticePlugin : Plugin() {
         listOf(Pair(SheetJob::class, SheetJobParser()))
 
     override suspend fun init() {
-        try {
-            while (true) {
+        GlobalScope.launch {
+            while (isActive) {
                 CoroutineJob.runTasks()
                 delay(timeToReloadJobs)
             }
-
-        } catch (_: CancellationException) {
         }
     }
 
