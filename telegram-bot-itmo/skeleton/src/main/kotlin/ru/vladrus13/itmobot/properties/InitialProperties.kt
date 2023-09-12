@@ -45,7 +45,7 @@ class InitialProperties {
                 nullableBot = value
             }
 
-        const val timeToReloadJobs = 1 * 60 * 1000L
+        const val timeToReloadJobs = 5 * 60 * 1000L
 
         private var nullableLogger: Logger? = null
 

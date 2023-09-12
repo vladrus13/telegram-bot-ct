@@ -8,7 +8,6 @@ import ru.vladrus13.itmobot.bot.MainFolder
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.database.DataBaseEntity
 import ru.vladrus13.itmobot.plugins.Plugin
-import ru.vladrus13.itmobot.properties.InitialProperties.Companion.timeToReloadJobs
 import kotlin.reflect.KClass
 
 class PracticePlugin : Plugin() {
@@ -26,7 +25,7 @@ class PracticePlugin : Plugin() {
             var currentIndex = 0
             while (isActive) {
                 currentIndex = CoroutineJob.runTasks(currentIndex)
-                delay(timeToReloadJobs)
+                delay(timeToReloadJob)
             }
         }
     }
@@ -39,5 +38,9 @@ class PracticePlugin : Plugin() {
 
             else -> arrayListOf()
         }
+    }
+
+    companion object {
+        const val timeToReloadJob = 1 * 60 * 1000L
     }
 }
