@@ -23,8 +23,9 @@ class PracticePlugin : Plugin() {
 
     override suspend fun init() {
         GlobalScope.launch {
+            var currentIndex = 0
             while (isActive) {
-                CoroutineJob.runTasks()
+                currentIndex = CoroutineJob.runTasks(currentIndex)
                 delay(timeToReloadJobs)
             }
         }
