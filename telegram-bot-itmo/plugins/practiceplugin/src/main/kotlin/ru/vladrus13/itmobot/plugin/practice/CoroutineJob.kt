@@ -24,30 +24,37 @@ class CoroutineJob {
             }
         }
 
-        fun runTasks() {
+        fun runTasks(tableIndex: Int, batchSize: Int = 1): Int {
+            var nextIndex: Int = 0
             transaction(DataBaseParser.connection) {
-                SheetJobTable
-                    .selectAll()
-                    .forEach { row ->
-                        val jobId = row[SheetJobTable.jobId]
-                        val sourceLink = row[SheetJobTable.sourceLink]
-                        val tableId = row[SheetJobTable.tableId]
-                        when (jobId) {
-                            NEERC_JOB -> {
-                                val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
-                                val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
+                val allSheetTables = SheetJobTable.selectAll().toList().sortedBy { it[SheetJobTable.id] }
+                if (allSheetTables.isNotEmpty()) {
+                    nextIndex = (tableIndex + batchSize) % allSheetTables.size
+                    allSheetTables
+                        .drop(tableIndex)
+                        .take(batchSize)
+                        .forEach { row ->
+                            val jobId = row[SheetJobTable.jobId]
+                            val sourceLink = row[SheetJobTable.sourceLink]
+                            val tableId = row[SheetJobTable.tableId]
+                            when (jobId) {
+                                NEERC_JOB -> {
+                                    val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
+                                    val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
 
-                                val currentTasks = googleSheet.getTasksList().flatten()
+                                    val currentTasks = googleSheet.getTasksList().flatten()
 
-                                if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
-                                    googleSheet.generateSheet(
-                                        actualTasks.subList(currentTasks.size, actualTasks.size)
-                                    )
+                                    if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
+                                        googleSheet.generateSheet(
+                                            actualTasks.subList(currentTasks.size, actualTasks.size)
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
+                }
             }
+            return nextIndex
         }
     }
 }
