@@ -45,11 +45,16 @@ class TransferData {
                 .map { it.first() }
                 .map(String::toInt)
                 .sorted()
-            val notExistsNumbers = (1..existsNumbers.max())
-                .toList()
-                .filter { existsNumbers.binarySearch(it) < 0 }
-                .map { listOf(it.toString(), "") }
-            return studentTableWithSkips.plus(notExistsNumbers).sortedBy { it.first().toInt() }
+            return if (existsNumbers.isNotEmpty() && 1 <= existsNumbers.max()) {
+                val notExistsNumbers = (1..existsNumbers.max())
+                    .toList()
+                    .filter { existsNumbers.binarySearch(it) < 0 }
+                    .map { listOf(it.toString(), "") }
+                studentTableWithSkips.plus(notExistsNumbers).sortedBy { it.first().toInt() }
+            } else {
+                listOf()
+            }
+
         }
 
         fun List<List<String>>.transferFCSToLastName(): List<List<String>> =
