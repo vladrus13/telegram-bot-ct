@@ -57,13 +57,13 @@ class TransferData {
 
         }
 
-        fun List<List<String>>.transferFCSToLastName(): List<List<String>> =
-            this.map {
-                it.mapIndexed { index, s ->
-                    if (index == 1) s.takeWhile(Char::isLetter)
-                    else s
-                }
-            }
+        // returns:
+        // Alexey
+        // Ivan
+        // Andrey
+        fun List<List<String>>.transferFCSToLastName(): List<List<String>> = this.map {
+            listOf(it[1].takeWhile(Char::isLetter), "")
+        }
 
         private fun isT(element: String) = RUSSIAN_T == element || ENGLISH_T == element
     }

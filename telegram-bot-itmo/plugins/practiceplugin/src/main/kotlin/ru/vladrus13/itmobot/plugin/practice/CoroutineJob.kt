@@ -1,6 +1,6 @@
 package ru.vladrus13.itmobot.plugin.practice
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException
+import com.google.api.client.auth.oauth2.TokenResponseException
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -12,6 +12,7 @@ import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferFCSToLastName
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferStudentTableToTeacher
 import ru.vladrus13.itmobot.properties.InitialProperties
+import java.io.IOException
 import java.lang.Thread.sleep
 import java.util.Objects.deepEquals
 import java.util.logging.Logger
@@ -57,11 +58,14 @@ class CoroutineJob {
                 when (jobId) {
                     NEERC_JOB -> runNeercTask(sourceLink, tableId)
                 }
-            } catch (e: GoogleJsonResponseException) {
-                logger.warning("Something wrong! Check situtation with google API")
+            } catch (e: IOException) {
+                logger.warning("IOException: " + e.stackTraceToString())
+            } catch (e: TokenResponseException) {
+                logger.warning("Something wrong! Check situation with google API: " + e.stackTraceToString())
             }
         }
 
+        @Throws(IOException::class, TokenResponseException::class)
         private fun runNeercTask(sourceLink: String, tableId: String) {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)

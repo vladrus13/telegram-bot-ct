@@ -2,6 +2,7 @@ package ru.vladrus13.itmobot.google
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.api.client.auth.oauth2.Credential
+import com.google.api.client.auth.oauth2.TokenResponseException
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
@@ -32,7 +33,7 @@ class GoogleTableResponse {
         private val SCOPES = listOf(SheetsScopes.SPREADSHEETS, SheetsScopes.DRIVE, SheetsScopes.DRIVE_FILE)
         private const val CREDENTIALS_FILE_PATH = "/credentials.json"
 
-        @Throws(IOException::class)
+        @Throws(IOException::class, TokenResponseException::class)
         fun getCredentials(HTTP_TRANSPORT: NetHttpTransport?): Credential? {
             val `in`: InputStream = GoogleTableResponse::class.java.getResourceAsStream(CREDENTIALS_FILE_PATH)
                 ?: throw FileNotFoundException("Resource not found: $CREDENTIALS_FILE_PATH")
@@ -79,7 +80,6 @@ class GoogleTableResponse {
             return answer
         }
 
-        @Throws(IOException::class)
         fun getNames(address: String): ArrayList<String> {
             val list: ArrayList<String> = ArrayList()
             val service: Sheets = Sheets.Builder(
@@ -96,7 +96,7 @@ class GoogleTableResponse {
             return list
         }
 
-        @Throws(IOException::class)
+        @Throws(IOException::class, TokenResponseException::class)
         fun createSheetsService(): Sheets = Sheets.Builder(
             HTTP_TRANSPORT,
             JSON_FACTORY,
@@ -105,7 +105,7 @@ class GoogleTableResponse {
             .setApplicationName(APPLICATION_NAME)
             .build()
 
-        @Throws(IOException::class)
+        @Throws(IOException::class, TokenResponseException::class)
         fun createDriveService(): Drive =
             Drive.Builder(
                 HTTP_TRANSPORT,
@@ -115,7 +115,7 @@ class GoogleTableResponse {
                 .setApplicationName(APPLICATION_NAME)
                 .build()
 
-        @Throws(IOException::class)
+        @Throws(IOException::class, TokenResponseException::class)
         fun insertPermission(
             service: Drive,
             fileId: String,
@@ -128,7 +128,7 @@ class GoogleTableResponse {
                     list.fold(Permission()) { permission, f -> f.invoke(permission) })
                 .execute()
 
-        @Throws(IOException::class)
+        @Throws(IOException::class, TokenResponseException::class)
         fun insertPermission(service: Drive, fileId: String): Permission =
             insertPermission(
                 service,
@@ -138,7 +138,7 @@ class GoogleTableResponse {
                     { permission: Permission -> permission.setRole("writer") })
             )
 
-        @Throws(IOException::class)
+        @Throws(IOException::class, TokenResponseException::class)
         fun getTableInfo(sheetService: Sheets, spreadsheet: Spreadsheet): Map<String, String> {
             val node = mapper.readTree(
                 sheetService
