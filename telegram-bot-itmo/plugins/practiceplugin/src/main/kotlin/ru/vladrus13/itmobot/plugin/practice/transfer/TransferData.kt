@@ -60,7 +60,6 @@ class TransferData {
                 }
             }
 
-
         private fun isT(element: String) = RUSSIAN_T == element || ENGLISH_T == element
     }
 }
