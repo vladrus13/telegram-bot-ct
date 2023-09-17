@@ -1,5 +1,6 @@
 package ru.vladrus13.itmobot.plugin.practice
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -11,6 +12,7 @@ import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferFCSToLastName
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferStudentTableToTeacher
 import ru.vladrus13.itmobot.properties.InitialProperties
+import java.lang.Thread.sleep
 import java.util.Objects.deepEquals
 import java.util.logging.Logger
 
@@ -48,11 +50,15 @@ class CoroutineJob {
         }
 
         private fun runTask(row: ResultRow) {
-            val jobId = row[SheetJobTable.jobId]
-            val sourceLink = row[SheetJobTable.sourceLink]
-            val tableId = row[SheetJobTable.tableId]
-            when (jobId) {
-                NEERC_JOB -> runNeercTask(sourceLink, tableId)
+            try {
+                val jobId = row[SheetJobTable.jobId]
+                val sourceLink = row[SheetJobTable.sourceLink]
+                val tableId = row[SheetJobTable.tableId]
+                when (jobId) {
+                    NEERC_JOB -> runNeercTask(sourceLink, tableId)
+                }
+            } catch (e: GoogleJsonResponseException) {
+                logger.warning("Something wrong! Check situtation with google API")
             }
         }
 
@@ -67,6 +73,8 @@ class CoroutineJob {
             val teacherSheetBody: List<List<String>> =
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks.transferStudentTableToTeacher().transferFCSToLastName()
+
+            sleep(70 * 1000)
 
             // Add newList
             if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
