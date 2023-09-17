@@ -1,6 +1,7 @@
 #!/bin/bash
 
 rm tokens/StoredCredential
-sleep 1m # It's time for local ./gradlew run and accepting accesses
+echo "Complete: Delete StoredCredential"
+sleep 30s # It's time for local ./gradlew run and accepting accesses
 ssh ubuntu@13.48.29.141 'rm /home/ubuntu/telegram-bot-ct/telegram-bot-itmo/tokens/StoredCredential'
 scp tokens/StoredCredential ubuntu@13.48.29.141:/home/ubuntu/telegram-bot-ct/telegram-bot-itmo/tokens/StoredCredential
