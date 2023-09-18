@@ -51,18 +51,21 @@ class CoroutineJob {
         }
 
         private fun runTask(row: ResultRow) {
-            try {
-                val jobId = row[SheetJobTable.jobId]
-                val sourceLink = row[SheetJobTable.sourceLink]
-                val tableLink = row[SheetJobTable.tableLink]
-                val tableId = row[SheetJobTable.tableId]
-                when (jobId) {
-                    NEERC_JOB -> runNeercTask(sourceLink, tableId, tableLink)
+            while (true) {
+                try {
+                    val jobId = row[SheetJobTable.jobId]
+                    val sourceLink = row[SheetJobTable.sourceLink]
+                    val tableLink = row[SheetJobTable.tableLink]
+                    val tableId = row[SheetJobTable.tableId]
+                    when (jobId) {
+                        NEERC_JOB -> runNeercTask(sourceLink, tableId, tableLink)
+                    }
+                    break;
+                } catch (e: IOException) {
+                    logger.warning("IOException: " + e.stackTraceToString())
+                } catch (e: TokenResponseException) {
+                    logger.warning("Something wrong! Check situation with google API: " + e.stackTraceToString())
                 }
-            } catch (e: IOException) {
-                logger.warning("IOException: " + e.stackTraceToString())
-            } catch (e: TokenResponseException) {
-                logger.warning("Something wrong! Check situation with google API: " + e.stackTraceToString())
             }
         }
 
