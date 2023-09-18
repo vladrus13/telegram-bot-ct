@@ -78,7 +78,7 @@ class CoroutineJob {
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks.transferStudentTableToTeacher().transferFCSToLastName()
 
-            sleep(70 * 1000)
+            sleep(60 * 1000)
 
             // Add newList
             if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
