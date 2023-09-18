@@ -54,9 +54,10 @@ class CoroutineJob {
             try {
                 val jobId = row[SheetJobTable.jobId]
                 val sourceLink = row[SheetJobTable.sourceLink]
+                val tableLink = row[SheetJobTable.tableLink]
                 val tableId = row[SheetJobTable.tableId]
                 when (jobId) {
-                    NEERC_JOB -> runNeercTask(sourceLink, tableId)
+                    NEERC_JOB -> runNeercTask(sourceLink, tableId, tableLink)
                 }
             } catch (e: IOException) {
                 logger.warning("IOException: " + e.stackTraceToString())
@@ -66,7 +67,7 @@ class CoroutineJob {
         }
 
         @Throws(IOException::class, TokenResponseException::class)
-        private fun runNeercTask(sourceLink: String, tableId: String) {
+        private fun runNeercTask(sourceLink: String, tableId: String, tableLink: String) {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
 
@@ -78,7 +79,9 @@ class CoroutineJob {
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks.transferStudentTableToTeacher().transferFCSToLastName()
 
+            logger.info("Sleep for 60 seconds")
             sleep(60 * 1000)
+            logger.info("End sleep for 60 seconds")
 
             // Add newList
             if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
@@ -89,6 +92,7 @@ class CoroutineJob {
             if (teacherSheetBody.isNotEmpty() && !deepEquals(googleSheet.getTeacherList(), teacherSheetBody)) {
                 googleSheet.updateFields(teacherSheetBody)
             }
+            logger.info("End with this link $tableLink")
         }
     }
 }
