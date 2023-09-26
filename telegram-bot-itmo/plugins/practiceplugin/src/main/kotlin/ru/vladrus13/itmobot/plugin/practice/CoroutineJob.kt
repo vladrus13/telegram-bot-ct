@@ -38,7 +38,7 @@ class CoroutineJob {
         fun runTasks(tableIndex: Int, batchSize: Int = 1): Int {
             var nextIndex: Int = 0
             transaction(DataBaseParser.connection) {
-                val allSheetTables = SheetJobTable.selectAll().toList().sortedBy { it[SheetJobTable.id] }
+                val allSheetTables = SheetJobTable.selectAll().toList().sortedBy { it[SheetJobTable.id].toInt() }
                 if (allSheetTables.isNotEmpty()) {
                     nextIndex = (tableIndex + batchSize) % allSheetTables.size
                     allSheetTables
