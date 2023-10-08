@@ -550,7 +550,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 getCountIf(range, RUSSIAN_P) + " + " + getCountIf(range, ENGLISH_P)
 
         private fun getActualScoreFormula(index: Int) =
-            "=" + getTitlePrettyCell(MAIN_LIST_NAME, index, TOTAL_SCORES_COLUMN_INDEX)
+            "=" + getTitlePrettyCell(MAIN_LIST_NAME, index, FCS_COLUMN_INDEX)
 
         private const val MAIN_LIST_NAME = "Results"
         private const val TEACHER_LIST_NAME = "Таблица с баллами"

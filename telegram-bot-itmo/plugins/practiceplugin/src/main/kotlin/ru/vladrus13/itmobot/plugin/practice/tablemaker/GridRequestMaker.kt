@@ -151,7 +151,8 @@ class GridRequestMaker(
         fun getTitlePrettyLongRowRange(title: String, firstRow: Int, lastRow: Int, firstColumn: Int) =
             getTitlePrettyRange(title, firstRow, lastRow, firstColumn, FARTHEST_COLUMN_INDEX)
 
-        fun getTitlePrettyCell(title: String, row: Int, column: Int) = "$title!${nToAZ(column)}${row + 1}"
+        fun getTitlePrettyCell(title: String, row: Int, column: Int) =
+            "ВПР(${nToAZ(column)}${row + 1};$title!A:B;2;ЛОЖЬ)"
 
         fun nToAZ(n: Int): String {
             if (n < 0) return ""
