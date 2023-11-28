@@ -2,7 +2,7 @@ version: "3"
 services:
   PostgresSQL:
     image: postgres
-    restart: always
+    restart: no
     ports:
       - "5432:5432"
     environment:
