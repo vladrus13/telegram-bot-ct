@@ -41,6 +41,6 @@ class PracticePlugin : Plugin() {
     }
 
     companion object {
-        const val timeToReloadJob = 1 * 60 * 1000L
+        const val timeToReloadJob = 60 * 1000L
     }
 }

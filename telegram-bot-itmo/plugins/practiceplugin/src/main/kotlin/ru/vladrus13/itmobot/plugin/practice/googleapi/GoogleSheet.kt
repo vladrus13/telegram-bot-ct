@@ -47,6 +47,24 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         )
     }
 
+    fun generateTeacherSheet(): Boolean {
+        val sheets = service.spreadsheets().get(id).execute().sheets
+        if (sheets.any { it.properties.title == TEACHER_LIST_NAME }) {
+            return false
+        }
+
+        val properties = SheetProperties().setTitle(TEACHER_LIST_NAME).setIndex(sheets.size)
+        executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
+        return true
+    }
+
+    fun updateFields(teacherTable: List<List<String>>) {
+        updateBody(
+            getTitlePrettyRange(TEACHER_LIST_NAME, 0, teacherTable.size, 0, teacherTable.first().size),
+            teacherTable,
+        )
+    }
+
     fun generateSheet(tasks: List<String>) {
         val students = getStudentList()
         val maxStudentRowIndex = students.size
@@ -54,7 +72,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         val lastRowIndex = students.size + 1
 
         // make new list
-        val homeworkCount = service.spreadsheets().get(id).execute().sheets.size
+        val homeworkCount = service.spreadsheets().get(id).execute().sheets.size + 1 - EXCESS_SHEETS
         val title = "Д$homeworkCount"
         val properties = SheetProperties().setTitle(title).setIndex(1)
         val lastTaskColumnIndex = TASK_COUNTER_COLUMN_INDEX + tasks.size
@@ -198,20 +216,56 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         emptyList()
     }
 
-    fun getTasksList(): List<List<String>> {
-        val tasksList = mutableListOf<List<String>>()
+    /*
+         * Return table like this
+         * |         | 1 | 2 | 3 | 4 |
+         * | Alexey  | 1 | T |   | 1 |
+         * | Daniil  | T |   | P | T |
+         *
+     */
+    fun getFCSTasksWithMarks(): List<List<String>> {
+        val students = listOf("").plus(getStudentList())
+
+        val allPracticesTasksWithAnswers = List(students.size) { mutableListOf<String>() }
         for (i in 1..30) {
-            val result: ValueRange
+            val onePracticeSheet: List<List<Any>>
             try {
-                result = getValueRange("Д$i!${TASKS_NAMES_ROW_INDEX + 1}:${TASKS_NAMES_ROW_INDEX + 1}")
+                onePracticeSheet =
+                    getValueRange("Д$i!${TASKS_NAMES_ROW_INDEX + 1}:${TASKS_NAMES_ROW_INDEX + students.size}")
+                        .getValues()
             } catch (e: GoogleJsonResponseException) {
                 break
             }
 
-            val currentTasksNames = result.getValues().first().map(Any::toString)
-            tasksList.add(currentTasksNames.subList(TASK_FIRST_COLUMN_INDEX, currentTasksNames.size))
+            val onePracticeTasksWithAnswers =
+                onePracticeSheet.map {
+                    val missingEmptyCells = List(onePracticeSheet.first().size - it.size) { "" }
+                    it
+                        .asSequence()
+                        .plus(missingEmptyCells)
+                        .map(Any::toString)
+                        .filterIndexed { index, _ ->
+                            index !in setOf(
+                                FCS_COLUMN_INDEX,
+                                TASK_COUNTER_COLUMN_INDEX,
+                                TOTAL_SCORES_COLUMN_INDEX
+                            )
+                        }.toList()
+                }
+            allPracticesTasksWithAnswers.mapIndexed { index, list -> list.addAll(onePracticeTasksWithAnswers[index]) }
         }
-        return tasksList
+        return allPracticesTasksWithAnswers.mapIndexed { index, array -> listOf(students[index]).plus(array) }
+    }
+
+    fun getTeacherList(): List<List<String>> {
+        val result: ValueRange
+        try {
+            result = getValueRange("$TEACHER_LIST_NAME!A:B")
+        } catch (_: GoogleJsonResponseException) {
+            logger.warning("Can't parse teacher sheet")
+            return listOf()
+        }
+        return result.getValues()?.map { it.map(Any::toString) } ?: listOf()
     }
 
     private fun updateBody(range: String, body: List<List<String>>) = service
@@ -496,14 +550,16 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 getCountIf(range, RUSSIAN_P) + " + " + getCountIf(range, ENGLISH_P)
 
         private fun getActualScoreFormula(index: Int) =
-            "=" + getTitlePrettyCell(MAIN_LIST_NAME, index, TOTAL_SCORES_COLUMN_INDEX)
+            "=" + getTitlePrettyCell(MAIN_LIST_NAME, index, FCS_COLUMN_INDEX)
 
         private const val MAIN_LIST_NAME = "Results"
+        private const val TEACHER_LIST_NAME = "Таблица с баллами"
         private const val FCS_COLUMN_NAME = "ФИО"
         private const val TOTAL_SCORES_COLUMN_NAME = "Total"
         private const val ONE_PRACTICE_TASKS_COLUMN_NAME = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
+        private const val EXCESS_SHEETS = 2
         private const val NONE_INDEX = -1
         private const val MIN_STUDENT_ROW_INDEX = 1
         private const val TASKS_NAMES_ROW_INDEX = 0
@@ -514,9 +570,9 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         private const val TASK_FIRST_COLUMN_INDEX = 3
         private const val FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX = 2
 
-        private const val RUSSIAN_T = "Т"
-        private const val ENGLISH_T = "T"
-        private const val RUSSIAN_P = "Р"
-        private const val ENGLISH_P = "P"
+        const val RUSSIAN_T = "Т"
+        const val ENGLISH_T = "T"
+        const val RUSSIAN_P = "Р"
+        const val ENGLISH_P = "P"
     }
 }
