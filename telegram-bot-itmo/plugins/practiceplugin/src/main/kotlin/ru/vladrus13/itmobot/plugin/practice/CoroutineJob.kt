@@ -36,7 +36,7 @@ class CoroutineJob {
         }
 
         fun runTasks(tableIndex: Int, batchSize: Int = 1): Int {
-            var nextIndex: Int = 0
+            var nextIndex = 0
             transaction(DataBaseParser.connection) {
                 val allSheetTables = SheetJobTable.selectAll().toList().sortedBy { it[SheetJobTable.id].toInt() }
                 if (allSheetTables.isNotEmpty()) {
@@ -60,14 +60,15 @@ class CoroutineJob {
                     when (jobId) {
                         NEERC_JOB -> runNeercTask(sourceLink, tableId, tableLink)
                     }
-                    break;
+                    break
                 } catch (e: IOException) {
-                    logger.warning("IOException: " + e.stackTraceToString())
+                    logger.severe("IOException: " + e.stackTraceToString())
+                    logger.warning("Wait for 60 second after exception")
+                    sleep(60 * 1000)
                 } catch (e: TokenResponseException) {
-                    logger.warning("Something wrong! Check situation with google API: " + e.stackTraceToString())
-                } finally {
-                    logger.warning("Wait for 60 second after exception");
-                    sleep(60 * 1000);
+                    logger.severe("Something wrong! Check situation with google API: " + e.stackTraceToString())
+                    logger.warning("Wait for 60 second after exception")
+                    sleep(60 * 1000)
                 }
             }
         }
@@ -85,9 +86,9 @@ class CoroutineJob {
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks.transferStudentTableToTeacher().transferFCSToLastName()
 
-            logger.info("Sleep for 60 seconds")
+            logger.fine("Sleep for 60 seconds")
             sleep(60 * 1000)
-            logger.info("End sleep for 60 seconds")
+            logger.fine("End sleep for 60 seconds")
 
             // Add newList
             if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
