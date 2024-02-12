@@ -1,16 +1,11 @@
 package ru.vladrus13.itmobot.google
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.api.client.auth.oauth2.Credential
 import com.google.api.client.auth.oauth2.TokenResponseException
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
+import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
-import com.google.api.client.util.store.FileDataStoreFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.Permission
 import com.google.api.services.sheets.v4.Sheets
@@ -19,7 +14,11 @@ import com.google.api.services.sheets.v4.model.Sheet
 import com.google.api.services.sheets.v4.model.SheetProperties
 import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.ValueRange
+import com.google.auth.http.HttpCredentialsAdapter
+import com.google.auth.oauth2.GoogleCredentials
 import java.io.*
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.security.GeneralSecurityException
 
 class GoogleTableResponse {
@@ -31,21 +30,15 @@ class GoogleTableResponse {
         private val mapper = ObjectMapper()
 
         private val SCOPES = listOf(SheetsScopes.SPREADSHEETS, SheetsScopes.DRIVE, SheetsScopes.DRIVE_FILE)
-        private const val CREDENTIALS_FILE_PATH = "/credentials.json"
+        private const val CREDENTIALS_FILE_PATH = "new_credentials.json"
 
-        @Throws(IOException::class, TokenResponseException::class)
-        fun getCredentials(HTTP_TRANSPORT: NetHttpTransport?): Credential? {
-            val `in`: InputStream = GoogleTableResponse::class.java.getResourceAsStream(CREDENTIALS_FILE_PATH)
-                ?: throw FileNotFoundException("Resource not found: $CREDENTIALS_FILE_PATH")
-            val clientSecrets: GoogleClientSecrets = GoogleClientSecrets.load(JSON_FACTORY, InputStreamReader(`in`))
-            val flow: GoogleAuthorizationCodeFlow = GoogleAuthorizationCodeFlow.Builder(
-                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES
-            )
-                .setDataStoreFactory(FileDataStoreFactory(File(TOKENS_DIRECTORY_PATH)))
-                .setAccessType("offline")
-                .build()
-            val receiver: LocalServerReceiver = LocalServerReceiver.Builder().setPort(8888).build()
-            return AuthorizationCodeInstalledApp(flow, receiver).authorize("user")
+        @Throws(IOException::class)
+        fun getCredentials(): HttpRequestInitializer {
+            val credential = GoogleCredentials
+                .fromStream(Files.newInputStream(Paths.get("/home/alexey/telegram-bot-ct/telegram-bot-itmo/src/main/resources/new_credentials.json")))
+                .createScoped(SCOPES)
+
+            return HttpCredentialsAdapter(credential)
         }
 
         @Throws(IOException::class, GeneralSecurityException::class)
@@ -55,7 +48,7 @@ class GoogleTableResponse {
             val service: Sheets = Sheets.Builder(
                 HTTP_TRANSPORT,
                 JSON_FACTORY,
-                getCredentials(HTTP_TRANSPORT)
+                getCredentials()
             )
                 .setApplicationName(APPLICATION_NAME)
                 .build()
@@ -85,7 +78,7 @@ class GoogleTableResponse {
             val service: Sheets = Sheets.Builder(
                 HTTP_TRANSPORT,
                 JSON_FACTORY,
-                getCredentials(HTTP_TRANSPORT)
+                getCredentials()
             )
                 .setApplicationName(APPLICATION_NAME)
                 .build()
@@ -100,7 +93,7 @@ class GoogleTableResponse {
         fun createSheetsService(): Sheets = Sheets.Builder(
             HTTP_TRANSPORT,
             JSON_FACTORY,
-            getCredentials(HTTP_TRANSPORT)
+            getCredentials()
         )
             .setApplicationName(APPLICATION_NAME)
             .build()
@@ -110,7 +103,7 @@ class GoogleTableResponse {
             Drive.Builder(
                 HTTP_TRANSPORT,
                 GsonFactory.getDefaultInstance(),
-                getCredentials(HTTP_TRANSPORT)
+                getCredentials()
             )
                 .setApplicationName(APPLICATION_NAME)
                 .build()
