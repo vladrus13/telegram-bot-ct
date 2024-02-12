@@ -17,25 +17,22 @@ import com.google.api.services.sheets.v4.model.ValueRange
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 import java.io.*
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.security.GeneralSecurityException
 
 class GoogleTableResponse {
     companion object {
         private const val APPLICATION_NAME = "ParseScheduleBot"
-        private const val TOKENS_DIRECTORY_PATH = "tokens"
         private val JSON_FACTORY: GsonFactory = GsonFactory.getDefaultInstance()
         private val HTTP_TRANSPORT: NetHttpTransport = GoogleNetHttpTransport.newTrustedTransport()
         private val mapper = ObjectMapper()
 
         private val SCOPES = listOf(SheetsScopes.SPREADSHEETS, SheetsScopes.DRIVE, SheetsScopes.DRIVE_FILE)
-        private const val CREDENTIALS_FILE_PATH = "new_credentials.json"
+        private const val CREDENTIALS_FILE_PATH = "/new_credentials.json"
 
         @Throws(IOException::class)
         fun getCredentials(): HttpRequestInitializer {
             val credential = GoogleCredentials
-                .fromStream(Files.newInputStream(Paths.get("/home/alexey/telegram-bot-ct/telegram-bot-itmo/src/main/resources/new_credentials.json")))
+                .fromStream(GoogleTableResponse::class.java.getResourceAsStream(CREDENTIALS_FILE_PATH))
                 .createScoped(SCOPES)
 
             return HttpCredentialsAdapter(credential)
@@ -73,6 +70,7 @@ class GoogleTableResponse {
             return answer
         }
 
+        @Suppress("UNCHECKED_CAST")
         fun getNames(address: String): ArrayList<String> {
             val list: ArrayList<String> = ArrayList()
             val service: Sheets = Sheets.Builder(
