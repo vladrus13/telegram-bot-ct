@@ -10,6 +10,7 @@ tokens
 src/main/resources/datatable.properties
 src/main/resources/main.properties
 src/main/resources/credentials.json
+src/main/resources/new_credentials.json
 
 # hide files of logger
 logger/*
