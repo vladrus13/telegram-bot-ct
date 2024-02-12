@@ -17,9 +17,9 @@ import com.google.api.services.sheets.v4.model.ValueRange
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
 import java.io.*
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.security.GeneralSecurityException
+import kotlin.io.path.Path
+import kotlin.io.path.inputStream
 
 class GoogleTableResponse {
     companion object {
@@ -35,12 +35,12 @@ class GoogleTableResponse {
         @Throws(IOException::class)
         fun getCredentials(): HttpRequestInitializer {
             val envPath = System.getenv(ENVIRONMENT_NAME_CREDENTIALS_PATH)
-            val `in` : InputStream =
-                if (envPath != null) Files.newInputStream(Paths.get(envPath))
+            val input : InputStream =
+                if (envPath != null) Path(envPath).inputStream()
                 else GoogleTableResponse::class.java.getResourceAsStream(CREDENTIALS_FILE_PATH)
                     ?: throw IOException("Doesn't exist credentials")
 
-            val credential = GoogleCredentials.fromStream(`in`).createScoped(SCOPES)
+            val credential = GoogleCredentials.fromStream(input).createScoped(SCOPES)
             return HttpCredentialsAdapter(credential)
         }
 
