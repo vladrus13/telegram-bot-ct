@@ -16,15 +16,19 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed:0.17.13")
     implementation("org.postgresql:postgresql:42.5.4")
     implementation("mysql:mysql-connector-java:8.0.25")
-    implementation("com.google.oauth-client:google-oauth-client-jetty:1.23.0")
     implementation("org.jsoup:jsoup:1.14.1")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
 
+    // https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-jetty
+    implementation("com.google.oauth-client:google-oauth-client-jetty:1.35.0")
     // For using service account
-    implementation("com.google.apis:google-api-services-iam:v1-rev20240108-2.0.0")
-    implementation("com.google.auth:google-auth-library-oauth2-http:1.16.1")
-    implementation("com.google.auth:google-auth-library-credentials:1.16.1")
+    // https://mvnrepository.com/artifact/com.google.apis/google-api-services-iam
+    implementation("com.google.apis:google-api-services-iam:v2-rev20240108-2.0.0")
+    // https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.22.0")
+    // https://mvnrepository.com/artifact/com.google.auth/google-auth-library-credentials
+    implementation("com.google.auth:google-auth-library-credentials:1.22.0")
 
     // Dependencies
     // https://mvnrepository.com/artifact/com.google.api-client/google-api-client

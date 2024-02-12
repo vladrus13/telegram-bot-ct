@@ -21,12 +21,19 @@ dependencies {
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.13.4")
 
-    // Dependencies for google-sheet
+    // For using service account
+    // https://mvnrepository.com/artifact/com.google.apis/google-api-services-iam
+    implementation("com.google.apis:google-api-services-iam:v2-rev20240108-2.0.0")
+    // https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.22.0")
+    // https://mvnrepository.com/artifact/com.google.auth/google-auth-library-credentials
+    implementation("com.google.auth:google-auth-library-credentials:1.22.0")
+
+    // Dependencies
     // https://mvnrepository.com/artifact/com.google.api-client/google-api-client
     implementation("com.google.api-client:google-api-client:2.2.0")
     // https://mvnrepository.com/artifact/com.google.apis/google-api-services-drive
     implementation("com.google.apis:google-api-services-drive:v3-rev197-1.25.0")
     implementation("com.google.apis:google-api-services-sheets:v4-rev612-1.25.0")
-
     implementation(project(":skeleton"))
 }
