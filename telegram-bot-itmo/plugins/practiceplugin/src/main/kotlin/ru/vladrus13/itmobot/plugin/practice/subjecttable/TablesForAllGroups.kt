@@ -14,10 +14,10 @@ class TablesForAllGroups(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf()
 
-    override fun menuHelp() = "Пункт создания таблиц для всех групп"
+    override fun menuHelp() = "1 строка - айди главной таблицы ДМ с результатами; 2 строка - название страницы, на которой находятся люди с номером группы (\"Результаты\"); 3 строка - ссылка на таблицу с заданиями"
 
     override val name: String
-        get() = "Создать таблицы для всех групп (1 row - id of main dm table; 2 row - page with people; 3 row - neerc tasks link)"
+        get() = "Создать таблицы для всех групп"
     override val systemName: String
         get() = "makeTablesForAllGroups"
 

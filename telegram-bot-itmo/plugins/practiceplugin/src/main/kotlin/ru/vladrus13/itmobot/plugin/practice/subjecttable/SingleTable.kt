@@ -22,10 +22,10 @@ class SingleTable(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf()
 
-    override fun menuHelp() = "Пункт создания таблицы"
+    override fun menuHelp() = "В 1 строке - название таблицы; В 2 - ссылка на сайт с заданиями; С 3 строки и далее: ФИО студентов (каждый студент с новой строки, пустые строки будут пропускаться)"
 
     override val name: String
-        get() = "Создать новую таблицу (в первой строке - название таблицы; во второй - ссылку на сайт; в следующих строках ФИО студентов)"
+        get() = "Создать новую таблицу"
     override val systemName: String
         get() = "makeTable"
 
