@@ -6,12 +6,14 @@ import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.plugin.practice.subjecttable.NeercTable
+import ru.vladrus13.itmobot.plugin.practice.subjecttable.NeercTables
 import java.util.logging.Logger
 
 class NeercTransit(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf(
-        NeercTable(this)
+        NeercTable(this),
+        NeercTables(this)
     )
 
     override fun menuHelp() = "NeercTransit page"

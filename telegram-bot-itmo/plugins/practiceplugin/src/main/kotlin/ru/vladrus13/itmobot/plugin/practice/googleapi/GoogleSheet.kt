@@ -275,11 +275,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
         .execute()
 
-    private fun getValueRange(range: String) = service
-        .spreadsheets()
-        .values()
-        .get(id, range)
-        .execute()
+    private fun getValueRange(range: String) = Companion.getValueRange(range, service, id)
 
     private fun getListRules(
         sheetTitle: String,
@@ -510,6 +506,12 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             CUSTOM_FORMULA,
             TEXT_EQ
         }
+
+        fun getValueRange(range: String, service: Sheets, id: String) = service
+            .spreadsheets()
+            .values()
+            .get(id, range)
+            .execute()
 
         private const val INTERPOLATION_POINT_TYPE_PERCENTILE = "PERCENTILE"
 
