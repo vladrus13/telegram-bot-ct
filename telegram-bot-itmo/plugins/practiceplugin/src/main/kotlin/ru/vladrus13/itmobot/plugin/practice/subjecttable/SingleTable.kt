@@ -18,7 +18,7 @@ import ru.vladrus13.itmobot.plugin.practice.CoroutineJob.Companion.NEERC_JOB
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet
 import java.util.logging.Logger
 
-class NeercTable(override val parent: Menu) : Menu(parent) {
+class SingleTable(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf()
 

@@ -10,23 +10,23 @@ import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsSer
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet
 import java.util.logging.Logger
 
-class NeercTables(override val parent: Menu) : Menu(parent) {
+class TablesForAllGroups(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf()
 
-    override fun menuHelp() = "Пункт создания множеств таблиц"
+    override fun menuHelp() = "Пункт создания таблиц для всех групп"
 
     override val name: String
         get() = "Создать таблицы для всех групп (1 row - id of main dm table; 2 row - page with people; 3 row - neerc tasks link)"
     override val systemName: String
-        get() = "makeTables"
+        get() = "makeTablesForAllGroups"
 
     override fun isAccept(update: Update): Boolean = update.message.text == name
 
     override fun get(update: Update, bot: TelegramLongPollingBot, user: User) {
         if (standardCommand(update, bot, user)) return
         val text: String = update.message.text
-        val listTexts = NeercTable.getTextLines(text)
+        val listTexts = SingleTable.getTextLines(text)
         if (text.isBlank()) {
             unknownCommand(bot, user)
         }
@@ -44,7 +44,7 @@ class NeercTables(override val parent: Menu) : Menu(parent) {
             .map { list -> list.map(Any::toString) }
             .filter { list -> list.all(String::isNotBlank) && list.size == 2 }
             .groupBy { it[1] }
-            .map { it.key + ": " + NeercTable.createTable(
+            .map { it.key + ": " + SingleTable.createTable(
                 sheetService,
                 driveService,
                 it.key,
