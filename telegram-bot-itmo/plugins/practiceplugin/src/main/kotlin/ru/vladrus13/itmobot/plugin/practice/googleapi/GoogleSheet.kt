@@ -275,7 +275,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
         .execute()
 
-    private fun getValueRange(range: String) = Companion.getValueRange(range, service, id)
+    private fun getValueRange(range: String) = getValueRange(range, service, id)
 
     private fun getListRules(
         sheetTitle: String,
