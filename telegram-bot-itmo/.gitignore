@@ -13,7 +13,7 @@ src/main/resources/credentials.json
 src/main/resources/new_credentials.json
 
 # hide files of logger
-logger/*
+logger/*.txt.*
 
 # postgres database
 postgres-data

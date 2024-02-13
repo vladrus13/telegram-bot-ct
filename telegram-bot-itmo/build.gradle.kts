@@ -13,6 +13,14 @@ dependencies {
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0")
     implementation("org.telegram:telegrambots:5.2.0")
 
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation("org.slf4j:slf4j-api:2.0.9") {
+        because("We want to remove warning about slf4j")
+    }
+    implementation("org.slf4j:slf4j-simple:2.0.9") {
+        because("We want to remove warning about slf4j")
+    }
+
     implementation(project("plugins:alarm"))
     implementation(project("plugins:shikimori"))
     implementation(project("plugins:shipper"))
