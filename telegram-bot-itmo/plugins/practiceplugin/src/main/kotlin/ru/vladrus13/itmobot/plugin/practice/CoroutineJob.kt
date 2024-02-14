@@ -53,12 +53,13 @@ class CoroutineJob {
         private fun runTask(row: ResultRow) {
             while (true) {
                 try {
+                    val id = row[SheetJobTable.id]
                     val jobId = row[SheetJobTable.jobId]
                     val sourceLink = row[SheetJobTable.sourceLink]
                     val tableLink = row[SheetJobTable.tableLink]
                     val tableId = row[SheetJobTable.tableId]
                     when (jobId) {
-                        NEERC_JOB -> runNeercTask(sourceLink, tableId, tableLink)
+                        NEERC_JOB -> runNeercTask(id, sourceLink, tableId, tableLink)
                     }
                     break
                 } catch (e: IOException) {
@@ -74,7 +75,7 @@ class CoroutineJob {
         }
 
         @Throws(IOException::class, TokenResponseException::class)
-        private fun runNeercTask(sourceLink: String, tableId: String, tableLink: String) {
+        private fun runNeercTask(groupId: Long, sourceLink: String, tableId: String, tableLink: String) {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
 
@@ -99,7 +100,7 @@ class CoroutineJob {
             if (teacherSheetBody.isNotEmpty() && !deepEquals(googleSheet.getTeacherList(), teacherSheetBody)) {
                 googleSheet.updateFields(teacherSheetBody)
             }
-            logger.info("End with this link $tableLink")
+            logger.info("End with group $groupId, link $tableLink")
         }
     }
 }
