@@ -1,16 +1,17 @@
 package ru.vladrus13.itmobot.plugin.practice
 
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import ru.vladrus13.itmobot.bot.MainFolder
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.database.DataBaseEntity
 import ru.vladrus13.itmobot.plugins.Plugin
+import ru.vladrus13.itmobot.properties.InitialProperties
 import kotlin.reflect.KClass
 
 class PracticePlugin : Plugin() {
+    private val logger = InitialProperties.logger
     override val name = "Таблица для практик"
     override val systemName = "practicePlugin"
     override val password: String? = null
@@ -22,10 +23,11 @@ class PracticePlugin : Plugin() {
 
     override suspend fun init() {
         GlobalScope.launch {
-            var currentIndex = 0
             while (isActive) {
-                currentIndex = CoroutineJob.runTasks(currentIndex)
-                delay(timeToReloadJob)
+                CoroutineJob.runTasks()
+            }
+            if (!isActive) {
+                logger.severe("Job was canceled")
             }
         }
     }
@@ -38,9 +40,5 @@ class PracticePlugin : Plugin() {
 
             else -> arrayListOf()
         }
-    }
-
-    companion object {
-        const val timeToReloadJob = 60 * 1000L
     }
 }

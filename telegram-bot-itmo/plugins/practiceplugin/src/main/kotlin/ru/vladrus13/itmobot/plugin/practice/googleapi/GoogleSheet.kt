@@ -227,7 +227,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         val students = listOf("").plus(getStudentList())
 
         val allPracticesTasksWithAnswers = List(students.size) { mutableListOf<String>() }
-        for (i in 1..30) {
+        for (i in 1..MAX_WEEK_DAY) {
             val onePracticeSheet: List<List<Any>>
             try {
                 onePracticeSheet =
@@ -561,6 +561,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         private const val ONE_PRACTICE_TASKS_COLUMN_NAME = "S"
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
+        private const val MAX_WEEK_DAY = 20
         private const val EXCESS_SHEETS = 2
         private const val NONE_INDEX = -1
         private const val MIN_STUDENT_ROW_INDEX = 1
