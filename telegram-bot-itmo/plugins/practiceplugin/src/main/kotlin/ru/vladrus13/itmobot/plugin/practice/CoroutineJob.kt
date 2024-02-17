@@ -1,6 +1,5 @@
 package ru.vladrus13.itmobot.plugin.practice
 
-import com.google.api.client.auth.oauth2.TokenResponseException
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
@@ -13,7 +12,6 @@ import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.tran
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferStudentTableToTeacher
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.utils.Messager
-import java.io.IOException
 import java.lang.Thread.sleep
 import java.util.Objects.deepEquals
 import java.util.logging.Logger
@@ -31,12 +29,12 @@ class CoroutineJob {
                     it[SheetJobTable.sourceLink] = sourceLink
                     it[SheetJobTable.tableLink] = tableLink
                     it[SheetJobTable.tableId] = tableId
-                    it[SheetJobTable.chatId] = userId
+                    it[chatId] = userId
                 }
             }
         }
 
-        fun runTasks() {
+        fun runTasks(): Boolean {
             var allSheetTables: List<ResultRow> = emptyList()
             transaction(DataBaseParser.connection) {
                 allSheetTables = SheetJobTable
@@ -44,10 +42,15 @@ class CoroutineJob {
                     .toList()
                     .sortedBy { it[SheetJobTable.id].toInt() }
             }
-            allSheetTables.forEach(CoroutineJob::runTask)
+            for (rw in allSheetTables) {
+                if (!runTask(rw)) {
+                    return false
+                }
+            }
+            return true
         }
 
-        private fun runTask(row: ResultRow) {
+        private fun runTask(row: ResultRow): Boolean {
             for (i in 1..RETRY_COUNT) {
                 val id = row[SheetJobTable.id]
                 val jobId = row[SheetJobTable.jobId]
@@ -59,19 +62,20 @@ class CoroutineJob {
                     when (jobId) {
                         NEERC_JOB -> runNeercTask(id, sourceLink, tableId, tableLink)
                     }
-                    break
-                } catch (e : Exception) {
-                    logger.severe("Unknow exception! Check it: " + e.stackTraceToString())
-                    Messager.getMessage(
-                        chatId = chatId,
-                        text = "Unknow exception! Check it: " + e.stackTraceToString()
-                    )
-                    sleep(60 * 1000)
+                    return true
+                } catch (e: Exception) {
+                    val errorMessage =
+                        "Unknown exception with table $id!\nLink: $tableLink!\nError:\n${e.stackTraceToString()}"
+                    logger.severe(errorMessage)
+                    Messager.sendMessage(bot = InitialProperties.bot, chatId = chatId, text = errorMessage)
+                    if (i < RETRY_COUNT) sleep(60 * 1000)
                 }
             }
+            logger.info("Refreshing table job stopped after $RETRY_COUNT attempts")
+            return false
         }
 
-        @Throws(IOException::class, TokenResponseException::class, Exception::class)
+        @Throws(Exception::class)
         private fun runNeercTask(groupId: Long, sourceLink: String, tableId: String, tableLink: String) {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)

@@ -5,6 +5,7 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
+import ru.vladrus13.itmobot.plugin.practice.subjecttable.ReloadJobs
 import ru.vladrus13.itmobot.plugin.practice.subjecttable.SingleTable
 import ru.vladrus13.itmobot.plugin.practice.subjecttable.TablesForAllGroups
 import java.util.logging.Logger
@@ -13,7 +14,8 @@ class NeercTransit(override val parent: Menu) : Menu(parent) {
     override val logger: Logger = super.logger
     override val childes: Array<Foldable> = arrayOf(
         SingleTable(this),
-        TablesForAllGroups(this)
+        TablesForAllGroups(this),
+        ReloadJobs(this)
     )
 
     override fun menuHelp() = "NeercTransit page"
