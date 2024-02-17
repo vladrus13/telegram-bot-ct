@@ -47,7 +47,7 @@ class CoroutineJob {
         }
 
         private fun runTask(row: ResultRow) {
-            while (true) {
+            for (i in 1..RETRY_COUNT) {
                 try {
                     val id = row[SheetJobTable.id]
                     val jobId = row[SheetJobTable.jobId]
@@ -102,5 +102,7 @@ class CoroutineJob {
             }
             logger.info("End with group $groupId, link $tableLink")
         }
+
+        private const val RETRY_COUNT = 5
     }
 }
