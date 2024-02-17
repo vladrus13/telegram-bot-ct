@@ -35,19 +35,15 @@ class CoroutineJob {
             }
         }
 
-        fun runTasks(tableIndex: Int, batchSize: Int = 1): Int {
-            var nextIndex = 0
+        fun runTasks() {
+            var allSheetTables: List<ResultRow> = emptyList()
             transaction(DataBaseParser.connection) {
-                val allSheetTables = SheetJobTable.selectAll().toList().sortedBy { it[SheetJobTable.id].toInt() }
-                if (allSheetTables.isNotEmpty()) {
-                    nextIndex = (tableIndex + batchSize) % allSheetTables.size
-                    allSheetTables
-                        .drop(tableIndex)
-                        .take(batchSize)
-                        .forEach(CoroutineJob::runTask)
-                }
+                allSheetTables = SheetJobTable
+                    .selectAll()
+                    .toList()
+                    .sortedBy { it[SheetJobTable.id].toInt() }
             }
-            return nextIndex
+            allSheetTables.forEach(CoroutineJob::runTask)
         }
 
         private fun runTask(row: ResultRow) {
@@ -70,11 +66,15 @@ class CoroutineJob {
                     logger.severe("Something wrong! Check situation with google API: " + e.stackTraceToString())
                     logger.warning("Wait for 60 second after exception")
                     sleep(60 * 1000)
+                } catch (e : Exception) {
+                    logger.severe("Unknow exception! Check it: " + e.stackTraceToString())
+                    logger.warning("Wait for 60 second after exception")
+                    sleep(60 * 1000)
                 }
             }
         }
 
-        @Throws(IOException::class, TokenResponseException::class)
+        @Throws(IOException::class, TokenResponseException::class, Exception::class)
         private fun runNeercTask(groupId: Long, sourceLink: String, tableId: String, tableLink: String) {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
