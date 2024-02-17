@@ -12,6 +12,7 @@ import ru.vladrus13.itmobot.plugin.practice.parsers.neerc.NeercParserInfo
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferFCSToLastName
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferStudentTableToTeacher
 import ru.vladrus13.itmobot.properties.InitialProperties
+import ru.vladrus13.itmobot.utils.Messager
 import java.io.IOException
 import java.lang.Thread.sleep
 import java.util.Objects.deepEquals
@@ -30,7 +31,7 @@ class CoroutineJob {
                     it[SheetJobTable.sourceLink] = sourceLink
                     it[SheetJobTable.tableLink] = tableLink
                     it[SheetJobTable.tableId] = tableId
-                    it[SheetJobTable.userId] = userId
+                    it[SheetJobTable.chatId] = userId
                 }
             }
         }
@@ -48,24 +49,23 @@ class CoroutineJob {
 
         private fun runTask(row: ResultRow) {
             for (i in 1..RETRY_COUNT) {
+                val id = row[SheetJobTable.id]
+                val jobId = row[SheetJobTable.jobId]
+                val sourceLink = row[SheetJobTable.sourceLink]
+                val tableLink = row[SheetJobTable.tableLink]
+                val tableId = row[SheetJobTable.tableId]
+                val chatId = row[SheetJobTable.chatId]
                 try {
-                    val id = row[SheetJobTable.id]
-                    val jobId = row[SheetJobTable.jobId]
-                    val sourceLink = row[SheetJobTable.sourceLink]
-                    val tableLink = row[SheetJobTable.tableLink]
-                    val tableId = row[SheetJobTable.tableId]
                     when (jobId) {
                         NEERC_JOB -> runNeercTask(id, sourceLink, tableId, tableLink)
                     }
                     break
-                } catch (e: IOException) {
-                    logger.severe("IOException: " + e.stackTraceToString())
-                    sleep(60 * 1000)
-                } catch (e: TokenResponseException) {
-                    logger.severe("Something wrong! Check situation with google API: " + e.stackTraceToString())
-                    sleep(60 * 1000)
                 } catch (e : Exception) {
                     logger.severe("Unknow exception! Check it: " + e.stackTraceToString())
+                    Messager.getMessage(
+                        chatId = chatId,
+                        text = "Unknow exception! Check it: " + e.stackTraceToString()
+                    )
                     sleep(60 * 1000)
                 }
             }
