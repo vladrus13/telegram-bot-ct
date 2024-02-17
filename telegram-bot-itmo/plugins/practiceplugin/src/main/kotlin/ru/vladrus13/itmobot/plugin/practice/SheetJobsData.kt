@@ -21,7 +21,7 @@ object SheetJobTable : Table() {
     val sourceLink = text("source_link")
     val tableLink = text("table_link")
     val tableId = text("table_id")
-    val userId = long("user_id")
+    val chatId = long("user_id")
 }
 
 class SheetJobParser(
@@ -37,7 +37,7 @@ class SheetJobParser(
         result[SheetJobTable.sourceLink],
         result[SheetJobTable.tableLink],
         result[SheetJobTable.tableId],
-        result[SheetJobTable.userId],
+        result[SheetJobTable.chatId],
     )
 
     override fun set(o: SheetJob, it: UpdateBuilder<Number>) {
@@ -45,6 +45,6 @@ class SheetJobParser(
         it[SheetJobTable.sourceLink] = o.sourceLink
         it[SheetJobTable.tableLink] = o.tableLink
         it[SheetJobTable.tableId] = o.tableId
-        it[SheetJobTable.userId] = o.userId
+        it[SheetJobTable.chatId] = o.userId
     }
 }
