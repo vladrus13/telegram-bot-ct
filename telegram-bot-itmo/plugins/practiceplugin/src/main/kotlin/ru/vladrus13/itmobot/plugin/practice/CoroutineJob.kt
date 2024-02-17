@@ -60,15 +60,12 @@ class CoroutineJob {
                     break
                 } catch (e: IOException) {
                     logger.severe("IOException: " + e.stackTraceToString())
-                    logger.warning("Wait for 60 second after exception")
                     sleep(60 * 1000)
                 } catch (e: TokenResponseException) {
                     logger.severe("Something wrong! Check situation with google API: " + e.stackTraceToString())
-                    logger.warning("Wait for 60 second after exception")
                     sleep(60 * 1000)
                 } catch (e : Exception) {
                     logger.severe("Unknow exception! Check it: " + e.stackTraceToString())
-                    logger.warning("Wait for 60 second after exception")
                     sleep(60 * 1000)
                 }
             }
