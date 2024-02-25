@@ -5,9 +5,9 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
+import ru.vladrus13.itmobot.google.ExecuteSchedulerService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createDriveService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsService
-import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet
 import java.util.logging.Logger
 
 class TablesForAllGroups(override val parent: Menu) : Menu(parent) {
@@ -38,7 +38,7 @@ class TablesForAllGroups(override val parent: Menu) : Menu(parent) {
         val listName: String = listTexts[1]
         val linkTasks: String = listTexts[2]
 
-        val urls: List<String> = GoogleSheet
+        val urls: List<String> = ExecuteSchedulerService
             .getValueRange("$listName!A:B", sheetService, mainSheetId)
             .getValues()
             .map { list -> list.map(Any::toString) }

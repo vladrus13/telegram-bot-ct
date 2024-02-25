@@ -67,8 +67,10 @@ class CoroutineJob {
                     val errorMessage =
                         "Unknown exception with table $id!\nLink: $tableLink!\nError:\n${e.stackTraceToString()}"
                     logger.severe(errorMessage)
-                    Messager.sendMessage(bot = InitialProperties.bot, chatId = chatId, text = errorMessage)
                     if (i < RETRY_COUNT) sleep(60 * 1000)
+                    else {
+                        Messager.sendMessage(bot = InitialProperties.bot, chatId = chatId, text = errorMessage)
+                    }
                 }
             }
             logger.info("Refreshing table job stopped after $RETRY_COUNT attempts")
@@ -99,7 +101,7 @@ class CoroutineJob {
 
             // Update teacher sheet List
             if (teacherSheetBody.isNotEmpty() && !deepEquals(googleSheet.getTeacherList(), teacherSheetBody)) {
-                googleSheet.updateFields(teacherSheetBody)
+                googleSheet.updateTeacherTableCells(GoogleSheet.transformListToRowDataOfString(teacherSheetBody))
             }
             logger.info("End with group $groupId, link $tableLink")
         }

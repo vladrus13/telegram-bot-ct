@@ -29,7 +29,7 @@ class Launcher {
 
 suspend fun main() {
     try {
-        LogManager .getLogManager()
+        LogManager.getLogManager()
             .readConfiguration(Launcher::class.java.getResourceAsStream("/logging_main.properties"))
         LogManager.getLogManager()
             .readConfiguration(DataBase::class.java.getResourceAsStream("/logging_datatable.properties"))
