@@ -46,6 +46,6 @@ class PracticePlugin : Plugin() {
 
     companion object {
         var isWorkingJob = true
-        private const val SLEEP_TIME = 60 * 1000L
+        private const val SLEEP_TIME = 0 * 1000L
     }
 }
