@@ -9,14 +9,17 @@ import kotlinx.coroutines.*
 import ru.vladrus13.itmobot.properties.InitialProperties
 import java.io.IOException
 import java.lang.Thread.sleep
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.coroutines.cancellation.CancellationException
 
 class ExecuteSchedulerService {
     companion object {
+        private const val N_THREADS = 1
         private val logger = InitialProperties.logger
         private val deque = ArrayDeque<Triple<Int, Int, Deferred<Any>>>()
         private val lock = ReentrantLock()
+        private val executor = newFixedThreadPoolContext(N_THREADS, "Executor")
 
         @Volatile
         private var usedReadOperations: Int = 0
@@ -42,115 +45,101 @@ class ExecuteSchedulerService {
                     }
                 }
             }
-            GlobalScope.launch {
-                while (true) {
-                    if (deque.isEmpty()) {
-                        logger.info("Don't have any job")
-                        sleep(1 * 1000)
-                        continue
-                    }
-                    val inLimit: Boolean
-                    lock.lock()
-                    try {
-                        inLimit = deque.first().first + usedReadOperations < CURRENT_OPERATIONS_LIMIT &&
-                                deque.first().second + usedWriteOperations < CURRENT_OPERATIONS_LIMIT
-                    } finally {
-                        lock.unlock()
-                    }
-                    if (inLimit) {
-                        val triple = deque.removeFirst()
-                        triple.third.start()
-                        lock.lock()
-                        try {
-                            usedReadOperations += triple.first
-                            usedWriteOperations += triple.second
-                            logger.info("Got a job, now: $usedReadOperations&$usedWriteOperations")
-                        } finally {
-                            lock.unlock()
-                        }
-                    } else {
-                        sleep(1 * 1000)
-                    }
-                }
-            }
         }
 
-        private fun tryToLaunch(worker: Deferred<Any>) {
+        private suspend fun tryToLaunch(readOp: Int, writeOp: Int) {
             var unsuccessful = true
             for (i in 1..SECONDS_LIMIT) {
-                if (worker.isCompleted) {
+                val checker: Boolean
+                lock.lock()
+                try {
+                    checker = (readOp + usedReadOperations < CURRENT_OPERATIONS_LIMIT)
+                            && (writeOp + usedWriteOperations < CURRENT_OPERATIONS_LIMIT)
+                    if (checker) {
+                        logger.info("Add to values new readOp&writeOp $readOp&$writeOp")
+                        usedReadOperations += readOp
+                        usedWriteOperations += writeOp
+                    }
+                } finally {
+                    lock.unlock()
+                }
+                if (checker) {
                     unsuccessful = false
+
                     break
                 }
-                sleep(1 * 1000)
+                delay(1 * 1000)
             }
             if (unsuccessful) throw CancellationException()
         }
 
         suspend fun getValueRange(range: String, service: Sheets, id: String): ValueRange {
-            val worker = CoroutineScope(Job())
-                .async(start = CoroutineStart.LAZY) {
-                    return@async service
-                        .spreadsheets()
-                        .values()
-                        .get(id, range)
-                        .execute()
-                }
-            deque.addLast(Triple(1, 0, worker))
-            tryToLaunch(worker)
+            tryToLaunch(1, 0)
+            val res = launch {
+                return@launch service
+                    .spreadsheets()
+                    .values()
+                    .get(id, range)
+                    .execute()
+            }
 
-            return worker.await()
+            return res.get()
         }
 
-
-        fun executeRequestsSequence(
+        suspend fun executeRequestsSequence(
             service: Sheets,
             id: String,
             vararg requests: Request
         ) {
-            val worker = CoroutineScope(Job()).async(start = CoroutineStart.LAZY) {
-                service
+            tryToLaunch(0, requests.size)
+            val res = launch {
+                return@launch service
                     .spreadsheets()
                     .batchUpdate(id, BatchUpdateSpreadsheetRequest().setRequests(requests.toList()))
                     .execute()
-                return@async
             }
-            deque.addLast(Triple(0, requests.size, worker))
-            tryToLaunch(worker)
+
+            res.get()
         }
 
         suspend fun createSpreadsheet(sheetService: Sheets, spreadsheet: Spreadsheet): Spreadsheet {
-            val worker = CoroutineScope(Job()).async(start = CoroutineStart.LAZY) {
-                return@async sheetService
+            tryToLaunch(0, 1)
+            val res = launch {
+                return@launch sheetService
                     .spreadsheets()
                     .create(spreadsheet)
                     .execute()
             }
-            deque.addLast(Triple(0, 1, worker))
-            tryToLaunch(worker)
 
-            return worker.await()
+            return res.get()
         }
 
         suspend fun getSpreadSheetById(service: Sheets, id: String): Spreadsheet {
-            val worker = CoroutineScope(Job()).async(start = CoroutineStart.LAZY) {
-                return@async service.spreadsheets().get(id).execute()
+            tryToLaunch(1, 0)
+            val res = launch {
+                return@launch service.spreadsheets().get(id).execute()
             }
-            deque.addLast(Triple(1, 0, worker))
-            tryToLaunch(worker)
 
-            return worker.await()
+            return res.get()
         }
 
         @Suppress("UNCHECKED_CAST")
         suspend fun getSheets(service: Sheets, address: String): ArrayList<Sheet> {
-            val worker = CoroutineScope(Job()).async(start = CoroutineStart.LAZY) {
-                return@async service.Spreadsheets().get(address).execute()["sheets"] as ArrayList<Sheet>
+            tryToLaunch(1, 0)
+            val res = launch {
+                return@launch service.Spreadsheets().get(address).execute()["sheets"] as ArrayList<Sheet>
             }
-            deque.addLast(Triple(1, 0, worker))
-            tryToLaunch(worker)
 
-            return worker.await()
+            return res.get()
+        }
+
+        private suspend fun <T> launch(body: suspend () -> T): CompletableFuture<T> {
+            val deferred = CompletableFuture<T>()
+            executor.run {
+                val result = body()
+                deferred.complete(result)
+            }
+            return deferred
         }
 
         @Throws(IOException::class, TokenResponseException::class)
@@ -161,5 +150,7 @@ class ExecuteSchedulerService {
             .Permissions()
             .create(fileId, Permission().setType("anyone").setRole("writer"))
             .execute()
+
+
     }
 }
