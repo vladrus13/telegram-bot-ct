@@ -15,6 +15,7 @@ import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.ValueRange
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
+import kotlinx.coroutines.runBlocking
 import java.io.*
 import java.security.GeneralSecurityException
 import kotlin.io.path.Path
@@ -54,7 +55,10 @@ class GoogleTableResponse {
             )
                 .setApplicationName(APPLICATION_NAME)
                 .build()
-            val response: ValueRange = ExecuteSchedulerService.getValueRange(rangeCopy, service, address)
+            var response: ValueRange = ValueRange()
+            runBlocking {
+                response = ExecuteSchedulerService.getValueRange(rangeCopy, service, address)
+            }
             val values = response.getValues()
             val answer: ArrayList<ArrayList<String>> = ArrayList()
             if (values != null) {
@@ -82,7 +86,11 @@ class GoogleTableResponse {
             )
                 .setApplicationName(APPLICATION_NAME)
                 .build()
-            val sheets: ArrayList<Sheet> = ExecuteSchedulerService.getSheets(service, address)
+
+            val sheets: ArrayList<Sheet> = arrayListOf()
+            runBlocking {
+                 sheets.addAll(ExecuteSchedulerService.getSheets(service, address))
+            }
             for (it in sheets) {
                 list.add((it["properties"] as SheetProperties)["title"] as String)
             }
@@ -110,7 +118,11 @@ class GoogleTableResponse {
 
         @Throws(IOException::class, TokenResponseException::class)
         fun getTableInfo(sheetService: Sheets, spreadsheet: Spreadsheet): Map<String, String> {
-            val node = mapper.readTree(ExecuteSchedulerService.getSpreadsheet(sheetService, spreadsheet).toString())
+            var spreadsheetString: String = ""
+            runBlocking {
+                spreadsheetString = ExecuteSchedulerService.createSpreadsheet(sheetService, spreadsheet).toString()
+            }
+            val node = mapper.readTree(spreadsheetString)
 
             val id = "spreadsheetId"
             val url = "spreadsheetUrl"

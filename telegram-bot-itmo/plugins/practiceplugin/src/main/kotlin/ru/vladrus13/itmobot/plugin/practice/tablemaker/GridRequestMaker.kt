@@ -2,6 +2,7 @@ package ru.vladrus13.itmobot.plugin.practice.tablemaker
 
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
+import kotlinx.coroutines.runBlocking
 import ru.vladrus13.itmobot.google.ExecuteSchedulerService
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getBlackColor
 
@@ -93,7 +94,11 @@ class GridRequestMaker(
         fun getSheetIdFromTitle(service: Sheets, id: String, title: String): Int {
             val sheetTable = SheetTable(service, id, title)
             val result: Int = try {
-                infoToId[sheetTable] ?: ExecuteSchedulerService.getSheets(service, id)
+                val list: ArrayList<Sheet> = arrayListOf()
+                runBlocking {
+                    list.addAll(ExecuteSchedulerService.getSheets(service, id))
+                }
+                infoToId[sheetTable] ?: list
                     .map(Sheet::getProperties)
                     .first { properties -> properties.title == title }
                     .sheetId

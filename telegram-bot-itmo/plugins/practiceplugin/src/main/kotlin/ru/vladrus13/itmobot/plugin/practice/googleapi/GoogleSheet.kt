@@ -3,6 +3,7 @@ package ru.vladrus13.itmobot.plugin.practice.googleapi
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
+import kotlinx.coroutines.runBlocking
 import ru.vladrus13.itmobot.google.ExecuteSchedulerService
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenAcceptedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenCountTasksColor
@@ -47,7 +48,10 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     }
 
     fun generateTeacherSheet(): Boolean {
-        val sheets = ExecuteSchedulerService.getSpreadSheetById(service, id).sheets
+        val sheets: MutableList<Sheet> = mutableListOf()
+        runBlocking {
+            sheets.addAll(ExecuteSchedulerService.getSpreadSheetById(service, id).sheets)
+        }
         if (sheets.any { it.properties.title == TEACHER_LIST_NAME }) {
             return false
         }
@@ -81,7 +85,10 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         val lastRowIndex = students.size + 1
 
         // make new list
-        val homeworkCount = ExecuteSchedulerService.getSpreadSheetById(service, id).sheets.size + 1 - EXCESS_SHEETS
+        var homeworkCount = 0
+        runBlocking {
+            homeworkCount = ExecuteSchedulerService.getSpreadSheetById(service, id).sheets.size + 1 - EXCESS_SHEETS
+        }
         val title = "Д$homeworkCount"
         val properties = SheetProperties().setTitle(title).setIndex(1)
         val lastTaskColumnIndex = TASK_COUNTER_COLUMN_INDEX + tasks.size
@@ -311,7 +318,13 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 .setRows(body)
         )
 
-    private fun getValueRange(range: String) = ExecuteSchedulerService.getValueRange(range, service, id)
+    fun getValueRange(range: String): ValueRange {
+        var result: ValueRange = ValueRange()
+        runBlocking {
+            result = ExecuteSchedulerService.getValueRange(range, service, id)
+        }
+        return result
+    }
 
     private fun getListRules(
         sheetId: Int,
