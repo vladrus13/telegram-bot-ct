@@ -414,9 +414,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         .setType(CONDITION_TYPE.CUSTOM_FORMULA.toString())
         .setValues(listOf(ConditionValue().setUserEnteredValue(userEnteredValue)))
 
-    private fun executeRequestsSequence(vararg requests: Request) = ExecuteSchedulerService.executeRequestsSequence(
-        service, id, *requests
-    )
+    private fun executeRequestsSequence(vararg requests: Request) = runBlocking {
+        ExecuteSchedulerService.executeRequestsSequence(
+            service, id, *requests
+        )
+    }
 
     private fun addNewMainListColumn(title: String, students: List<String>): List<Request> {
         val maxStudentRowIndex = students.size

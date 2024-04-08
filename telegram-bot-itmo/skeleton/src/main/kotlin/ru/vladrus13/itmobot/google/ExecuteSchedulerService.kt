@@ -5,7 +5,10 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.Permission
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
 import ru.vladrus13.itmobot.properties.InitialProperties
 import java.io.IOException
 import java.lang.Thread.sleep
@@ -17,7 +20,6 @@ class ExecuteSchedulerService {
     companion object {
         private const val N_THREADS = 1
         private val logger = InitialProperties.logger
-        private val deque = ArrayDeque<Triple<Int, Int, Deferred<Any>>>()
         private val lock = ReentrantLock()
         private val executor = newFixedThreadPoolContext(N_THREADS, "Executor")
 
@@ -29,7 +31,7 @@ class ExecuteSchedulerService {
         private const val FREE_PERIOD: Long = 60 * 1000
         private const val SECONDS_LIMIT: Int = 60 * 1000
         private const val ALL_OPERATIONS_LIMIT = 300
-        private const val CURRENT_OPERATIONS_LIMIT = (ALL_OPERATIONS_LIMIT * 0.5).toInt()
+        private const val CURRENT_OPERATIONS_LIMIT = 240
 
         init {
             GlobalScope.launch {
@@ -93,10 +95,11 @@ class ExecuteSchedulerService {
         ) {
             tryToLaunch(0, requests.size)
             val res = launch {
-                return@launch service
+                service
                     .spreadsheets()
                     .batchUpdate(id, BatchUpdateSpreadsheetRequest().setRequests(requests.toList()))
                     .execute()
+                return@launch
             }
 
             res.get()
