@@ -22,6 +22,7 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 import ru.vladrus13.itmobot.properties.InitialProperties
 import java.util.logging.Logger
+import kotlin.math.max
 
 class GoogleSheet(private val service: Sheets, private val id: String) {
     private val logger: Logger = InitialProperties.logger
@@ -239,7 +240,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
 
             val onePracticeTasksWithAnswers =
                 onePracticeSheet.map {
-                    val missingEmptyCells = List(onePracticeSheet.first().size - it.size) { "" }
+                    val missingEmptyCells = List(max(0, onePracticeSheet.first().size - it.size)) { "" }
                     it
                         .asSequence()
                         .plus(missingEmptyCells)
