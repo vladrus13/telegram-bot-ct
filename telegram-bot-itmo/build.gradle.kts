@@ -1,5 +1,8 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     kotlin("jvm") version "1.9.21"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "ru.vladrus13.itmobot"
@@ -30,27 +33,24 @@ dependencies {
 
 }
 
-tasks.withType<JavaExec> {
-    jvmArgs = listOf("-Xms492m", "-Xmx492m")
+task<JavaExec>("runBot") {
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("ru.vladrus13.itmobot.LauncherRun")
 }
 
-apply {
-    plugin("application")
-}
+tasks.create<ShadowJar>("runBotJar") {
+    mergeServiceFiles()
+    group = "shadow"
+    description = "Run bot"
 
-tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs = listOf("-Xmx492m", "-Xmы492m")
-}
+    from(sourceSets.main.get().output)
+    from(project.configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    exclude("META-INF/*.RSA", "META-INF/*.SF", "META-INF/*.DSA")
+    configurations = listOf(project.configurations.runtimeClasspath.get())
 
-configure<ApplicationPluginConvention> {
-    mainClassName = "ru.vladrus13.itmobot.LauncherRun"
-}
-
-rec(project, buildDir)
-
-fun rec(project: Project, buildDir: File) {
-    project.buildDir = buildDir
-    project.childProjects.forEach {
-        rec(it.value, buildDir.resolve(it.key))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveFileName.set("runBot.jar")
+    manifest {
+        attributes["Main-Class"] = (tasks.findByName("runBot") as JavaExec).mainClass.get()
     }
-}
+}.apply task@ { tasks.named("jar") { dependsOn(this@task) } }
