@@ -22,7 +22,6 @@ dependencies {
     }
 
     implementation(project("plugins:alarm"))
-    implementation(project("plugins:shikimori"))
     implementation(project("plugins:shipper"))
     implementation(project("plugins:simple"))
     implementation(project("plugins:homework"))
