@@ -9,10 +9,10 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
+import ru.vladrus13.itmobot.google.ExecuteSchedulerService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createDriveService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.createSheetsService
 import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.getTableInfo
-import ru.vladrus13.itmobot.google.GoogleTableResponse.Companion.insertPermission
 import ru.vladrus13.itmobot.plugin.practice.CoroutineJob
 import ru.vladrus13.itmobot.plugin.practice.CoroutineJob.Companion.NEERC_JOB
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet
@@ -81,7 +81,7 @@ class SingleTable(override val parent: Menu) : Menu(parent) {
             googleSheet.generateMainSheet(students)
 
             // Allow all to edit page
-            insertPermission(driveService, id)
+            ExecuteSchedulerService.insertPermission(driveService, id)
 
             CoroutineJob.addTask(NEERC_JOB, link, url, id, chatId)
 
