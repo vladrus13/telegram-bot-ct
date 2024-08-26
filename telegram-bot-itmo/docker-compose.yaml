@@ -1,7 +1,7 @@
 version: "3"
 services:
   PostgresSQL:
-    image: postgres:15
+    image: postgres
     restart: no
     ports:
       - "5432:5432"
