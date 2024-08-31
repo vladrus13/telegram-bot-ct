@@ -88,10 +88,6 @@ class CoroutineJob {
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks.transferStudentTableToTeacher().transferFCSToLastName()
 
-//            logger.fine("Sleep for 60 seconds")
-//            sleep(60 * 1000)
-//            logger.fine("End sleep for 60 seconds")
-
             // Add newList
             if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
                 googleSheet.generateSheet(actualTasks.subList(currentTasks.size, actualTasks.size))

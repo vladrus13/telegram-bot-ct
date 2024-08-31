@@ -1,6 +1,6 @@
 package ru.vladrus13.itmobot.plugin.practice
 
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.vladrus13.itmobot.bot.MainFolder
@@ -19,8 +19,8 @@ class PracticePlugin : Plugin() {
     override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> =
         listOf(Pair(SheetJob::class, SheetJobParser()))
 
-    override suspend fun init() {
-        GlobalScope.launch {
+    override suspend fun init(): Unit = coroutineScope {
+        launch {
             while (true) {
                 if (!isWorkingJob) {
                     delay(SLEEP_TIME)
