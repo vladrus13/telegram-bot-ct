@@ -38,8 +38,8 @@ class TablesForAllGroups(override val parent: Menu) : Menu(parent) {
         val listName: String = listTexts[1]
         val linkTasks: String = listTexts[2]
 
-        val urls: List<String> = GoogleSheet
-            .getValueRange("$listName!A:B", sheetService, mainSheetId)
+        val urls: List<String> = GoogleSheet(sheetService, mainSheetId)
+            .getValueRange("$listName!A:B")
             .getValues()
             .map { list -> list.map(Any::toString) }
             .filter { list -> list.all(String::isNotBlank) && list.size == 2 }

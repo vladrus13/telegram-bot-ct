@@ -3,6 +3,8 @@ package ru.vladrus13.itmobot.plugin.practice.googleapi
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.model.*
+import kotlinx.coroutines.runBlocking
+import ru.vladrus13.itmobot.google.ExecuteSchedulerService
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenAcceptedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenCountTasksColor
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenScores
@@ -15,10 +17,10 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.createGridRequestMaker
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getPrettyRange
+import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getSheetIdFromTitle
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyCell
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyLongRowRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyOnlyRowRange
-import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companion.getTitlePrettyRange
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 import ru.vladrus13.itmobot.properties.InitialProperties
 import java.util.logging.Logger
@@ -26,7 +28,6 @@ import kotlin.math.max
 
 class GoogleSheet(private val service: Sheets, private val id: String) {
     private val logger: Logger = InitialProperties.logger
-    private val MAX_STUDENTS_COUNT = 500
 
     fun generateMainSheet(students: List<String>) {
         // rename list to $MAIN_LIST_NAME
@@ -34,14 +35,13 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         val update = UpdateSheetPropertiesRequest()
             .setProperties(properties)
             .setFields("title")
-        executeRequestsSequence(Request().setUpdateSheetProperties(update))
-
-        fillInStudents(MAIN_LIST_NAME, Companion::getSumScoresFormula, students)
-
-        // Conditional Format
+        val sheetId = 0
         executeRequestsSequence(
+            Request().setUpdateSheetProperties(update),
+            *fillInStudents(sheetId, Companion::getSumScoresFormula, students).toTypedArray(),
+            // Conditional Format
             getConditionalFormatRequest(
-                MAIN_LIST_NAME,
+                sheetId,
                 MIN_STUDENT_ROW_INDEX, MIN_STUDENT_ROW_INDEX + students.size,
                 TOTAL_SCORES_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
             ) { it.setGradientRule(MAIN_SCORES_GRADIENT) }
@@ -49,7 +49,10 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     }
 
     fun generateTeacherSheet(): Boolean {
-        val sheets = service.spreadsheets().get(id).execute().sheets
+        val sheets: MutableList<Sheet> = mutableListOf()
+        runBlocking {
+            sheets.addAll(ExecuteSchedulerService.getSpreadSheetById(service, id).sheets)
+        }
         if (sheets.any { it.properties.title == TEACHER_LIST_NAME }) {
             return false
         }
@@ -59,10 +62,20 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         return true
     }
 
-    fun updateFields(teacherTable: List<List<String>>) {
-        updateBody(
-            getTitlePrettyRange(TEACHER_LIST_NAME, 0, teacherTable.size, 0, teacherTable.first().size),
-            teacherTable,
+    fun updateTeacherTableCells(teacherTable: List<RowData>) {
+        executeRequestsSequence(
+            updateBody(
+                createGridRequestMaker(
+                    service,
+                    id,
+                    TEACHER_LIST_NAME,
+                    0,
+                    teacherTable.size,
+                    0,
+                    teacherTable.first().size
+                ).range,
+                teacherTable,
+            )
         )
     }
 
@@ -73,53 +86,81 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         val lastRowIndex = students.size + 1
 
         // make new list
-        val homeworkCount = service.spreadsheets().get(id).execute().sheets.size + 1 - EXCESS_SHEETS
+        var homeworkCount = 0
+        runBlocking {
+            homeworkCount = ExecuteSchedulerService.getSpreadSheetById(service, id).sheets.size + 1 - EXCESS_SHEETS
+        }
         val title = "Д$homeworkCount"
         val properties = SheetProperties().setTitle(title).setIndex(1)
         val lastTaskColumnIndex = TASK_COUNTER_COLUMN_INDEX + tasks.size
-        executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
+        // Adding sheet
+        executeRequestsSequence(
+            Request().setAddSheet(AddSheetRequest().setProperties(properties)),
+        )
+        val sheetId = getSheetIdFromTitle(service, id, title)
 
-        fillInStudents(title, Companion::getActualScoreFormula, students)
+        // Allow make a lot of columns
+        executeRequestsSequence(
+            Request().setAppendDimension(
+                AppendDimensionRequest()
+                    .setDimension("COLUMNS")
+                    .setLength(MAX_TASK_NUMBER)
+                    .setSheetId(sheetId)
+            )
+        )
 
-        val body = listOf(listOf(ONE_PRACTICE_TASKS_COLUMN_NAME) + tasks) +
-                (MIN_STUDENT_ROW_INDEX..maxStudentRowIndex).map {
-                    listOf(getCountAFormula(getPrettyLongRowRange(it, it + 1, TASK_FIRST_COLUMN_INDEX)))
-                } +
-                listOf(
-                    listOf(
-                        getCountIfFormula(
-                            getPrettyLongRowRange(lastRowIndex, lastRowIndex + 1, TASK_FIRST_COLUMN_INDEX), ">0"
-                        )
-                    ) + tasks.indices.map { it + TASK_FIRST_COLUMN_INDEX }.map {
+        val body = listOf(
+            createRowData(
+                stringCell(ONE_PRACTICE_TASKS_COLUMN_NAME),
+                *tasks.map(GoogleSheet::stringCell).toTypedArray()
+            )
+        ).plus(
+            createRowData(
+                *(MIN_STUDENT_ROW_INDEX..maxStudentRowIndex).map {
+                    formulaCell(getCountAFormula(getPrettyLongRowRange(it, it + 1, TASK_FIRST_COLUMN_INDEX)))
+                }.toTypedArray()
+            )
+        ).plus(
+            createRowData(
+                formulaCell(
+                    getCountIfFormula(
+                        getPrettyLongRowRange(lastRowIndex, lastRowIndex + 1, TASK_FIRST_COLUMN_INDEX), ">0"
+                    )
+                ),
+                *tasks.indices.map { it + TASK_FIRST_COLUMN_INDEX }.map {
+                    formulaCell(
                         getCountAFormula(
                             getPrettyRange(MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1, it, it + 1)
                         )
-                    }
-                )
-
-        updateBody(
-            getTitlePrettyRange(
-                title,
-                TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
-                TASK_COUNTER_COLUMN_INDEX, lastTaskColumnIndex + 1
-            ),
-            body
+                    )
+                }.toTypedArray()
+            )
         )
-
-        addNewMainListColumn(title, students)
 
         // Conditional Format
         executeRequestsSequence(
+            // Add students to table
+            *fillInStudents(sheetId, Companion::getActualScoreFormula, students).toTypedArray(),
+            // Write columns with rows
+            updateBody(
+                GridRequestMaker(
+                    sheetId,
+                    TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
+                    TASK_COUNTER_COLUMN_INDEX, lastTaskColumnIndex + 1
+                ).range,
+                body
+            ),
+            *addNewMainListColumn(title, students).toTypedArray(),
             *colorCellsByTaskGreenGradient(
-                title, MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
+                sheetId, MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 TASK_COUNTER_COLUMN_INDEX, TASK_COUNTER_COLUMN_INDEX + 1
             ).toTypedArray(),
             *colorCellsByTaskGreenGradient(
-                title, taskCounterRowIndex, taskCounterRowIndex + 1,
+                sheetId, taskCounterRowIndex, taskCounterRowIndex + 1,
                 TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
             ).toTypedArray(),
             *getListRules(
-                title,
+                sheetId,
                 lastRowIndex, lastRowIndex + 1,
                 TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1,
                 *getListBooleanConditionsOfAcceptedOrNotTask(
@@ -130,7 +171,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 ).map { it }.toTypedArray()
             ).toTypedArray(),
             *getListRules(
-                title,
+                sheetId,
                 MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 FCS_COLUMN_INDEX, FCS_COLUMN_INDEX + 1,
                 *getListBooleanConditionsOfAcceptedOrNotTask(
@@ -138,13 +179,13 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 ).map { it }.toTypedArray()
             ).toTypedArray(),
             *getListRules(
-                title,
+                sheetId,
                 MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1,
                 *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
             ).toTypedArray(),
             *getRequests(
-                title,
+                sheetId,
                 *getEqualsActionsRectangles(
                     listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
                     Rectangle(
@@ -184,11 +225,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     }
 
     private fun colorCellsByTaskGreenGradient(
-        title: String,
+        sheetId: Int,
         beginRowIndex: Int, endRowIndex: Int,
         beginColumnIndex: Int, endColumnIndex: Int
     ) = getListRules(
-        title, beginRowIndex,
+        sheetId, beginRowIndex,
         endRowIndex,
         beginColumnIndex,
         endColumnIndex,
@@ -213,7 +254,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             .map(Any::toString)
             .filter(String::isNotBlank)
     } catch (_: GoogleJsonResponseException) {
-        logger.info("Not found students in google sheet")
+        logger.severe("Not found students in google sheet")
         emptyList()
     }
 
@@ -269,24 +310,32 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         return result.getValues()?.map { it.map(Any::toString) } ?: listOf()
     }
 
-    private fun updateBody(range: String, body: List<List<String>>) = service
-        .spreadsheets()
-        .values()
-        .update(id, range, ValueRange().setValues(body))
-        .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
-        .execute()
 
-    private fun getValueRange(range: String) = getValueRange(range, service, id)
+    private fun updateBody(range: GridRange, body: List<RowData>): Request =
+        Request().setUpdateCells(
+            UpdateCellsRequest()
+                .setFields("*")
+                .setRange(range)
+                .setRows(body)
+        )
+
+    fun getValueRange(range: String): ValueRange {
+        var result: ValueRange = ValueRange()
+        runBlocking {
+            result = ExecuteSchedulerService.getValueRange(range, service, id)
+        }
+        return result
+    }
 
     private fun getListRules(
-        sheetTitle: String,
+        sheetId: Int,
         firstRow: Int,
         lastRow: Int,
         firstColumn: Int,
         lastColumn: Int,
         vararg addRule: (ConditionalFormatRule) -> ConditionalFormatRule
     ): List<Request> = addRule.map {
-        getConditionalFormatRequest(sheetTitle, firstRow, lastRow, firstColumn, lastColumn, it)
+        getConditionalFormatRequest(sheetId, firstRow, lastRow, firstColumn, lastColumn, it)
     }
 
     private fun getListBooleanConditionsOfAcceptedOrNotTask(range: String): List<(ConditionalFormatRule) -> ConditionalFormatRule> =
@@ -339,7 +388,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         )
 
     private fun getConditionalFormatRequest(
-        sheetTitle: String,
+        sheetId: Int,
         firstRow: Int,
         lastRow: Int,
         firstColumn: Int,
@@ -351,9 +400,8 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 ConditionalFormatRule()
                     .setRanges(
                         listOf(
-                            createGridRequestMaker(
-                                service,
-                                id, sheetTitle,
+                            GridRequestMaker(
+                                sheetId,
                                 firstRow, lastRow,
                                 firstColumn, lastColumn
                             ).range
@@ -367,15 +415,16 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         .setType(CONDITION_TYPE.CUSTOM_FORMULA.toString())
         .setValues(listOf(ConditionValue().setUserEnteredValue(userEnteredValue)))
 
-    private fun executeRequestsSequence(vararg requests: Request) = service.spreadsheets()
-        .batchUpdate(
-            id,
-            BatchUpdateSpreadsheetRequest().setRequests(requests.toList())
-        ).execute()
+    private fun executeRequestsSequence(vararg requests: Request) = runBlocking {
+        ExecuteSchedulerService.executeRequestsSequence(
+            service, id, *requests
+        )
+    }
 
-    private fun addNewMainListColumn(title: String, students: List<String>) {
+    private fun addNewMainListColumn(title: String, students: List<String>): List<Request> {
         val maxStudentRowIndex = students.size
         val maxStudentRowNumber = maxStudentRowIndex + 1
+        val sheetId = 0
 
         val width: Int
         try {
@@ -387,66 +436,74 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             )
             width = result.getValues()[0].size
         } catch (e: GoogleJsonResponseException) {
-            return
+            logger.severe("Incorrect result in addNewMainListColumn: " + e.stackTraceToString())
+            return listOf()
         } catch (e: IndexOutOfBoundsException) {
-            return
+            logger.severe("Incorrect result in addNewMainListColumn: " + e.stackTraceToString())
+            return listOf()
         }
 
-        val body = listOf(listOf(title)) +
-                students.indices.map { it + MIN_STUDENT_ROW_INDEX }.map {
-                    listOf(
-                        getCountIfRussianEnglishIsTFormula(
-                            getTitlePrettyLongRowRange(title, it, it + 1, TASK_FIRST_COLUMN_INDEX)
-                        )
+        val body = listOf(
+            createRowData(stringCell(title))
+        ).plus(students.indices.map { it + MIN_STUDENT_ROW_INDEX }.map {
+            createRowData(
+                formulaCell(
+                    getCountIfRussianEnglishIsTFormula(
+                        getTitlePrettyLongRowRange(title, it, it + 1, TASK_FIRST_COLUMN_INDEX)
                     )
-                }
-
-        updateBody(
-            getTitlePrettyRange(
-                MAIN_LIST_NAME,
-                TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1
-            ),
-            body,
-        )
+                )
+            )
+        })
 
         // format new column
-        executeRequestsSequence(
-            *getRequests(
-                MAIN_LIST_NAME,
-                *getEqualsActionsRectangles(
-                    listOf(
-                        GridRequestMaker::colorizeBorders,
-                        GridRequestMaker::formatCells,
-                        { grid -> grid.setWidth(32) }
-                    ),
-                    Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
-                    Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_INDEX + 1, width, width + 1)
-                ).toTypedArray()
-            ).toTypedArray(),
-        )
+        return listOf(
+            updateBody(
+                GridRequestMaker(
+                    sheetId,
+                    TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1
+                ).range,
+                body,
+            )
+        ).plus(getRequests(
+            sheetId,
+            *getEqualsActionsRectangles(
+                listOf(
+                    GridRequestMaker::colorizeBorders,
+                    GridRequestMaker::formatCells,
+                    { grid -> grid.setWidth(32) }
+                ),
+                Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, maxStudentRowNumber, width, width + 1),
+                Rectangle(TASKS_NAMES_MAIN_LIST_ROW_INDEX, TASKS_NAMES_MAIN_LIST_ROW_INDEX + 1, width, width + 1)
+            ).toTypedArray()
+        ))
     }
 
 
     /**
-     * @param title is "Д[0-9]+" or <code>MAIN_LIST_NAME</code>
+     * @param sheetId is id for sheet
      */
-    private fun fillInStudents(title: String, scoresFormula: (Int) -> String, students: List<String>) {
-        val body =
-            listOf(listOf(FCS_COLUMN_NAME, TOTAL_SCORES_COLUMN_NAME)) + students.mapIndexed { studentIndex, name ->
-                listOf(name, scoresFormula(MIN_STUDENT_ROW_INDEX + studentIndex))
+    private fun fillInStudents(sheetId: Int, scoresFormula: (Int) -> String, students: List<String>): List<Request> {
+        val body: List<RowData> = listOf(
+            createRowData(
+                stringCell(FCS_COLUMN_NAME), stringCell(TOTAL_SCORES_COLUMN_NAME)
+            )
+        ).plus(
+            students.mapIndexed { studentIndex, name ->
+                createRowData(stringCell(name), formulaCell(scoresFormula(MIN_STUDENT_ROW_INDEX + studentIndex)))
             }
-
-        updateBody(
-            getTitlePrettyRange(
-                title,
-                TASKS_NAMES_MAIN_LIST_ROW_INDEX, body.size, FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
-            ),
-            body,
         )
 
-        executeRequestsSequence(
+        return listOf(
+            updateBody(
+                GridRequestMaker(
+                    sheetId,
+                    TASKS_NAMES_MAIN_LIST_ROW_INDEX, body.size,
+                    FCS_COLUMN_INDEX, TOTAL_SCORES_COLUMN_INDEX + 1
+                ).range,
+                body
+            ),
             *getRequests(
-                title,
+                sheetId,
                 *getEqualsActionsRectangles(
                     listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
                     Rectangle(
@@ -484,12 +541,12 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         )
     }
 
-    private fun getRequests(
-        title: String,
+    fun getRequests(
+        sheetId: Int,
         vararg updateCells: FormattedRectangle
     ): List<Request> =
         updateCells.map { rect ->
-            rect.actions.map { action -> action(createGridRequestMaker(service, id, title, rect.rectangle)) }
+            rect.actions.map { action -> action(createGridRequestMaker(sheetId, rect.rectangle)) }
         }.flatten()
 
     private fun getEqualsActionsRectangles(
@@ -498,21 +555,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     ): List<FormattedRectangle> = rectangles.map { rect -> FormattedRectangle(rect, actions) }
 
     companion object {
-        enum class WHO_ENTERED {
-            USER_ENTERED,
-        }
-
         enum class CONDITION_TYPE {
             NUMBER_EQ,
             CUSTOM_FORMULA,
             TEXT_EQ
         }
-
-        fun getValueRange(range: String, service: Sheets, id: String) = service
-            .spreadsheets()
-            .values()
-            .get(id, range)
-            .execute()
 
         private const val INTERPOLATION_POINT_TYPE_PERCENTILE = "PERCENTILE"
 
@@ -529,6 +576,17 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         private val LOCAL_SCORED_GRADIENT = GradientRule()
             .setMinpoint(getInterpolationPoint(getWhiteColor(), "0"))
             .setMaxpoint(getInterpolationPoint(getGreenCountTasksColor(), "100"))
+
+        private fun createRowData(vararg cells: CellData): RowData = RowData().setValues(listOf(*cells))
+
+        private fun stringCell(str: String): CellData =
+            CellData().setUserEnteredValue(ExtendedValue().setStringValue(str))
+
+        private fun formulaCell(str: String): CellData =
+            CellData().setUserEnteredValue(ExtendedValue().setFormulaValue(str))
+
+        fun transformListToRowDataOfString(list: List<List<String>>): List<RowData> = list
+            .map { createRowData(*it.map { str -> stringCell(str) }.toTypedArray()) }
 
         private fun getSumScoresFormula(index: Int) =
             "=SUM(${
@@ -563,6 +621,8 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         private const val SCORES_FOR_DISCRETE_MATH_TASK: Int = 5
 
         private const val MAX_WEEK_DAY = 20
+        private const val MAX_TASK_NUMBER = 400
+        private const val MAX_STUDENTS_COUNT = 500
         private const val EXCESS_SHEETS = 2
         private const val NONE_INDEX = -1
         private const val MIN_STUDENT_ROW_INDEX = 1

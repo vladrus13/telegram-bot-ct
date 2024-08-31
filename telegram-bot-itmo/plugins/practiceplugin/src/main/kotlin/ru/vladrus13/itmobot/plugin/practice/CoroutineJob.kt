@@ -12,7 +12,6 @@ import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.tran
 import ru.vladrus13.itmobot.plugin.practice.transfer.TransferData.Companion.transferStudentTableToTeacher
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.utils.Messager
-import java.lang.Thread.sleep
 import java.util.Objects.deepEquals
 import java.util.logging.Logger
 
@@ -67,8 +66,9 @@ class CoroutineJob {
                     val errorMessage =
                         "Unknown exception with table $id!\nLink: $tableLink!\nError:\n${e.stackTraceToString()}"
                     logger.severe(errorMessage)
-                    Messager.sendMessage(bot = InitialProperties.bot, chatId = chatId, text = errorMessage)
-                    if (i < RETRY_COUNT) sleep(60 * 1000)
+                    if (i == RETRY_COUNT) {
+                        Messager.sendMessage(bot = InitialProperties.bot, chatId = chatId, text = errorMessage)
+                    }
                 }
             }
             logger.info("Refreshing table job stopped after $RETRY_COUNT attempts")
@@ -88,10 +88,6 @@ class CoroutineJob {
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks.transferStudentTableToTeacher().transferFCSToLastName()
 
-            logger.fine("Sleep for 60 seconds")
-            sleep(60 * 1000)
-            logger.fine("End sleep for 60 seconds")
-
             // Add newList
             if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {
                 googleSheet.generateSheet(actualTasks.subList(currentTasks.size, actualTasks.size))
@@ -99,7 +95,7 @@ class CoroutineJob {
 
             // Update teacher sheet List
             if (teacherSheetBody.isNotEmpty() && !deepEquals(googleSheet.getTeacherList(), teacherSheetBody)) {
-                googleSheet.updateFields(teacherSheetBody)
+                googleSheet.updateTeacherTableCells(GoogleSheet.transformListToRowDataOfString(teacherSheetBody))
             }
             logger.info("End with group $groupId, link $tableLink")
         }

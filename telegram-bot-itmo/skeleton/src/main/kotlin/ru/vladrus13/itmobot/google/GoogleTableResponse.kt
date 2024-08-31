@@ -7,7 +7,6 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
-import com.google.api.services.drive.model.Permission
 import com.google.api.services.sheets.v4.Sheets
 import com.google.api.services.sheets.v4.SheetsScopes
 import com.google.api.services.sheets.v4.model.Sheet
@@ -16,6 +15,7 @@ import com.google.api.services.sheets.v4.model.Spreadsheet
 import com.google.api.services.sheets.v4.model.ValueRange
 import com.google.auth.http.HttpCredentialsAdapter
 import com.google.auth.oauth2.GoogleCredentials
+import kotlinx.coroutines.runBlocking
 import java.io.*
 import java.security.GeneralSecurityException
 import kotlin.io.path.Path
@@ -35,7 +35,7 @@ class GoogleTableResponse {
         @Throws(IOException::class)
         fun getCredentials(): HttpRequestInitializer {
             val envPath = System.getenv(ENVIRONMENT_NAME_CREDENTIALS_PATH)
-            val input : InputStream =
+            val input: InputStream =
                 if (envPath != null) Path(envPath).inputStream()
                 else GoogleTableResponse::class.java.getResourceAsStream(CREDENTIALS_FILE_PATH)
                     ?: throw IOException("Doesn't exist credentials")
@@ -55,9 +55,10 @@ class GoogleTableResponse {
             )
                 .setApplicationName(APPLICATION_NAME)
                 .build()
-            val response: ValueRange = service.spreadsheets().values()
-                .get(address, rangeCopy)
-                .execute()
+            var response: ValueRange = ValueRange()
+            runBlocking {
+                response = ExecuteSchedulerService.getValueRange(rangeCopy, service, address)
+            }
             val values = response.getValues()
             val answer: ArrayList<ArrayList<String>> = ArrayList()
             if (values != null) {
@@ -76,7 +77,6 @@ class GoogleTableResponse {
             return answer
         }
 
-        @Suppress("UNCHECKED_CAST")
         fun getNames(address: String): ArrayList<String> {
             val list: ArrayList<String> = ArrayList()
             val service: Sheets = Sheets.Builder(
@@ -86,7 +86,11 @@ class GoogleTableResponse {
             )
                 .setApplicationName(APPLICATION_NAME)
                 .build()
-            val sheets: ArrayList<Sheet> = service.Spreadsheets().get(address).execute()["sheets"] as ArrayList<Sheet>
+
+            val sheets: ArrayList<Sheet> = arrayListOf()
+            runBlocking {
+                 sheets.addAll(ExecuteSchedulerService.getSheets(service, address))
+            }
             for (it in sheets) {
                 list.add((it["properties"] as SheetProperties)["title"] as String)
             }
@@ -113,37 +117,12 @@ class GoogleTableResponse {
                 .build()
 
         @Throws(IOException::class, TokenResponseException::class)
-        fun insertPermission(
-            service: Drive,
-            fileId: String,
-            list: List<(Permission) -> Permission>
-        ): Permission =
-            service
-                .Permissions()
-                .create(
-                    fileId,
-                    list.fold(Permission()) { permission, f -> f.invoke(permission) })
-                .execute()
-
-        @Throws(IOException::class, TokenResponseException::class)
-        fun insertPermission(service: Drive, fileId: String): Permission =
-            insertPermission(
-                service,
-                fileId,
-                listOf(
-                    { permission: Permission -> permission.setType("anyone") },
-                    { permission: Permission -> permission.setRole("writer") })
-            )
-
-        @Throws(IOException::class, TokenResponseException::class)
         fun getTableInfo(sheetService: Sheets, spreadsheet: Spreadsheet): Map<String, String> {
-            val node = mapper.readTree(
-                sheetService
-                    .spreadsheets()
-                    .create(spreadsheet)
-                    .execute()
-                    .toString()
-            )
+            var spreadsheetString: String = ""
+            runBlocking {
+                spreadsheetString = ExecuteSchedulerService.createSpreadsheet(sheetService, spreadsheet).toString()
+            }
+            val node = mapper.readTree(spreadsheetString)
 
             val id = "spreadsheetId"
             val url = "spreadsheetUrl"
