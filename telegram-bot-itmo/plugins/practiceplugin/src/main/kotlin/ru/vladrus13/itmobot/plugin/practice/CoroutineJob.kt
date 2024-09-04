@@ -81,13 +81,13 @@ class CoroutineJob {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
 
-            logger.info("Indicator of creating new teacher sheet: ${googleSheet.generateTeacherSheet()}")
-
             val fcsTasksWithMarks = googleSheet.getFCSTasksWithMarks()
             val currentTasks: List<String> = fcsTasksWithMarks.firstOrNull()?.drop(1) ?: listOf()
             val teacherSheetBody: List<List<String>> =
                 if (fcsTasksWithMarks.isEmpty()) listOf()
-                else fcsTasksWithMarks.transferStudentTableToTeacher().transferFCSToLastName()
+                else fcsTasksWithMarks
+                    .transferStudentTableToTeacher()
+                    .transferFCSToLastName()
 
             logger.fine("Sleep for 60 seconds")
             sleep(60 * 1000)

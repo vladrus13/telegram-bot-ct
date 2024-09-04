@@ -126,6 +126,9 @@ class GridRequestMaker(
             rectangle.lastColumn
         )
 
+        fun getCellWithTitleAndNotChangingColumn(title: String, rowIndex: Int, columnIndex: Int) =
+            """'$title'!$${nToAZ(columnIndex)}${rowIndex + 1}"""
+
         /**
          * This function return correct range string
          *
