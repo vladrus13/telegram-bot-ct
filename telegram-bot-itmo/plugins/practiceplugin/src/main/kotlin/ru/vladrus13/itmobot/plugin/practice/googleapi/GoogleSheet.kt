@@ -390,7 +390,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     ) {
         val body = buildList {
             addAll(students.indices.map { it + MIN_STUDENT_ROW_INDEX }.map {
-                listOf(getSumCells(it, width - FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX))
+                listOf(getSumCells(it, (width+1) - FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX))
             })
         }
         updateBody(
@@ -473,10 +473,12 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     ) {
         val body = buildList {
             add(listOf(FCS_COLUMN_NAME, TOTAL_TASKS_COLUMN_NAME, S_TASKS_COLUMN_NAME))
-            addAll(students.mapIndexed { studentIndex, name ->
+            addAll(students.mapIndexed { index, name ->
+                val studentIndex = index + MIN_STUDENT_ROW_INDEX
+
                 listOf(
                     name,
-                    totalFormula(MIN_STUDENT_ROW_INDEX + studentIndex),
+                    totalFormula(MIN_STUDENT_ROW_INDEX + index),
                     if (isMainSheet) sFormula(studentIndex, workingSheets)
                     else getCountAFormula(
                         getPrettyLongRowRange(studentIndex, studentIndex + 1, TASK_FIRST_COLUMN_INDEX)
@@ -615,10 +617,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         // Нужен для выделения логики заполнения кол-ва всех решённых задач человеком
         private fun getSumCells(rowIndex: Int, listCount: Int) = "=SUM(${
             List(listCount) { i ->
-                GridRequestMaker.getCellWithTitleAndNotChangingColumn("Д$i", rowIndex, S_TASKS_COLUMN_INDEX)
-            }.joinToString(", ")
+                GridRequestMaker.getCellWithTitleAndNotChangingColumn("Д${i + 1}", rowIndex, S_TASKS_COLUMN_INDEX)
+            }.joinToString(", ").also {
+                LOG.info("listCount=$listCount")
+            }
         })"
-
 
         private fun getCountIf(range: String, condition: String) = "COUNTIF($range;\"$condition\")"
 
