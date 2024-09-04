@@ -22,9 +22,10 @@ class CoroutineJob {
 
         const val NEERC_JOB = 1L
 
-        fun addTask(jobId: Long, sourceLink: String, tableLink: String, tableId: String, userId: Long) {
+        fun addTask(id: Long, jobId: Long, sourceLink: String, tableLink: String, tableId: String, userId: Long) {
             transaction(DataBaseParser.connection) {
                 SheetJobTable.insert {
+                    it[SheetJobTable.id] = id
                     it[SheetJobTable.jobId] = jobId
                     it[SheetJobTable.sourceLink] = sourceLink
                     it[SheetJobTable.tableLink] = tableLink

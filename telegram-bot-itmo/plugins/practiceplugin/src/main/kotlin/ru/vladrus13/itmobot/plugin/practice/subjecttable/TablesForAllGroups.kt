@@ -47,7 +47,8 @@ class TablesForAllGroups(override val parent: Menu) : Menu(parent) {
             .map { it.key + ": " + SingleTable.createTable(
                 sheetService,
                 driveService,
-                it.key,
+                // :TODO it's may be incorrect
+                it.key.substring(1).toLong(),
                 linkTasks,
                 it.value.map(List<String>::first),
                 user.chatId
