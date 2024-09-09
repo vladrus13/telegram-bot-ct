@@ -2,6 +2,7 @@ package ru.vladrus13.itmobot.plugin.practice
 
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import ru.vladrus13.itmobot.database.DataBaseParser
@@ -51,7 +52,40 @@ class CoroutineJob {
             return true
         }
 
+        fun runTasks(prefix: String): Boolean {
+            var allSheetTables: List<ResultRow> = emptyList()
+            transaction(DataBaseParser.connection) {
+                allSheetTables = SheetJobTable
+                    // 3239 -> 32 && 32** -> 32
+                    .select { SheetJobTable.id / 100 eq prefix.take(2).toLong() }
+                    .toList()
+                    .sortedBy { it[SheetJobTable.id].toInt() }
+            }
+            for (rw in allSheetTables) {
+                if (!runTask(rw)) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        fun runTask(name: String): Boolean {
+            var sheetTable: List<ResultRow> = emptyList()
+            transaction(DataBaseParser.connection) {
+                sheetTable = SheetJobTable
+                    .select { SheetJobTable.id eq name.toLong() }
+                    .toList()
+            }
+            if (sheetTable.size != 1) {
+                return false
+            }
+
+            return runTask(sheetTable[0])
+        }
+
         private fun runTask(row: ResultRow): Boolean {
+            logger.info("Running task ${row[SheetJobTable.id]}")
+
             for (i in 1..RETRY_COUNT) {
                 val id = row[SheetJobTable.id]
                 val jobId = row[SheetJobTable.jobId]
@@ -89,9 +123,9 @@ class CoroutineJob {
                     .transferStudentTableToTeacher()
                     .transferFCSToLastName()
 
-            logger.fine("Sleep for 60 seconds")
-            sleep(60 * 1000)
-            logger.fine("End sleep for 60 seconds")
+            logger.info("Sleep for 10 seconds")
+            sleep(10 * 1000)
+            logger.info("End sleep")
 
             // Add newList
             if (currentTasks.isEmpty() && actualTasks.isNotEmpty() || actualTasks.last() != currentTasks.last()) {

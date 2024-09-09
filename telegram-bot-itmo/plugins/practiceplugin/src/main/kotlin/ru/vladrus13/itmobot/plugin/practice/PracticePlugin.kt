@@ -1,12 +1,9 @@
 package ru.vladrus13.itmobot.plugin.practice
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import ru.vladrus13.itmobot.bot.MainFolder
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.database.DataBaseEntity
 import ru.vladrus13.itmobot.plugins.Plugin
-import java.lang.Thread.sleep
 import kotlin.reflect.KClass
 
 class PracticePlugin : Plugin() {
@@ -19,20 +16,7 @@ class PracticePlugin : Plugin() {
     override fun getDataBases(): List<Pair<KClass<*>, DataBaseEntity<*>>> =
         listOf(Pair(SheetJob::class, SheetJobParser()))
 
-    override suspend fun init() {
-        GlobalScope.launch {
-            while (true) {
-                if (!isWorkingJob) {
-                    sleep(SLEEP_TIME)
-                    continue
-                }
-
-                if (!CoroutineJob.runTasks()) {
-                    isWorkingJob = false
-                }
-            }
-        }
-    }
+    override suspend fun init() {}
 
     override fun addFoldable(current: Foldable): List<Pair<Plugin, Foldable>> {
         return when (current) {
@@ -45,7 +29,6 @@ class PracticePlugin : Plugin() {
     }
 
     companion object {
-        var isWorkingJob = true
-        private const val SLEEP_TIME = 60 * 1000L
+        var isWorkingJob = false
     }
 }

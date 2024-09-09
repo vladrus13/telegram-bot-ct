@@ -71,7 +71,7 @@ class SingleTable(override val parent: Menu) : Menu(parent) {
     }
 
     companion object {
-        private val NAME_REGEX = """^3[1-4]3[0-9]$""".toRegex()
+        private val NAME_REGEX = """^3[1-4][3-4][0-9]$""".toRegex()
 
         fun createTable(sheetsService: Sheets, driveService: Drive, groupNumber: Long, link: String, students: List<String>, chatId: Long): String {
             val spreadsheet = Spreadsheet()

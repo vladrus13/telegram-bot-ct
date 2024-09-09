@@ -618,9 +618,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         private fun getSumCells(rowIndex: Int, listCount: Int) = "=SUM(${
             List(listCount) { i ->
                 GridRequestMaker.getCellWithTitleAndNotChangingColumn("Д${i + 1}", rowIndex, S_TASKS_COLUMN_INDEX)
-            }.joinToString(", ").also {
-                LOG.info("listCount=$listCount")
-            }
+            }.joinToString(", ")
         })"
 
         private fun getCountIf(range: String, condition: String) = "COUNTIF($range;\"$condition\")"
