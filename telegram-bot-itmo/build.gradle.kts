@@ -54,3 +54,7 @@ tasks.create<ShadowJar>("runBotJar") {
         attributes["Main-Class"] = (tasks.findByName("runBot") as JavaExec).mainClass.get()
     }
 }.apply task@ { tasks.named("jar") { dependsOn(this@task) } }
+
+tasks.test {
+    useJUnitPlatform()
+}

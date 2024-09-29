@@ -32,4 +32,11 @@ dependencies {
     implementation("com.google.apis:google-api-services-drive:v3-rev197-1.25.0")
     implementation("com.google.apis:google-api-services-sheets:v4-rev612-1.25.0")
     implementation(project(":skeleton"))
+
+    // Other dependencies.
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

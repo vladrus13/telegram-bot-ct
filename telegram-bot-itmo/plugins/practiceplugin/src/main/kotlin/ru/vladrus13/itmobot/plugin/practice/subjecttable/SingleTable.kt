@@ -51,11 +51,16 @@ class SingleTable(override val parent: Menu) : Menu(parent) {
         val sheetsService = createSheetsService()
         val driveService = createDriveService()
 
-        val name: String = listTexts[0]
+        // It should be 3*3*, where
+        // first * - course number
+        // second * - group number
+        val name = listTexts[0]
+        if (!NAME_REGEX.matches(name)) throw IllegalArgumentException("Incorrect name, it should work with regex = $NAME_REGEX")
+        val groupNumber = name.toLong()
         val link: String = listTexts[1]
         val students = listTexts.subList(2, listTexts.size)
 
-        val url = createTable(sheetsService, driveService, name, link, students, user.chatId)
+        val url = createTable(sheetsService, driveService, groupNumber, link, students, user.chatId)
         logger.info("Done making table '$name' with $url")
 
         user.send(
@@ -66,11 +71,13 @@ class SingleTable(override val parent: Menu) : Menu(parent) {
     }
 
     companion object {
-        fun createTable(sheetsService: Sheets, driveService: Drive, name: String, link: String, students: List<String>, chatId: Long): String {
+        private val NAME_REGEX = """^3[1-4][3-4][0-9]$""".toRegex()
+
+        fun createTable(sheetsService: Sheets, driveService: Drive, groupNumber: Long, link: String, students: List<String>, chatId: Long): String {
             val spreadsheet = Spreadsheet()
                 .setProperties(
                     SpreadsheetProperties()
-                        .setTitle(name)
+                        .setTitle(groupNumber.toString())
                 )
 
             val dictData = getTableInfo(sheetsService, spreadsheet)
@@ -83,7 +90,7 @@ class SingleTable(override val parent: Menu) : Menu(parent) {
             // Allow all to edit page
             insertPermission(driveService, id)
 
-            CoroutineJob.addTask(NEERC_JOB, link, url, id, chatId)
+            CoroutineJob.addTask(groupNumber, NEERC_JOB, link, url, id, chatId)
 
             return url
         }
