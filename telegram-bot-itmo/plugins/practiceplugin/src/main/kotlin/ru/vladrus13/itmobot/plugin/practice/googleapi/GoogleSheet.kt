@@ -73,6 +73,9 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         val properties = SheetProperties().setTitle(title).setIndex(1)
         val lastTaskColumnIndex = S_TASKS_COLUMN_INDEX + tasks.size
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
+        val newSheetId =
+            service.spreadsheets().get(id).execute().sheets.find { it.properties.title == title }?.properties?.sheetId
+                ?: throw IllegalArgumentException("Must be made new list")
 
         fillInStudents(title, Companion::getActualScoreFormula, Companion::getSumCells, students, 0, false)
 
@@ -97,17 +100,103 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
 
         addNewMainListColumn(title, students)
 
-        // Conditional Format
         executeRequestsSequence(
-            *colorCellsByTaskGreenGradient(
-                title, MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
-                S_TASKS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
-            ).toTypedArray(),
-            *colorCellsByTaskGreenGradient(
-                title, taskCounterRowIndex, taskCounterRowIndex + 1,
-                TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
-            ).toTypedArray(),
-            *getListRules(
+            *getGradientRequests(title, maxStudentRowIndex, taskCounterRowIndex, lastTaskColumnIndex),
+            *getBooleanConditionRequests(title, lastRowIndex, lastTaskColumnIndex, maxStudentRowIndex),
+            *getUpdateAppearanceRequests(title, lastRowIndex, lastTaskColumnIndex),
+            *getDeleteStuffRowsAndColumnsRequests(newSheetId, lastTaskColumnIndex, lastRowIndex)
+        )
+    }
+
+    private fun getDeleteStuffRowsAndColumnsRequests(
+        newSheetId: Int,
+        lastTaskColumnIndex: Int,
+        lastRowIndex: Int
+    ) = buildList {
+        add(
+            Request().setDeleteDimension(
+                DeleteDimensionRequest().setRange(
+                    DimensionRange()
+                        .setSheetId(newSheetId)
+                        .setDimension("COLUMNS")
+                        .setStartIndex(lastTaskColumnIndex + 1)
+                )
+            )
+        )
+        add(
+            Request().setDeleteDimension(
+                DeleteDimensionRequest().setRange(
+                    DimensionRange()
+                        .setSheetId(newSheetId)
+                        .setDimension("ROWS")
+                        .setStartIndex(lastRowIndex + 1)
+                )
+            )
+        )
+    }.toTypedArray()
+
+    private fun getUpdateAppearanceRequests(
+        title: String,
+        lastRowIndex: Int,
+        lastTaskColumnIndex: Int
+    ) = getRequests(
+        title,
+        *getColorizedBorders(lastRowIndex, lastTaskColumnIndex),
+        *getWidthUpdateRequests(lastTaskColumnIndex),
+    ).toTypedArray()
+
+    private fun getWidthUpdateRequests(lastTaskColumnIndex: Int) = buildList {
+        addAll(
+            getEqualsActionsRectangles(
+                listOf { grid -> grid.setWidth(S_TASKS_WIDTH) },
+                Rectangle(
+                    NONE_INDEX, NONE_INDEX,
+                    S_TASKS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
+                )
+            )
+        )
+        addAll(
+            getEqualsActionsRectangles(
+                listOf { grid -> grid.setWidth(TASK_WIDTH) },
+                Rectangle(
+                    NONE_INDEX, NONE_INDEX,
+                    TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
+                )
+            )
+        )
+    }.toTypedArray()
+
+    private fun getColorizedBorders(
+        lastRowIndex: Int,
+        lastTaskColumnIndex: Int
+    ) = getEqualsActionsRectangles(
+        listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
+        Rectangle(
+            TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
+            FCS_COLUMN_INDEX, lastTaskColumnIndex + 1
+        ),
+        Rectangle(
+            MIN_STUDENT_ROW_INDEX, lastRowIndex + 1,
+            S_TASKS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
+        ),
+        Rectangle(
+            TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_INDEX + 1,
+            TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
+        ),
+        Rectangle(
+            lastRowIndex, lastRowIndex + 1,
+            S_TASKS_COLUMN_INDEX, lastTaskColumnIndex + 1
+        )
+    ).toTypedArray()
+
+    private fun getBooleanConditionRequests(
+        title: String,
+        lastRowIndex: Int,
+        lastTaskColumnIndex: Int,
+        maxStudentRowIndex: Int
+    ) = buildList {
+        addAll(
+            getListRules(
                 title,
                 lastRowIndex, lastRowIndex + 1,
                 TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1,
@@ -117,60 +206,47 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                         TASK_FIRST_COLUMN_INDEX, TASK_FIRST_COLUMN_INDEX + 1
                     )
                 ).map { it }.toTypedArray()
-            ).toTypedArray(),
-            *getListRules(
+            )
+        )
+        addAll(
+            getListRules(
                 title,
                 MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 FCS_COLUMN_INDEX, FCS_COLUMN_INDEX + 1,
                 *getListBooleanConditionsOfAcceptedOrNotTask(
                     getPrettyLongRowRange(MIN_STUDENT_ROW_INDEX, MIN_STUDENT_ROW_INDEX + 1, TASK_FIRST_COLUMN_INDEX)
                 ).map { it }.toTypedArray()
-            ).toTypedArray(),
-            *getListRules(
+            )
+        )
+        addAll(
+            getListRules(
                 title,
                 MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1,
                 *getListBooleanConditionsOfAcceptedOrNotTaskExactlyTOrP().map { it }.toTypedArray()
-            ).toTypedArray(),
-            *getRequests(
-                title,
-                *getEqualsActionsRectangles(
-                    listOf(GridRequestMaker::colorizeBorders, GridRequestMaker::formatCells),
-                    Rectangle(
-                        TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
-                        FCS_COLUMN_INDEX, lastTaskColumnIndex + 1
-                    ),
-                    Rectangle(
-                        MIN_STUDENT_ROW_INDEX, lastRowIndex + 1,
-                        S_TASKS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
-                    ),
-                    Rectangle(
-                        TASKS_NAMES_ROW_INDEX, TASKS_NAMES_ROW_INDEX + 1,
-                        TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
-                    ),
-                    Rectangle(
-                        lastRowIndex, lastRowIndex + 1,
-                        S_TASKS_COLUMN_INDEX, lastTaskColumnIndex + 1
-                    )
-                ).toTypedArray(),
-
-                *getEqualsActionsRectangles(
-                    listOf { grid -> grid.setWidth(S_TASKS_WIDTH) },
-                    Rectangle(
-                        NONE_INDEX, NONE_INDEX,
-                        S_TASKS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
-                    )
-                ).toTypedArray(),
-                *getEqualsActionsRectangles(
-                    listOf { grid -> grid.setWidth(TASK_WIDTH) },
-                    Rectangle(
-                        NONE_INDEX, NONE_INDEX,
-                        TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
-                    )
-                ).toTypedArray(),
-            ).toTypedArray(),
+            )
         )
-    }
+    }.toTypedArray()
+
+    private fun getGradientRequests(
+        title: String,
+        maxStudentRowIndex: Int,
+        taskCounterRowIndex: Int,
+        lastTaskColumnIndex: Int
+    ) = buildList {
+        addAll(
+            colorCellsByTaskGreenGradient(
+                title, MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
+                S_TASKS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
+            )
+        )
+        addAll(
+            colorCellsByTaskGreenGradient(
+                title, taskCounterRowIndex, taskCounterRowIndex + 1,
+                TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
+            )
+        )
+    }.toTypedArray()
 
     private fun generateTeacherSheet(): Boolean {
         val sheets = service.spreadsheets().get(id).execute().sheets
@@ -390,7 +466,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     ) {
         val body = buildList {
             addAll(students.indices.map { it + MIN_STUDENT_ROW_INDEX }.map {
-                listOf(getSumCells(it, (width+1) - FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX))
+                listOf(getSumCells(it, (width + 1) - FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX))
             })
         }
         updateBody(
