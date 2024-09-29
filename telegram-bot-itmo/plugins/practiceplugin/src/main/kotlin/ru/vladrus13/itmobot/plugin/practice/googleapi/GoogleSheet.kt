@@ -701,8 +701,6 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
 
         private fun getCountAFormula(range: String) = "=COUNTA($range)"
 
-        private fun getCountIfFormula(range: String, condition: String) = "=" + getCountIf(range, condition)
-
         private fun getCountIfRussianEnglishIsTFormula(range: String) = "=" +
                 getCountIf(range, RUSSIAN_T) + " + " + getCountIf(range, ENGLISH_T)
 
