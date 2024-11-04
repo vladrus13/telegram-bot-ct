@@ -139,6 +139,6 @@ class CoroutineJob {
             logger.info("End with group $groupId, link $tableLink")
         }
 
-        private const val RETRY_COUNT = 5
+        private const val RETRY_COUNT = 2
     }
 }
