@@ -2,7 +2,22 @@ package ru.vladrus13.itmobot.plugin.practice.googleapi
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException
 import com.google.api.services.sheets.v4.Sheets
-import com.google.api.services.sheets.v4.model.*
+import com.google.api.services.sheets.v4.Sheets.Spreadsheets.Values.Update
+import com.google.api.services.sheets.v4.model.AddConditionalFormatRuleRequest
+import com.google.api.services.sheets.v4.model.AddSheetRequest
+import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest
+import com.google.api.services.sheets.v4.model.BooleanCondition
+import com.google.api.services.sheets.v4.model.BooleanRule
+import com.google.api.services.sheets.v4.model.CellFormat
+import com.google.api.services.sheets.v4.model.Color
+import com.google.api.services.sheets.v4.model.ConditionValue
+import com.google.api.services.sheets.v4.model.ConditionalFormatRule
+import com.google.api.services.sheets.v4.model.GradientRule
+import com.google.api.services.sheets.v4.model.InterpolationPoint
+import com.google.api.services.sheets.v4.model.Request
+import com.google.api.services.sheets.v4.model.SheetProperties
+import com.google.api.services.sheets.v4.model.UpdateSheetPropertiesRequest
+import com.google.api.services.sheets.v4.model.ValueRange
 import org.slf4j.LoggerFactory
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenAcceptedTask
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.ColorMaker.Companion.getGreenCountTasksColor
@@ -37,19 +52,22 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             .setFields("title")
         executeRequestsSequence(Request().setUpdateSheetProperties(update))
 
-        fillInStudents(
+        val (requests, fillValuesUpdate) = fillInStudents(
             MAIN_LIST_NAME, Companion::getSumScoresFormula, Companion::getSumCells, students,
             isMainSheet = true
         )
 
         // Conditional Format
         executeRequestsSequence(
+            *requests.toTypedArray(),
             getConditionalFormatRequest(
                 MAIN_LIST_NAME,
                 MIN_STUDENT_ROW_INDEX, MIN_STUDENT_ROW_INDEX + students.size,
                 TOTAL_TASKS_COLUMN_INDEX, TOTAL_TASKS_COLUMN_INDEX + 1
             ) { it.setGradientRule(MAIN_SCORES_GRADIENT) }
         )
+
+        fillValuesUpdate.execute()
 
         generateTeacherSheet()
     }
@@ -58,7 +76,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         updateBody(
             getTitlePrettyRange(TEACHER_LIST_NAME, 0, teacherTable.size, 0, teacherTable.first().size),
             teacherTable,
-        )
+        ).execute()
     }
 
     fun generateSheet(tasks: List<String>) {
@@ -74,31 +92,18 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         val lastTaskColumnIndex = S_TASKS_COLUMN_INDEX + tasks.size
         executeRequestsSequence(Request().setAddSheet(AddSheetRequest().setProperties(properties)))
 
-        fillInStudents(title, Companion::getActualScoreFormula, Companion::getSumCells, students, 0, false)
-
-        val body = buildList {
-            add(tasks)
-            addAll(List((maxStudentRowIndex + 1) - MIN_STUDENT_ROW_INDEX) { listOf("") })
-            add(tasks.indices.map { it + TASK_FIRST_COLUMN_INDEX }.map {
-                getCountAFormula(
-                    getPrettyRange(MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1, it, it + 1)
-                )
-            })
-        }
-
-        updateBody(
-            getTitlePrettyRange(
-                title,
-                TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
-                TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
-            ),
-            body,
+        val (requestsToNewList, fillValuesUpdate) = fillInStudents(
+            title,
+            Companion::getActualScoreFormula,
+            Companion::getSumCells,
+            students,
+            1,
+            false
         )
-
-        addNewMainListColumn(title, students)
 
         // Conditional Format
         executeRequestsSequence(
+            *requestsToNewList.toTypedArray(),
             *colorCellsByTaskGreenGradient(
                 title, MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1,
                 S_TASKS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
@@ -170,6 +175,29 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 ).toTypedArray(),
             ).toTypedArray(),
         )
+
+        fillValuesUpdate.execute()
+
+        val body = buildList {
+            add(tasks)
+            addAll(List((maxStudentRowIndex + 1) - MIN_STUDENT_ROW_INDEX) { listOf("") })
+            add(tasks.indices.map { it + TASK_FIRST_COLUMN_INDEX }.map {
+                getCountAFormula(
+                    getPrettyRange(MIN_STUDENT_ROW_INDEX, maxStudentRowIndex + 1, it, it + 1)
+                )
+            })
+        }
+
+        updateBody(
+            getTitlePrettyRange(
+                title,
+                TASKS_NAMES_ROW_INDEX, lastRowIndex + 1,
+                TASK_FIRST_COLUMN_INDEX, lastTaskColumnIndex + 1
+            ),
+            body,
+        ).execute()
+
+        addNewMainListColumn(title, students)
     }
 
     private fun generateTeacherSheet(): Boolean {
@@ -269,12 +297,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         return result.getValues()?.map { it.map(Any::toString) } ?: listOf()
     }
 
-    private fun updateBody(range: String, body: List<List<String>>) = service
+    private fun updateBody(range: String, body: List<List<String>>): Update = service
         .spreadsheets()
         .values()
         .update(id, range, ValueRange().setValues(body))
         .setValueInputOption(WHO_ENTERED.USER_ENTERED.toString())
-        .execute()
 
     private fun getValueRange(range: String) = getValueRange(range, service, id)
 
@@ -390,9 +417,10 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     ) {
         val body = buildList {
             addAll(students.indices.map { it + MIN_STUDENT_ROW_INDEX }.map {
-                listOf(getSumCells(it, (width+1) - FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX))
+                listOf(getSumCells(it, (width + 1) - FIRST_TASKS_COUNTER_MAIN_LIST_COLUMN_INDEX))
             })
         }
+
         updateBody(
             getTitlePrettyRange(
                 MAIN_LIST_NAME,
@@ -402,7 +430,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 S_TASKS_COLUMN_INDEX + 1
             ),
             body,
-        )
+        ).execute()
     }
 
     private fun addNewHWColumn(
@@ -422,11 +450,6 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             })
         }
 
-        updateBody(
-            getTitlePrettyRange(MAIN_LIST_NAME, TASKS_NAMES_ROW_INDEX, maxStudentRowNumber, width, width + 1),
-            body,
-        )
-
         // format new column
         executeRequestsSequence(
             *getRequests(
@@ -442,6 +465,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 ).toTypedArray()
             ).toTypedArray(),
         )
+
+        updateBody(
+            getTitlePrettyRange(MAIN_LIST_NAME, TASKS_NAMES_ROW_INDEX, maxStudentRowNumber, width, width + 1),
+            body,
+        ).execute()
     }
 
     private fun getTasksWidthMainSheet() = try {
@@ -470,7 +498,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         students: List<String>,
         workingSheets: Int = 0,
         isMainSheet: Boolean = false,
-    ) {
+    ): Pair<List<Request>, Sheets.Spreadsheets.Values.Update> {
         val body = buildList {
             add(listOf(FCS_COLUMN_NAME, TOTAL_TASKS_COLUMN_NAME, S_TASKS_COLUMN_NAME))
             addAll(students.mapIndexed { index, name ->
@@ -487,22 +515,20 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             })
         }
 
-        updateBody(
-            getTitlePrettyRange(
-                title,
-                TASKS_NAMES_ROW_INDEX, body.size, FCS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
-            ),
-            body,
-        )
-
-        executeRequestsSequence(
-            *getRequests(
+        return Pair(
+            getRequests(
                 title,
                 *makeBorders(body),
                 *setFCSWidth(),
                 *setTOTALWidth(),
                 *setSWidth(),
-            ).toTypedArray(),
+            ), updateBody(
+                getTitlePrettyRange(
+                    title,
+                    TASKS_NAMES_ROW_INDEX, body.size, FCS_COLUMN_INDEX, S_TASKS_COLUMN_INDEX + 1
+                ),
+                body,
+            )
         )
     }
 
