@@ -6,6 +6,7 @@ import ru.vladrus13.itmobot.bean.User
 import ru.vladrus13.itmobot.command.Foldable
 import ru.vladrus13.itmobot.command.Menu
 import ru.vladrus13.itmobot.plugin.practice.subjecttable.ReloadJobs
+import ru.vladrus13.itmobot.plugin.practice.subjecttable.SetWritePermissions
 import ru.vladrus13.itmobot.plugin.practice.subjecttable.SingleTable
 import ru.vladrus13.itmobot.plugin.practice.subjecttable.TablesForAllGroups
 import java.util.logging.Logger
@@ -15,7 +16,8 @@ class NeercTransit(override val parent: Menu) : Menu(parent) {
     override val childes: Array<Foldable> = arrayOf(
         SingleTable(this),
         TablesForAllGroups(this),
-        ReloadJobs(this)
+        ReloadJobs(this),
+        SetWritePermissions(this),
     )
 
     override fun menuHelp() = "NeercTransit page"
