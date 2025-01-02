@@ -715,5 +715,9 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
         const val ENGLISH_T = "T"
         const val RUSSIAN_P = "Р"
         const val ENGLISH_P = "P"
+        const val CORRECT_1 = "#"
+        const val CORRECT_2 = "##"
+
+        val correct_letters = listOf(RUSSIAN_T, ENGLISH_T, CORRECT_1, CORRECT_2)
     }
 }

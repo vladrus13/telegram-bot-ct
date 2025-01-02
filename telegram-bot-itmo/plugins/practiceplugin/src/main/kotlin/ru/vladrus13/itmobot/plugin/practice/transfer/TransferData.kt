@@ -1,7 +1,6 @@
 package ru.vladrus13.itmobot.plugin.practice.transfer
 
-import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet.Companion.ENGLISH_T
-import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet.Companion.RUSSIAN_T
+import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet.Companion.correct_letters
 
 class TransferData {
     companion object {
@@ -65,6 +64,6 @@ class TransferData {
             listOf(it[1].takeWhile(Char::isLetter), "")
         }
 
-        private fun isT(element: String) = RUSSIAN_T == element || ENGLISH_T == element
+        private fun isT(element: String) = correct_letters.any { it == element }
     }
 }
