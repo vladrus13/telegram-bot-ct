@@ -43,8 +43,7 @@ class ReloadJobs(override val parent: Menu) : Menu(parent) {
 
             val result = when (name) {
                 "all" -> CoroutineJob.runTasks()
-                "32**" -> CoroutineJob.runTasks(name)
-                "31**" -> CoroutineJob.runTasks(name)
+                "31**", "32**" -> CoroutineJob.runTasks(name)
                 else -> CoroutineJob.runTask(name)
             }
 
