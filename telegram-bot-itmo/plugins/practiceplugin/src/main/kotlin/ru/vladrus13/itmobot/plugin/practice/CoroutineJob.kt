@@ -36,7 +36,7 @@ class CoroutineJob {
             }
         }
 
-        fun runTasks(prefix: String? = null): Boolean {
+        fun runTasks(sendMessage: (String) -> Unit, prefix: String? = null): Boolean {
             var allSheetTables: List<ResultRow> = emptyList()
             transaction(DataBaseParser.connection) {
                 allSheetTables = SheetJobTable
@@ -49,12 +49,17 @@ class CoroutineJob {
                     .toList()
                     .sortedBy { it[SheetJobTable.id].toInt() }
             }
+            var result = true
+
             for (rw in allSheetTables) {
                 if (!runTask(rw)) {
-                    return false
+                    result = false
+                    sendMessage("Бот не смог обновить таблицу группы ${rw[SheetJobTable.id]}")
+                } else {
+                    sendMessage("Бот смог обновить таблицу группы ${rw[SheetJobTable.id]}")
                 }
             }
-            return true
+            return result
         }
 
         fun runTask(name: String): Boolean {
@@ -83,7 +88,7 @@ class CoroutineJob {
                 val chatId = row[SheetJobTable.chatId]
                 try {
                     when (jobId) {
-                        NEERC_JOB -> runNeercTask(id, sourceLink, tableId, tableLink)
+                        NEERC_JOB -> runNeercTask(id, sourceLink, tableId, tableLink, chatId)
                     }
                     return true
                 } catch (e: Exception) {
@@ -99,7 +104,7 @@ class CoroutineJob {
         }
 
         @Throws(Exception::class)
-        private fun runNeercTask(groupId: Long, sourceLink: String, tableId: String, tableLink: String) {
+        private fun runNeercTask(groupId: Long, sourceLink: String, tableId: String, tableLink: String, chatId: Long) {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
 
@@ -108,7 +113,7 @@ class CoroutineJob {
             val teacherSheetBody: List<List<String>> =
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks
-                    .transferStudentTableToTeacher()
+                    .transferStudentTableToTeacher(chatId)
                     .transferFCSToLastName()
 
             logger.info("Sleep for 10 seconds")

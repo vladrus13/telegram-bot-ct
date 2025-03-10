@@ -38,7 +38,6 @@ import ru.vladrus13.itmobot.plugin.practice.tablemaker.GridRequestMaker.Companio
 import ru.vladrus13.itmobot.plugin.practice.tablemaker.Rectangle
 import ru.vladrus13.itmobot.properties.InitialProperties
 import java.util.logging.Logger
-import kotlin.math.max
 
 class GoogleSheet(private val service: Sheets, private val id: String) {
     private val logger: Logger = InitialProperties.logger
@@ -255,7 +254,7 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
     fun getFCSTasksWithMarks(): List<List<String>> {
         val students = listOf("").plus(getStudentList())
 
-        val allPracticesTasksWithAnswers = List(students.size) { mutableListOf<String>() }
+        var allPracticesTasksWithAnswers = List(students.size) { listOf<String>() }
         for (i in 1..MAX_WEEK_DAY) {
             val onePracticeSheet: List<List<Any>>
             try {
@@ -266,22 +265,21 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
                 break
             }
 
-            val onePracticeTasksWithAnswers =
-                onePracticeSheet.map {
-                    val missingEmptyCells = List(max(0, onePracticeSheet.first().size - it.size)) { "" }
-                    it
-                        .asSequence()
-                        .plus(missingEmptyCells)
-                        .map(Any::toString)
-                        .filterIndexed { index, _ ->
-                            index !in setOf(
-                                FCS_COLUMN_INDEX,
-                                S_TASKS_COLUMN_INDEX,
-                                TOTAL_TASKS_COLUMN_INDEX
-                            )
-                        }.toList()
-                }
-            allPracticesTasksWithAnswers.mapIndexed { index, list -> list.addAll(onePracticeTasksWithAnswers[index]) }
+            val onePracticeAnswers =
+                onePracticeSheet.map { it.map(Any::toString).filter(String::isNotBlank).drop(TASK_FIRST_COLUMN_INDEX) }
+
+            val onePracticeAnswersWithSkips =
+                onePracticeAnswers.map { row ->
+                    val resultLength = onePracticeAnswers.first().size
+
+                    val result = if (resultLength - row.size <= 0) row.take(resultLength)
+                    else row + List(resultLength - row.size) { "" }
+
+                    result
+                }.toMutableList()
+
+            allPracticesTasksWithAnswers =
+                allPracticesTasksWithAnswers.zip(onePracticeAnswersWithSkips) { a, b -> a + b }
         }
         return allPracticesTasksWithAnswers.mapIndexed { index, array -> listOf(students[index]).plus(array) }
     }
