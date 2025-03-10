@@ -43,12 +43,11 @@ class TablesForAllGroups(override val parent: Menu) : Menu(parent) {
             .getValues()
             .map { list -> list.map(Any::toString) }
             .filter { list -> list.all(String::isNotBlank) && list.size == 2 }
-            .groupBy { it[1] }
-            .map { it.key + ": " + SingleTable.createTable(
+            .groupBy { it[1].substring(1).toLong() }
+            .map { it.key.toString() + ": " + SingleTable.createTable(
                 sheetService,
                 driveService,
-                // :TODO it's may be incorrect
-                it.key.substring(1).toLong(),
+                it.key,
                 linkTasks,
                 it.value.map(List<String>::first),
                 user.chatId
