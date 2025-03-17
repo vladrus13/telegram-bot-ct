@@ -1,6 +1,8 @@
 package ru.vladrus13.itmobot.plugin.practice.transfer
 
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet.Companion.correct_letters
+import ru.vladrus13.itmobot.properties.InitialProperties
+import ru.vladrus13.itmobot.utils.Messager
 
 class TransferData {
     companion object {
@@ -20,25 +22,42 @@ class TransferData {
          * | 3 |
          * | 4 | Daniil
          */
-        fun List<List<String>>.transferStudentTableToTeacher(): List<List<String>> {
+        fun List<List<String>>.transferStudentTableToTeacher(chatId: Long): List<List<String>> {
             if (this.isEmpty()) return listOf()
 
             val tasks = this.first()
-            val studentTableWithSkips = this
-                .asSequence()
-                .drop(1)
-                .map { studentResults ->
-                    studentResults
-                        .asSequence()
-                        .mapIndexed { id, resultTask -> TupleFCSTaskResult(studentResults[0], tasks[id], resultTask) }
-                        .filterIndexed { id, tuple -> id > 0 && isT(tuple.result) }
-                        .map { tuple -> Pair(tuple.task, tuple.fcs) }
-                        .toList()
-                }
-                .flatten()
-                .sortedBy { pair -> pair.first.toInt() }
-                .map { pair -> listOf(pair.first, pair.second) }
-                .toList()
+
+            val studentTableWithSkips = try {
+                this
+                    .asSequence()
+                    .drop(1)
+                    .map { studentResults ->
+                        studentResults
+                            .asSequence()
+                            .mapIndexed { id, resultTask ->
+                                TupleFCSTaskResult(
+                                    studentResults[0],
+                                    tasks[id],
+                                    resultTask
+                                )
+                            }
+                            .filterIndexed { id, tuple -> id > 0 && isT(tuple.result) }
+                            .map { tuple -> Pair(tuple.task, tuple.fcs) }
+                            .toList()
+                    }
+                    .flatten()
+                    .sortedBy { pair -> pair.first.toInt() }
+                    .map { pair -> listOf(pair.first, pair.second) }
+                    .toList()
+            } catch (e: Exception) {
+                Messager.sendMessage(
+                    bot = InitialProperties.bot,
+                    chatId = chatId,
+                    text = this.joinToString("\n") { it.joinToString(",") }
+                )
+
+                throw e
+            }
 
             val existsNumbers = studentTableWithSkips
                 .map { it.first() }

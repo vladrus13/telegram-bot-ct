@@ -1,9 +1,9 @@
 package ru.vladrus13.itmobot.plugin.practice
 
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import ru.vladrus13.itmobot.database.DataBaseParser
 import ru.vladrus13.itmobot.google.GoogleTableResponse
@@ -36,37 +36,30 @@ class CoroutineJob {
             }
         }
 
-        fun runTasks(): Boolean {
-            var allSheetTables: List<ResultRow> = emptyList()
-            transaction(DataBaseParser.connection) {
-                allSheetTables = SheetJobTable
-                    .selectAll()
-                    .toList()
-                    .sortedBy { it[SheetJobTable.id].toInt() }
-            }
-            for (rw in allSheetTables) {
-                if (!runTask(rw)) {
-                    return false
-                }
-            }
-            return true
-        }
-
-        fun runTasks(prefix: String): Boolean {
+        fun runTasks(sendMessage: (String) -> Unit, prefix: String? = null): Boolean {
             var allSheetTables: List<ResultRow> = emptyList()
             transaction(DataBaseParser.connection) {
                 allSheetTables = SheetJobTable
                     // 3239 -> 32 && 32** -> 32
-                    .select { SheetJobTable.id / 100 eq prefix.take(2).toLong() }
+                    .select {
+                        if (prefix == null) return@select Op.TRUE
+
+                        SheetJobTable.id / 100 eq prefix.take(2).toLong()
+                    }
                     .toList()
                     .sortedBy { it[SheetJobTable.id].toInt() }
             }
+            var result = true
+
             for (rw in allSheetTables) {
                 if (!runTask(rw)) {
-                    return false
+                    result = false
+                    sendMessage("Бот не смог обновить таблицу группы ${rw[SheetJobTable.id]}")
+                } else {
+                    sendMessage("Бот смог обновить таблицу группы ${rw[SheetJobTable.id]}")
                 }
             }
-            return true
+            return result
         }
 
         fun runTask(name: String): Boolean {
@@ -95,7 +88,7 @@ class CoroutineJob {
                 val chatId = row[SheetJobTable.chatId]
                 try {
                     when (jobId) {
-                        NEERC_JOB -> runNeercTask(id, sourceLink, tableId, tableLink)
+                        NEERC_JOB -> runNeercTask(id, sourceLink, tableId, tableLink, chatId)
                     }
                     return true
                 } catch (e: Exception) {
@@ -111,7 +104,7 @@ class CoroutineJob {
         }
 
         @Throws(Exception::class)
-        private fun runNeercTask(groupId: Long, sourceLink: String, tableId: String, tableLink: String) {
+        private fun runNeercTask(groupId: Long, sourceLink: String, tableId: String, tableLink: String, chatId: Long) {
             val actualTasks: List<String> = NeercParserInfo(sourceLink).getTasks()
             val googleSheet = GoogleSheet(GoogleTableResponse.createSheetsService(), tableId)
 
@@ -120,7 +113,7 @@ class CoroutineJob {
             val teacherSheetBody: List<List<String>> =
                 if (fcsTasksWithMarks.isEmpty()) listOf()
                 else fcsTasksWithMarks
-                    .transferStudentTableToTeacher()
+                    .transferStudentTableToTeacher(chatId)
                     .transferFCSToLastName()
 
             logger.info("Sleep for 10 seconds")
