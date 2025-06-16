@@ -1,5 +1,6 @@
 package ru.vladrus13.itmobot.plugin.practice.transfer
 
+import org.slf4j.LoggerFactory
 import ru.vladrus13.itmobot.plugin.practice.googleapi.GoogleSheet.Companion.correct_letters
 import ru.vladrus13.itmobot.properties.InitialProperties
 import ru.vladrus13.itmobot.utils.Messager
@@ -26,6 +27,10 @@ class TransferData {
             if (this.isEmpty()) return listOf()
 
             val tasks = this.first()
+
+            LOG.info("MEEEEOW!")
+            LOG.info("chatId=${chatId}")
+            LOG.info("current list=$this")
 
             val studentTableWithSkips = try {
                 this
@@ -59,10 +64,15 @@ class TransferData {
                 throw e
             }
 
+            LOG.info("studentTableWithSkips=$studentTableWithSkips")
+
             val existsNumbers = studentTableWithSkips
                 .map { it.first() }
                 .map(String::toInt)
                 .sorted()
+
+            LOG.info("existNumbers=$existsNumbers")
+
             return if (existsNumbers.isNotEmpty() && 1 <= existsNumbers.max()) {
                 val notExistsNumbers = (1..existsNumbers.max())
                     .toList()
@@ -71,6 +81,8 @@ class TransferData {
                 studentTableWithSkips.plus(notExistsNumbers).sortedBy { it.first().toInt() }
             } else {
                 listOf()
+            }.also {
+                LOG.info("result=$it")
             }
 
         }
@@ -84,5 +96,7 @@ class TransferData {
         }
 
         private fun isT(element: String) = correct_letters.any { it == element }
+
+        private val LOG = LoggerFactory.getLogger(TransferData::class.java)
     }
 }
