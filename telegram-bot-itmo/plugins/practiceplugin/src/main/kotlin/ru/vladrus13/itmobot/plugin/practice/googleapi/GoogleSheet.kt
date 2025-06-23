@@ -266,7 +266,11 @@ class GoogleSheet(private val service: Sheets, private val id: String) {
             }
 
             val onePracticeAnswers =
-                onePracticeSheet.map { it.map(Any::toString).filter(String::isNotBlank).drop(TASK_FIRST_COLUMN_INDEX) }
+                onePracticeSheet.map {
+                    it
+                        .map(Any::toString)
+                        .drop(TASK_FIRST_COLUMN_INDEX)
+                }
 
             val onePracticeAnswersWithSkips =
                 onePracticeAnswers.map { row ->

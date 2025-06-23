@@ -28,9 +28,7 @@ class TransferData {
 
             val tasks = this.first()
 
-            LOG.info("MEEEEOW!")
-            LOG.info("chatId=${chatId}")
-            LOG.info("current list=$this")
+            LOG.debug("chatId=${chatId}")
 
             val studentTableWithSkips = try {
                 this
@@ -64,14 +62,12 @@ class TransferData {
                 throw e
             }
 
-            LOG.info("studentTableWithSkips=$studentTableWithSkips")
-
             val existsNumbers = studentTableWithSkips
                 .map { it.first() }
                 .map(String::toInt)
                 .sorted()
 
-            LOG.info("existNumbers=$existsNumbers")
+            LOG.debug("existNumbers={}", existsNumbers)
 
             return if (existsNumbers.isNotEmpty() && 1 <= existsNumbers.max()) {
                 val notExistsNumbers = (1..existsNumbers.max())
@@ -79,12 +75,7 @@ class TransferData {
                     .filter { existsNumbers.binarySearch(it) < 0 }
                     .map { listOf(it.toString(), "") }
                 studentTableWithSkips.plus(notExistsNumbers).sortedBy { it.first().toInt() }
-            } else {
-                listOf()
-            }.also {
-                LOG.info("result=$it")
-            }
-
+            } else listOf()
         }
 
         // returns:
