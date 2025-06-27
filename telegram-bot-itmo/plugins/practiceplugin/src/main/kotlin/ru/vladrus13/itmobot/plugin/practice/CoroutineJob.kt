@@ -115,6 +115,7 @@ class CoroutineJob {
                 else fcsTasksWithMarks
                     .transferStudentTableToTeacher(chatId)
                     .transferFCSToLastName()
+                    .plus(List(AMOUNT_CLEAR_ROW_AFTER) { listOf("") })
 
             logger.info("Sleep for 10 seconds")
             sleep(10 * 1000)
@@ -133,5 +134,6 @@ class CoroutineJob {
         }
 
         private const val RETRY_COUNT = 2
+        private const val AMOUNT_CLEAR_ROW_AFTER = 300
     }
 }
